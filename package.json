@@ -1,0 +1,24 @@
+{
+  "name": "milkshake-bar-backend",
+  "version": "1.0.0",
+  "description": "Backend dla MilkShake Bar (rezerwacje, menu, happy hour)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "express",
+    "milkshake",
+    "rezerwacje",
+    "menu"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

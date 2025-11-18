@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu | MilkShake Bar</title>
+    <meta name="description" content="Pełne menu MilkShake Bar – desery, shakes, burgery i więcej. Sprawdź wszystkie nasze kompozycje smakowe.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <style>
+        /* === PALETA KOLORÓW - EATMI ORANGE === */
+        :root {
+            --primary-color: #FF6A00;      /* Eatmi Orange */
+            --secondary-color: #FF9100;    /* Jaśniejszy pomarańcz */
+            --accent-color: #FFE0B2;       /* Ciepły kremowy akcent */
+            --background-light: #FFF6EC;   /* Delikatne, ciepłe tło */
+            --background-dark: #22100A;    /* Głęboki brąz pod ciemne sekcje */
+            --text-color-dark: #2B1300;    /* Ciemny, ciepły brąz */
+            --text-color-light: #FFFFFF;
+            --gradient-bg: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            --shadow: 0px 10px 30px rgba(0, 0, 0, 0.12);
+            --border-radius: 20px;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            font-size: 16px;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            color: var(--text-color-dark);
+            background-color: var(--background-light);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 25px;
+        }
+
+        h1, h2, h3 {
+            font-weight: 700;
+        }
+
+        .section {
+            padding: 120px 0;
+            position: relative;
+        }
+
+        h2.section-title {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 900;
+            margin-bottom: 40px;
+            text-align: center;
+            background: var(--gradient-bg);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+
+        /* --- Nagłówek --- */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 20px 0;
+            z-index: 1000;
+            transition: all 0.3s ease-in-out;
+        }
+
+        .header.scrolled {
+            background: rgba(255, 246, 236, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .logo img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .logo:hover img {
+            transform: rotate(360deg) scale(1.1);
+        }
+
+        .nav-menu {
+            list-style: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .nav-item { margin: 0 20px; }
+
+        .nav-link {
+            color: var(--text-color-dark);
+            text-decoration: none;
+            font-weight: 600;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--gradient-bg);
+            border-radius: 2px;
+            transform: scaleX(0);
+            transform-origin: right;
+            transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .nav-link:hover::after,
+        .nav-link.active::after {
+            transform: scaleX(1);
+            transform-origin: left;
+        }
+
+        .btn {
+            padding: 14px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-primary {
+            background: var(--gradient-bg);
+            color: white;
+            box-shadow: 0 4px 20px rgba(255, 106, 0, 0.5);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(255, 106, 0, 0.7);
+        }
+
+        .hamburger { display: none; }
+
+        /* --- HERO MENU --- */
+        .menu-hero {
+            min-height: 60vh;
+            display: flex;
+            align-items: center;
+            padding-top: 110px;
+            position: relative;
+        }
+
+        .menu-hero-inner {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .menu-hero-text h1 {
+            font-size: clamp(2.8rem, 5vw, 4rem);
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+
+        .menu-hero-text p {
+            font-size: 1.1rem;
+            line-height: 1.7;
+            max-width: 550px;
+            margin-bottom: 25px;
+        }
+
+        .menu-hero-text .highlight {
+            background: var(--gradient-bg);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .menu-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 18px;
+            border-radius: 999px;
+            background-color: rgba(255, 106, 0, 0.08);
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .menu-hero-visual {
+            position: relative;
+            justify-self: center;
+        }
+
+        .menu-hero-visual img {
+            width: 100%;
+            max-width: 380px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+        }
+
+        .menu-hero-tag {
+            position: absolute;
+            bottom: 10%;
+            left: -10px;
+            background-color: #fff;
+            padding: 10px 18px;
+            border-radius: 999px;
+            box-shadow: var(--shadow);
+            font-size: 0.9rem;
+        }
+
+        /* --- FILTRY KATEGORII --- */
+        .menu-filters {
+            margin: 40px 0 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            border-radius: 999px;
+            border: 1px solid rgba(255, 106, 0, 0.4);
+            background-color: #fff;
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.25s ease;
+        }
+
+        .filter-btn i {
+            font-size: 0.9rem;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: var(--gradient-bg);
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(255, 106, 0, 0.5);
+            border-color: transparent;
+        }
+
+        /* --- LISTA MENU --- */
+        .menu-section-subtitle {
+            text-align: center;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: rgba(43, 19, 0, 0.8);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .menu-item-card {
+            background-color: #fff;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                        box-shadow 0.3s ease;
+        }
+
+        .menu-item-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .menu-item-image {
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .menu-item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .menu-item-card:hover .menu-item-image img {
+            transform: scale(1.08);
+        }
+
+        .menu-item-content {
+            padding: 22px 22px 18px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .menu-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .menu-item-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+
+        .menu-item-category-pill {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            background-color: rgba(255, 106, 0, 0.1);
+            color: var(--primary-color);
+            padding: 4px 10px;
+            border-radius: 999px;
+            white-space: nowrap;
+        }
+
+        .menu-item-desc {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            color: rgba(43, 19, 0, 0.9);
+        }
+
+        .menu-item-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: auto;
+        }
+
+        .menu-item-price {
+            font-size: 1.3rem;
+            font-weight: 900;
+            background: var(--gradient-bg);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .menu-item-extra {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        /* --- STOPKA --- */
+        .footer {
+            background-color: var(--background-dark);
+            color: #ccc;
+            padding: 60px 0 35px;
+            margin-top: 80px;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-col h4 {
+            font-size: 1.3rem;
+            color: #fff;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .footer-col h4::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 50px;
+            height: 3px;
+            background: var(--gradient-bg);
+            border-radius: 2px;
+        }
+
+        .footer-col p, .footer-col li {
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col li {
+            margin-bottom: 8px;
+        }
+
+        .footer-col a {
+            color: #ccc;
+            text-decoration: none;
+            transition: color 0.3s ease, padding-left 0.3s ease;
+        }
+
+        .footer-col a:hover {
+            color: #fff;
+            padding-left: 4px;
+        }
+
+        .footer-socials {
+            display: flex;
+            gap: 15px;
+        }
+
+        .footer-socials a {
+            width: 38px;
+            height: 38px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(255,255,255,0.1);
+            color: #fff;
+            border-radius: 50%;
+            text-decoration: none;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .footer-socials a:hover {
+            background-color: var(--primary-color);
+            transform: translateY(-4px);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 20px;
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        /* --- RESPONSYWNOŚĆ --- */
+        @media (max-width: 992px) {
+            .nav-menu {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 70%;
+                height: 100vh;
+                background: white;
+                box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+                flex-direction: column;
+                justify-content: center;
+                gap: 40px;
+                transition: right 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+            }
+
+            .nav-menu.active { right: 0; }
+
+            .nav-link {
+                font-size: 1.4rem;
+            }
+
+            .hamburger {
+                display: block;
+                z-index: 1001;
+                cursor: pointer;
+            }
+
+            .menu-hero-inner {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .menu-hero-text p {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .menu-hero-visual {
+                order: -1;
+            }
+
+            .menu-hero-tag {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .section {
+                padding: 90px 0;
+            }
+
+            .footer-grid {
+                text-align: center;
+            }
+
+            .footer-col h4::after {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+
+            .footer-socials {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header class="header" id="header">
+    <div class="container">
+        <nav class="navbar">
+            <!-- Załóżmy, że index.html to strona główna -->
+            <a href="index.html#home" class="logo">
+                <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="Logo MilkShake Bar">
+                <span>MilkShake Bar</span>
+            </a>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="index.html#about" class="nav-link">O nas</a></li>
+                <li class="nav-item"><a href="menu.html" class="nav-link active">Menu</a></li>
+                <li class="nav-item"><a href="index.html#reservation" class="nav-link">Rezerwacja</a></li>
+                <li class="nav-item"><a href="index.html#location" class="nav-link">Lokal</a></li>
+            </ul>
+            <a href="index.html#reservation" class="btn btn-primary nav-btn">Rezerwuj stolik <i class="fas fa-arrow-right"></i></a>
+            <div class="hamburger">
+                <i class="fas fa-bars fa-2x"></i>
+            </div>
+        </nav>
+    </div>
+</header>
+
+<main>
+    <!-- HERO MENU -->
+    <section class="menu-hero">
+        <div class="container">
+            <div class="menu-hero-inner">
+                <div class="menu-hero-text">
+                    <div class="menu-hero-badge">
+                        <i class="fas fa-star"></i> Pełna karta smaków
+                    </div>
+                    <h1>Nasze <span class="highlight">menu</span></h1>
+                    <p>Od kremowych milkshake’ów, przez autorskie desery, aż po soczyste burgery. 
+                        Wybierz swój nastrój i znajdź idealną pozycję na dziś.</p>
+                    <p class="menu-section-subtitle">Przeglądaj kategorie lub zobacz wszystko naraz.</p>
+                </div>
+                <div class="menu-hero-visual">
+                    <img src="https://i.imgur.com/kfE4j7j.jpeg" alt="Milkshake dekorowany słodkościami">
+                    <div class="menu-hero-tag">
+                        <strong>30+ pozycji</strong><br>
+                        Desery • Shakes • Burgery
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FILTRY + LISTA MENU -->
+    <section class="section" id="full-menu">
+        <div class="container">
+            <h2 class="section-title">Wybierz kategorię</h2>
+
+            <div class="menu-filters">
+                <button class="filter-btn active" data-filter="all">
+                    <i class="fas fa-layer-group"></i> Wszystko
+                </button>
+                <button class="filter-btn" data-filter="deser">
+                    <i class="fas fa-ice-cream"></i> Desery
+                </button>
+                <button class="filter-btn" data-filter="shake">
+                    <i class="fas fa-blender"></i> Shakes
+                </button>
+                <button class="filter-btn" data-filter="burger">
+                    <i class="fas fa-burger"></i> Burgery
+                </button>
+                <button class="filter-btn" data-filter="snack">
+                    <i class="fas fa-bowl-food"></i> Przekąski
+                </button>
+                <button class="filter-btn" data-filter="drink">
+                    <i class="fas fa-mug-hot"></i> Napoje
+                </button>
+            </div>
+
+            <div class="menu-grid" id="menuGrid">
+                <!-- SHAKES -->
+                <article class="menu-item-card" data-category="shake">
+                    <div class="menu-item-image">
+                        <img src="https://i.imgur.com/kfE4j7j.jpeg" alt="MilkShake Oreo Deluxe">
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <h3 class="menu-item-title">MilkShake #1 Oreo Deluxe</h3>
+                            <span class="menu-item-category-pill">Shake</span>
+                        </div>
+                        <p class="menu-item-desc">
+                            Gofr amerykański z ciasteczkami Oreo, białą czekoladą, kremowym mascarpone,
+                            świeżymi malinami, polewą czekoladową i musem malinowym.
+                        </p>
+                        <div class="menu-item-footer">
+                            <span class="menu-item-price">21 PLN</span>
+                            <span class="menu-item-extra">Na zimno • Słodki</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="menu-item-card" data-category="shake">
+                    <div class="menu-item-image">
+                        <img src="https://i.imgur.com/dsMynF5.png" alt="MilkShake Czekoladowy Crunch">
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <h3 class="menu-item-title">MilkShake #2 Choco Crunch</h3>
+                            <span class="menu-item-category-pill">Shake</span>
+                        </div>
+                        <p class="menu-item-desc">
+                            Czekoladowy milkshake na bazie lodów rzemieślniczych, z chrupiącymi kulkami
+                            czekoladowymi, bitą śmietaną i sosem karmelowym.
+                        </p>
+                        <div class="menu-item-footer">
+                            <span class="menu-item-price">23 PLN</span>
+                            <span class="menu-item-extra">Na zimno • Intensywny</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="menu-item-card" data-category="shake">
+                    <div class="menu-item-image">
+                        <img src="https://i.imgur.com/7Bx2X7g.png" alt="MilkShake Truskawkowy Cloud">
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <h3 class="menu-item-title">MilkShake #3 Strawberry Cloud</h3>
+                            <span class="menu-item-category-pill">Shake</span>
+                        </div>
+                        <p class="menu-item-desc">
+                            Aksamitny shake truskawkowy ze świeżymi owocami, bitą śmietaną,
+                            puszystą pianką i delikatnym musem truskawkowym.
+                        </p>
+                        <div class="menu-item-footer">
+                            <span class="menu-item-price">24 PLN</span>
+                            <span class="menu-item-extra">Na zimno • Owocowy</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- DESERY -->
+                <article class="menu-item-card" data-category="deser">
+                    <div class="menu-item-image">
+                        <img src="https://i.imgur.com/frz51UG.png" alt="Deser Brownie Lava">
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <h3 class="menu-item-title">Brownie Lava</h3>
+                            <span class="menu-item-category-pill">Deser</span>
+                        </div>
+                        <p class="menu-item-desc">
+                            Ciepłe brownie z płynnym wnętrzem, podawane z lodami waniliowymi,
+                            sosem czekoladowym i kruszonymi orzechami.
+                        </p>
+                        <div class="menu-item-footer">
+                            <span class="menu-item-price">19 PLN</span>
+                            <span class="menu-item-extra">Na ciepło • Czekoladowy</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="menu-item-card" data-category="deser">
+                    <div class="menu-item-image">
+                        <img src="https://i.imgur.com/GRvCj6z.png" alt="Deser Pancake Berry Stack">
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <h3 class="menu-item-title">Pancake Berry Stack</h3>
+                            <span class="menu-item-category-pill">Deser</span>
+                        </div>
+                        <p class="menu-item-desc">
+                            Stos puszystych pancake’ów z sosem klonowym, świeżymi owocami leśnymi
+                            i lekkim kremem mascarpone.
+                        </p>
+                        <div class="menu-item-footer">
+                            <span class="menu-item-price">22 PLN</span>
+                            <span class="menu-item-extra">Na śniadanie • Słodki</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="menu-item-card" data-category="deser">
+                    <div class="menu-item-image">
+                        <img src="https://i.imgur.com/XIdoN0y.png" alt="Deser Classic Waffle">
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <h3 class="menu-item-title">Classic Waffle</h3>
+                            <span class="menu-item-category-pill">Deser</span>
+                        </div>
+                        <p class="menu-item-desc">
+                            Klasyczny gofr amerykański z cukrem pudrem, bitą śmietaną 
+                            i wyborem owoców sezonowych.
+                        </p>
+                        <div class="menu-item-footer">
+                            <span class="menu-item-price">17 PLN</span>
+                            <span class="menu-item-extra">Lekki • Uniwersalny</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- BURGERY -->
+                <article class="menu-item-card" data-category="burger">
+                    <div class="menu-item-image">
+                        <img src="https://i.imgur.com/5Hqv7yL.jpeg" alt="Burger Classic Smash">
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <h3 class="menu-item-title">Classic Smash Burger</h3>
+                            <span class="menu-item-category-pill">Burger</span>
+                        </div>
+                        <p class="menu-item-desc">
+                            Sezonowana wołowina smash, ser cheddar, sałata, pomidor, ogórek,
+                            sos house special w maślanej bułce brioche.
+                        </p>
+                        <div class="menu-item-footer">
+                            <span class="menu-item-price">29 PLN</span>
+                            <span class="menu-item-extra">Wołowina • Klasyk</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="menu-item-card" data-category="burger">
+                    <div class="menu-item-image">
+                        <img src="https://i.imgur.com/Yg5CqKE.jpeg" alt="Burger BBQ Bacon">
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <h3 class="menu-item-title">BBQ Bacon Burger</h3>
+                            <span class="menu-item-category-pill">Burger</span>
+                        </div>
+                        <p class="menu-item-desc">
+                            Wołowina, chrupiący boczek, ser, czerwona cebula, sos BBQ,
+                            prażona cebulka, bułka brioche.
+                        </p>
+                        <div class="menu-item-footer">
+                            <span class="menu-item-price">32 PLN</span>
+                            <span class="menu-item-extra">Wołowina • Wyrazisty</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="menu-item-card" data-category="burger">
+                    <div class="menu-item-image">
+                        <img src="https://i.imgur.com/3dJ7z0u.jpeg" alt="Burger Vege Halloumi">
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <h3 class="menu-item-title">Halloumi Vege Burger</h3>
+                            <span class="menu-item-category-pill">Burger</span>
+                        </div>
+                        <p class="menu-item-desc">
+                            Grillowany ser halloumi, pesto bazyliowe, rukola, pomidor,
+                            marynowana czerwona cebula, sos jogurtowo-czosnkowy.
+                        </p>
+                        <div class="menu-item-footer">
+                            <span class="menu-item-price">28 PLN</span>
+                            <span class="menu-item-extra">Vege • Świeży</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- PRZEKĄSKI -->
+                <article class="menu-item-card" data-category="snack">
+                    <div class="menu-item-image">
+                        <img src="https://i.imgur.com/8fDvYFs.jpeg" alt="Frytki belgijskie">
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <h3 class="menu-item-title">Frytki belgijskie</h3>
+                            <span class="menu-item-category-pill">Przekąska</span>
+                        </div>
+                        <p class="menu-item-desc">
+                            Złociste, podwójnie smażone frytki belgijskie z solą morską 
+                            i wyborem sosów: ketchup, BBQ, aioli.
+                        </p>
+                        <div class="menu-item-footer">
+                            <span class="menu-item-price">13 PLN</span>
+                            <span class="menu-item-extra">Porcja średnia</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="menu-item-card" data-category="snack">
+                    <div class="menu-item-image">
+                        <img src="https://i.imgur.com/0dBBh9X.jpeg" alt="Krążki cebulowe">
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <h3 class="menu-item-title">Krążki cebulowe</h3>
+                            <span class="menu-item-category-pill">Przekąska</span>
+                        </div>
+                        <p class="menu-item-desc">
+                            Chrupiące krążki cebulowe w złocistej panierce, 
+                            podawane z sosem czosnkowym.
+                        </p>
+                        <div class="menu-item-footer">
+                            <span class="menu-item-price">14 PLN</span>
+                            <span class="menu-item-extra">Idealne do burgera</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- NAPOJE -->
+                <article class="menu-item-card" data-category="drink">
+                    <div class="menu-item-image">
+                        <img src="https://i.imgur.com/t0n9H2p.jpeg" alt="Lemoniada cytrusowa">
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <h3 class="menu-item-title">Lemoniada cytrusowa</h3>
+                            <span class="menu-item-category-pill">Napój</span>
+                        </div>
+                        <p class="menu-item-desc">
+                            Orzeźwiająca domowa lemoniada na bazie cytryn, limonki i pomarańczy,
+                            z kostkami lodu i świeżą miętą.
+                        </p>
+                        <div class="menu-item-footer">
+                            <span class="menu-item-price">12 PLN</span>
+                            <span class="menu-item-extra">0,4 L</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="menu-item-card" data-category="drink">
+                    <div class="menu-item-image">
+                        <img src="https://i.imgur.com/5UpwP8R.jpeg" alt="Cold brew coffee">
+                    </div>
+                    <div class="menu-item-content">
+                        <div class="menu-item-header">
+                            <h3 class="menu-item-title">Cold Brew Coffee</h3>
+                            <span class="menu-item-category-pill">Napój</span>
+                        </div>
+                        <p class="menu-item-desc">
+                            Powoli macerowana na zimno kawa speciality, podawana z kostkami lodu
+                            i opcjonalnie mlekiem roślinnym.
+                        </p>
+                        <div class="menu-item-footer">
+                            <span class="menu-item-price">14 PLN</span>
+                            <span class="menu-item-extra">Pobudzająca</span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <a href="index.html#home" class="logo">
+                    <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="Logo MilkShake Bar">
+                    <span>MilkShake Bar</span>
+                </a>
+                <p>Każdy łyk i każdy kęs to małe dzieło sztuki – wybierz coś z menu i daj się zaskoczyć.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Nawigacja</h4>
+                <ul>
+                    <li><a href="index.html#about">O nas</a></li>
+                    <li><a href="menu.html">Menu</a></li>
+                    <li><a href="index.html#gallery">Galeria</a></li>
+                    <li><a href="index.html#reservation">Rezerwacja</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Kontakt</h4>
+                <ul>
+                    <li><i class="fas fa-map-marker-alt"></i> Szczecińska 17, 76-200 Słupsk</li>
+                    <li><i class="fas fa-phone"></i> +48 733 033 100</li>
+                    <li><i class="fas fa-clock"></i> Otwarte: Pn-Sb 12–22, Nd 12–21</li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Znajdź nas</h4>
+                <div class="footer-socials">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2025 MilkShake Bar. Wszystkie prawa zastrzeżone.</p>
+        </div>
+    </div>
+</footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // efekt scrolled dla nagłówka
+        const header = document.getElementById('header');
+        window.addEventListener('scroll', () => {
+            header.classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        // menu mobilne
+        const hamburger = document.querySelector('.hamburger');
+        const navMenu = document.querySelector('.nav-menu');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        const toggleMenu = () => navMenu.classList.toggle('active');
+        const closeMenu = () => navMenu.classList.remove('active');
+
+        if (hamburger) hamburger.addEventListener('click', toggleMenu);
+        navLinks.forEach(link => link.addEventListener('click', closeMenu));
+
+        // filtrowanie pozycji
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const menuItems = document.querySelectorAll('.menu-item-card');
+
+        filterButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const filter = btn.dataset.filter;
+
+                filterButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                menuItems.forEach(item => {
+                    const category = item.dataset.category;
+                    if (filter === 'all' || filter === category) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

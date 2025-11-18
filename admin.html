@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8" />
+    <title>MilkShake Bar – Panel administratora</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;900&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+    <style>
+        :root {
+            --primary-color: #ff6a00;        /* eatmi orange */
+            --primary-soft: #ffe1c4;
+            --primary-soft-strong: #ffd1a0;
+            --secondary-color: #ff9100;
+            --bg-light: #fff7ef;
+            --bg-page: #faf5f0;
+            --sidebar-bg: #ffffff;
+            --sidebar-border: #ffe1c4;
+            --text-main: #2b1300;
+            --text-muted: #7a5c47;
+            --danger: #dc2626;
+            --success: #16a34a;
+            --radius-xl: 24px;
+            --shadow-soft: 0 18px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Poppins", sans-serif;
+            background: radial-gradient(circle at top left, #ffe2c1 0, #fff7ef 40%, #fff 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        /* LOGIN SCREEN */
+
+        .login-screen {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 16px;
+        }
+
+        .login-card {
+            background: #ffffff;
+            border-radius: 28px;
+            box-shadow: var(--shadow-soft);
+            padding: 32px 28px;
+            max-width: 420px;
+            width: 100%;
+            border: 1px solid var(--primary-soft);
+        }
+
+        .login-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+        }
+
+        .login-logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .login-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+        }
+
+        .login-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 24px;
+        }
+
+        .login-label {
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .login-input-wrap {
+            margin-bottom: 16px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 999px;
+            border: 1px solid var(--primary-soft);
+            font-size: 1.1rem;
+            text-align: center;
+            letter-spacing: 4px;
+            font-weight: 600;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .login-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 1px rgba(255, 106, 0, 0.2);
+        }
+
+        .login-error {
+            min-height: 18px;
+            font-size: 0.85rem;
+            color: var(--danger);
+            margin-bottom: 10px;
+        }
+
+        .login-btn {
+            width: 100%;
+            border-radius: 999px;
+            border: none;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: #fff;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 10px 25px rgba(255, 106, 0, 0.45);
+        }
+
+        .login-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 30px rgba(255, 106, 0, 0.55);
+        }
+
+        .login-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 14px;
+            text-align: center;
+        }
+
+        /* LAYOUT */
+
+        .app {
+            display: none; /* pokazujemy dopiero po zalogowaniu */
+            min-height: 100vh;
+        }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--sidebar-border);
+            padding: 20px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .sidebar-logo img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .sidebar-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+        }
+
+        .sidebar-tag {
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .sidebar-nav {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .nav-item {
+            border-radius: 999px;
+            padding: 9px 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-main);
+            background: #fff3e9;
+            border: 1px solid transparent;
+            transition: box-shadow 0.2s, transform 0.1s, background 0.2s, border-color 0.2s;
+            box-shadow: 0 0 0 rgba(255, 106, 0, 0.2);
+        }
+
+        .nav-item i {
+            width: 18px;
+            text-align: center;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: #fff0e3;
+            border-color: #ffd1a0;
+            box-shadow: 0 0 18px rgba(255, 150, 50, 0.45);
+            transform: translateY(-1px);
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        .sidebar-logout {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: none;
+            background: #fff3e9;
+            color: var(--text-main);
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .content {
+            flex: 1;
+            padding: 20px 24px;
+            background: var(--bg-page);
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .content-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .content-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .content-badge {
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid #ffe1c4;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* TABS */
+
+        .tab {
+            display: none;
+        }
+
+        .tab.active {
+            display: block;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: var(--radius-xl);
+            padding: 18px 16px;
+            box-shadow: var(--shadow-soft);
+            border: 1px solid #ffe1c4;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .card-title {
+            font-weight: 600;
+        }
+
+        .card-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* REZERWACJE */
+
+        .reservations-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+            max-height: calc(100vh - 210px);
+            overflow-y: auto;
+        }
+
+        .reservation-item {
+            display: grid;
+            grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr) auto;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 16px;
+            background: #fffaf5;
+            border: 1px solid #ffe1c4;
+        }
+
+        .reservation-main {
+            font-size: 0.9rem;
+        }
+
+        .reservation-name {
+            font-weight: 600;
+        }
+
+        .reservation-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .reservation-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fff7e0;
+            color: #b45309;
+        }
+
+        .status-accepted {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .reservation-actions {
+            display: flex;
+            gap: 6px;
+            justify-content: flex-end;
+        }
+
+        .btn-chip {
+            border-radius: 999px;
+            padding: 6px 10px;
+            border: none;
+            font-size: 0.8rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            background: #fff;
+            border: 1px solid #ffe1c4;
+        }
+
+        .btn-accept {
+            background: #dcfce7;
+            border-color: #bbf7d0;
+            color: #166534;
+        }
+
+        .btn-reject {
+            background: #fee2e2;
+            border-color: #fecaca;
+            color: #b91c1c;
+        }
+
+        .btn-delete {
+            background: #fef2f2;
+            border-color: #fecaca;
+            color: #b91c1c;
+        }
+
+        /* MENU */
+
+        .menu-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.7fr);
+            gap: 14px;
+        }
+
+        .field {
+            margin-bottom: 10px;
+        }
+
+        .field-label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .field-input,
+        .field-textarea,
+        .field-file {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid #efd6ba;
+            padding: 9px 11px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            background: #fffaf5;
+        }
+
+        .field-textarea {
+            resize: vertical;
+            min-height: 70px;
+        }
+
+        .field-input:focus,
+        .field-textarea:focus {
+            border-color: var(--primary-color);
+        }
+
+        .menu-items {
+            max-height: calc(100vh - 230px);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .menu-item {
+            display: grid;
+            grid-template-columns: 60px minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: center;
+            padding: 9px 10px;
+            border-radius: 16px;
+            background: #fffaf5;
+            border: 1px solid #ffe1c4;
+        }
+
+        .menu-item img {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            object-fit: cover;
+        }
+
+        .menu-item-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .menu-item-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .menu-item-price {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-top: 3px;
+        }
+
+        /* HAPPY HOUR */
+
+        .happy-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.4fr);
+            gap: 14px;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        .toggle-input {
+            width: 38px;
+            height: 20px;
+        }
+
+        .preview-happy {
+            border-radius: 999px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: #fff;
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        /* TOAST DŹWIĘK / POWIADOMIENIA (opcjonalnie do użycia) */
+
+        .inline-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            background: #fffaf5;
+            border: 1px solid #ffe1c4;
+        }
+
+        /* DŹWIĘK – nic tu nie trzeba, audio ukryte */
+
+        /* RESPONSYWNOŚĆ */
+
+        @media (max-width: 900px) {
+            .layout {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                flex-direction: row;
+                overflow-x: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--sidebar-border);
+            }
+            .sidebar-nav {
+                flex-direction: row;
+                flex-wrap: wrap;
+                margin-top: 0;
+            }
+            .sidebar-bottom {
+                display: none;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .menu-layout,
+            .happy-grid {
+                grid-template-columns: 1fr;
+            }
+            .reservation-item {
+                grid-template-columns: 1fr;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- EKRAN LOGOWANIA KODEM 20133 -->
+    <div class="login-screen" id="login-screen">
+        <div class="login-card">
+            <div class="login-logo">
+                <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="Logo" />
+                <div>
+                    <div class="login-title">Panel MilkShake Bar</div>
+                    <div class="login-subtitle">Wpisz kod dostępu, aby przejść do panelu administratora.</div>
+                </div>
+            </div>
+
+            <div class="login-input-wrap">
+                <div class="login-label">Kod dostępu</div>
+                <input
+                    type="password"
+                    id="access-code"
+                    class="login-input"
+                    maxlength="5"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    placeholder="•••••"
+                />
+            </div>
+            <div id="login-error" class="login-error"></div>
+
+            <button id="login-btn" class="login-btn">
+                Wejdź do panelu
+                <i class="fas fa-arrow-right"></i>
+            </button>
+
+            <div class="login-hint">Kod składa się z 5 cyfr (np. 20133).</div>
+        </div>
+    </div>
+
+    <!-- APLIKACJA ADMINA -->
+    <div class="app" id="app">
+        <div class="layout">
+            <aside class="sidebar">
+                <div>
+                    <div class="sidebar-logo">
+                        <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="Logo" />
+                        <div>
+                            <div class="sidebar-title">MilkShake Bar</div>
+                            <div class="sidebar-tag">Panel administratora</div>
+                        </div>
+                    </div>
+
+                    <nav class="sidebar-nav" id="sidebar-nav">
+                        <div class="nav-item active" data-tab="tab-reservations">
+                            <i class="fas fa-bell"></i>
+                            <span>Rezerwacje</span>
+                        </div>
+                        <div class="nav-item" data-tab="tab-menu">
+                            <i class="fas fa-ice-cream"></i>
+                            <span>Menu</span>
+                        </div>
+                        <div class="nav-item" data-tab="tab-happy">
+                            <i class="fas fa-clock"></i>
+                            <span>Happy Hour</span>
+                        </div>
+                    </nav>
+                </div>
+
+                <div class="sidebar-bottom">
+                    <div>Połączono z API</div>
+                    <button class="sidebar-logout" id="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Wyloguj
+                    </button>
+                </div>
+            </aside>
+
+            <main class="content">
+                <div class="content-header">
+                    <div>
+                        <div class="content-title" id="current-tab-title">Rezerwacje</div>
+                        <div class="content-subtitle" id="current-tab-subtitle">
+                            Odbieraj i zarządzaj rezerwacjami stolików w czasie zbliżonym do rzeczywistego.
+                        </div>
+                    </div>
+                    <div class="content-badge">
+                        <i class="fas fa-signal"></i> Panel online
+                    </div>
+                </div>
+
+                <!-- TAB: REZERWACJE -->
+                <section class="tab active" id="tab-reservations">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Rezerwacje stolików</div>
+                                <div class="card-subtitle">
+                                    Nowa rezerwacja = dźwięk dzwonka „din din” + podświetlenie na liście.
+                                </div>
+                            </div>
+                            <div class="inline-badge">
+                                <i class="fas fa-bell"></i>
+                                <span id="reservation-counter">–</span>
+                            </div>
+                        </div>
+
+                        <div class="reservations-list" id="reservations-list">
+                            <!-- tutaj JS wstawi rezerwacje -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: MENU -->
+                <section class="tab" id="tab-menu">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Pozycje w menu</div>
+                                <div class="card-subtitle">Dodawaj nowe desery i milkshake'i, łącznie ze zdjęciem.</div>
+                            </div>
+                        </div>
+
+                        <div class="menu-layout">
+                            <form id="menu-form">
+                                <div class="field">
+                                    <div class="field-label">Nazwa pozycji</div>
+                                    <input type="text" id="menu-name" class="field-input" required />
+                                </div>
+                                <div class="field">
+                                    <div class="field-label">Opis</div>
+                                    <textarea id="menu-description" class="field-textarea" required></textarea>
+                                </div>
+                                <div class="field">
+                                    <div class="field-label">Cena (PLN)</div>
+                                    <input type="number" id="menu-price" class="field-input" step="0.01" min="0" required />
+                                </div>
+                                <div class="field">
+                                    <div class="field-label">Zdjęcie (plik / aparat)</div>
+                                    <input
+                                        type="file"
+                                        id="menu-image"
+                                        class="field-file"
+                                        accept="image/*"
+                                        capture="environment"
+                                    />
+                                </div>
+                                <button type="submit" class="login-btn" style="margin-top: 4px; width: 100%;">
+                                    Dodaj pozycję do menu
+                                    <i class="fas fa-plus"></i>
+                                </button>
+                            </form>
+
+                            <div>
+                                <div class="field-label" style="margin-bottom: 6px;">Aktualne pozycje</div>
+                                <div class="menu-items" id="menu-items">
+                                    <!-- JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: HAPPY HOUR -->
+                <section class="tab" id="tab-happy">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Pasek Happy Hour</div>
+                                <div class="card-subtitle">
+                                    Tekst i link wyświetlane na górze strony głównej (index.html).
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="happy-grid">
+                            <form id="happy-form">
+                                <div class="field">
+                                    <div class="field-label">Treść paska</div>
+                                    <textarea id="happy-text" class="field-textarea" placeholder="Np. Dziś Happy Hour 17:00–19:00 –20% na wszystkie milkshake'i!"></textarea>
+                                </div>
+                                <div class="field">
+                                    <div class="field-label">Link (opcjonalnie)</div>
+                                    <input
+                                        type="url"
+                                        id="happy-link"
+                                        class="field-input"
+                                        placeholder="Np. https://instagram.com/twojprofil"
+                                    />
+                                </div>
+                                <div class="field">
+                                    <div class="field-label">Status</div>
+                                    <div class="toggle-row">
+                                        <input type="checkbox" id="happy-enabled" class="toggle-input" />
+                                        <label for="happy-enabled">Pasek Happy Hour włączony</label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="login-btn" style="width: 100%; margin-top: 6px;">
+                                    Zapisz ustawienia paska
+                                    <i class="fas fa-save"></i>
+                                </button>
+                            </form>
+
+                            <div>
+                                <div class="field-label" style="margin-bottom: 6px;">Podgląd paska</div>
+                                <div class="preview-happy" id="happy-preview">
+                                    <span id="happy-preview-text">Tutaj pojawi się treść paska Happy Hour</span>
+                                    <span style="font-size: 0.75rem;">Happy Hour</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- AUDIO – DŹWIĘK NOWEJ REZERWACJI (DIN-DIN) -->
+    <audio id="new-reservation-sound" preload="auto">
+        <!-- wrzuć plik ding.mp3 do tego samego folderu co admin.html -->
+        <source src="ding.mp3" type="audio/mpeg" />
+    </audio>
+
+    <script>
+        const API_BASE = ""; // ten sam host co index.html / server.js
+
+        // --- LOGIN LOGIKA ---
+        const CORRECT_CODE = "20133";
+        const loginScreen = document.getElementById("login-screen");
+        const app = document.getElementById("app");
+        const accessCodeInput = document.getElementById("access-code");
+        const loginBtn = document.getElementById("login-btn");
+        const loginError = document.getElementById("login-error");
+        const logoutBtn = document.getElementById("logout-btn");
+
+        function unlockPanel() {
+            loginScreen.style.display = "none";
+            app.style.display = "block";
+        }
+
+        function lockPanel() {
+            app.style.display = "none";
+            loginScreen.style.display = "flex";
+            localStorage.removeItem("msbAdminUnlocked");
+        }
+
+        // auto-unlock jeśli już zalogowany wcześniej
+        if (localStorage.getItem("msbAdminUnlocked") === "true") {
+            unlockPanel();
+        }
+
+        loginBtn.addEventListener("click", () => {
+            const val = accessCodeInput.value.trim();
+            if (val === CORRECT_CODE) {
+                loginError.textContent = "";
+                localStorage.setItem("msbAdminUnlocked", "true");
+                unlockPanel();
+            } else {
+                loginError.textContent = "Nieprawidłowy kod. Spróbuj ponownie.";
+            }
+        });
+
+        accessCodeInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                loginBtn.click();
+            }
+        });
+
+        logoutBtn.addEventListener("click", () => {
+            lockPanel();
+        });
+
+        // --- ZAKŁADKI / NAWIGACJA ---
+        const navItems = document.querySelectorAll(".nav-item");
+        const tabs = document.querySelectorAll(".tab");
+        const tabTitle = document.getElementById("current-tab-title");
+        const tabSubtitle = document.getElementById("current-tab-subtitle");
+
+        const tabMeta = {
+            "tab-reservations": {
+                title: "Rezerwacje",
+                subtitle: "Odbieraj i zarządzaj rezerwacjami stolików w czasie zbliżonym do rzeczywistego."
+            },
+            "tab-menu": {
+                title: "Menu",
+                subtitle: "Twórz i edytuj pozycje menu widoczne dla gości."
+            },
+            "tab-happy": {
+                title: "Happy Hour",
+                subtitle: "Ustaw pasek z informacją o promocjach na stronie głównej."
+            }
+        };
+
+        navItems.forEach((item) => {
+            item.addEventListener("click", () => {
+                const tabId = item.dataset.tab;
+
+                navItems.forEach((n) => n.classList.remove("active"));
+                item.classList.add("active");
+
+                tabs.forEach((t) => t.classList.remove("active"));
+                document.getElementById(tabId).classList.add("active");
+
+                if (tabMeta[tabId]) {
+                    tabTitle.textContent = tabMeta[tabId].title;
+                    tabSubtitle.textContent = tabMeta[tabId].subtitle;
+                }
+            });
+        });
+
+        // --- REZERWACJE ---
+
+        let reservations = [];
+        let knownReservationIds = new Set();
+        const reservationsList = document.getElementById("reservations-list");
+        const reservationCounter = document.getElementById("reservation-counter");
+        const newReservationSound = document.getElementById("new-reservation-sound");
+
+        function renderReservations() {
+            reservationsList.innerHTML = "";
+            if (!reservations.length) {
+                reservationsList.innerHTML =
+                    '<div style="font-size:0.85rem;color:var(--text-muted);padding:4px 6px;">Brak rezerwacji.</div>';
+                reservationCounter.textContent = "0 rezerwacji";
+                return;
+            }
+
+            reservationCounter.textContent = `${reservations.length} rezerwacj${reservations.length === 1 ? "a" : "e"}`;
+
+            reservations.forEach((r) => {
+                const item = document.createElement("div");
+                item.className = "reservation-item";
+
+                const main = document.createElement("div");
+                main.className = "reservation-main";
+
+                const nameEl = document.createElement("div");
+                nameEl.className = "reservation-name";
+                nameEl.textContent = `${r.name} • ${r.guests || "?"} os.`;
+
+                const metaEl = document.createElement("div");
+                metaEl.className = "reservation-meta";
+                metaEl.textContent = `${r.date || "?"} • ${r.time || "?"} • ${r.phone || ""}`;
+
+                main.appendChild(nameEl);
+                main.appendChild(metaEl);
+
+                const center = document.createElement("div");
+
+                const seatEl = document.createElement("div");
+                seatEl.className = "reservation-meta";
+                seatEl.textContent = r.selected_seat_display || r.selected_seat_value || "";
+
+                const statusBadge = document.createElement("div");
+                statusBadge.className = "reservation-badge";
+
+                if (r.status === "accepted") {
+                    statusBadge.classList.add("status-accepted");
+                    statusBadge.innerHTML = '<i class="fas fa-check-circle"></i> Przyjęta';
+                } else if (r.status === "rejected") {
+                    statusBadge.classList.add("status-rejected");
+                    statusBadge.innerHTML = '<i class="fas fa-times-circle"></i> Odrzucona';
+                } else {
+                    statusBadge.classList.add("status-pending");
+                    statusBadge.innerHTML = '<i class="fas fa-hourglass-half"></i> Oczekująca';
+                }
+
+                center.appendChild(seatEl);
+                center.appendChild(statusBadge);
+
+                const actions = document.createElement("div");
+                actions.className = "reservation-actions";
+
+                if (r.status !== "accepted") {
+                    const acceptBtn = document.createElement("button");
+                    acceptBtn.className = "btn-chip btn-accept";
+                    acceptBtn.innerHTML = '<i class="fas fa-check"></i> Przyjmij';
+                    acceptBtn.addEventListener("click", () => updateReservationStatus(r.id, "accepted"));
+                    actions.appendChild(acceptBtn);
+                }
+
+                if (r.status !== "rejected") {
+                    const rejectBtn = document.createElement("button");
+                    rejectBtn.className = "btn-chip btn-reject";
+                    rejectBtn.innerHTML = '<i class="fas fa-times"></i> Odrzuć';
+                    rejectBtn.addEventListener("click", () => updateReservationStatus(r.id, "rejected"));
+                    actions.appendChild(rejectBtn);
+                }
+
+                const deleteBtn = document.createElement("button");
+                deleteBtn.className = "btn-chip btn-delete";
+                deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                deleteBtn.addEventListener("click", () => deleteReservation(r.id));
+                actions.appendChild(deleteBtn);
+
+                item.appendChild(main);
+                item.appendChild(center);
+                item.appendChild(actions);
+
+                reservationsList.appendChild(item);
+            });
+        }
+
+        async function fetchReservations(isInitial = false) {
+            try {
+                const res = await fetch(`${API_BASE}/api/rezerwacje`);
+                if (!res.ok) throw new Error("Nie udało się pobrać rezerwacji");
+                const data = await res.json();
+
+                let hasNew = false;
+                const currentIds = new Set(data.map((r) => r.id));
+
+                if (!isInitial && knownReservationIds.size) {
+                    for (const r of data) {
+                        if (!knownReservationIds.has(r.id)) {
+                            hasNew = true;
+                            break;
+                        }
+                    }
+                }
+
+                knownReservationIds = currentIds;
+                reservations = data;
+                renderReservations();
+
+                if (hasNew && newReservationSound) {
+                    try {
+                        newReservationSound.currentTime = 0;
+                        newReservationSound.play().catch(() => {});
+                    } catch (e) {
+                        console.warn("Nie udało się odtworzyć dźwięku:", e);
+                    }
+                }
+            } catch (err) {
+                console.error("Błąd pobierania rezerwacji:", err);
+            }
+        }
+
+        async function updateReservationStatus(id, status) {
+            try {
+                const res = await fetch(`${API_BASE}/api/rezerwacje/${encodeURIComponent(id)}/status`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status })
+                });
+                if (!res.ok) throw new Error("Nie udało się zaktualizować statusu");
+                await fetchReservations(true);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function deleteReservation(id) {
+            if (!confirm("Na pewno usunąć tę rezerwację?")) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/rezerwacje/${encodeURIComponent(id)}`, {
+                    method: "DELETE"
+                });
+                if (!res.ok) throw new Error("Nie udało się usunąć rezerwacji");
+                await fetchReservations(true);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // --- MENU ---
+
+        const menuForm = document.getElementById("menu-form");
+        const menuItemsContainer = document.getElementById("menu-items");
+
+        async function fetchMenu() {
+            try {
+                const res = await fetch(`${API_BASE}/api/menu`);
+                if (!res.ok) throw new Error("Nie udało się pobrać menu");
+                const data = await res.json();
+                renderMenu(data);
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function renderMenu(items) {
+            menuItemsContainer.innerHTML = "";
+            if (!items.length) {
+                menuItemsContainer.innerHTML =
+                    '<div style="font-size:0.85rem;color:var(--text-muted);padding:4px 6px;">Brak pozycji w menu.</div>';
+                return;
+            }
+
+            items.forEach((item) => {
+                const wrap = document.createElement("div");
+                wrap.className = "menu-item";
+
+                const img = document.createElement("img");
+                img.src = item.imageUrl || "https://via.placeholder.com/80x80?text=IMG";
+                img.alt = item.name || "Zdjęcie";
+
+                const middle = document.createElement("div");
+                const title = document.createElement("div");
+                title.className = "menu-item-title";
+                title.textContent = item.name;
+
+                const desc = document.createElement("div");
+                desc.className = "menu-item-desc";
+                desc.textContent = item.description || "";
+
+                const price = document.createElement("div");
+                price.className = "menu-item-price";
+                price.textContent = item.price ? `${item.price} PLN` : "";
+
+                middle.appendChild(title);
+                middle.appendChild(desc);
+                middle.appendChild(price);
+
+                const right = document.createElement("div");
+                right.style.display = "flex";
+                right.style.alignItems = "center";
+
+                const del = document.createElement("button");
+                del.className = "btn-chip btn-delete";
+                del.innerHTML = '<i class="fas fa-trash"></i>';
+                del.addEventListener("click", () => deleteMenuItem(item.id));
+
+                right.appendChild(del);
+
+                wrap.appendChild(img);
+                wrap.appendChild(middle);
+                wrap.appendChild(right);
+
+                menuItemsContainer.appendChild(wrap);
+            });
+        }
+
+        async function deleteMenuItem(id) {
+            if (!confirm("Na pewno usunąć tę pozycję z menu?")) return;
+            try {
+                const res = await fetch(`${API_BASE}/api/menu/${encodeURIComponent(id)}`, {
+                    method: "DELETE"
+                });
+                if (!res.ok) throw new Error("Nie udało się usunąć pozycji");
+                await fetchMenu();
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        menuForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+
+            const name = document.getElementById("menu-name").value.trim();
+            const description = document.getElementById("menu-description").value.trim();
+            const price = document.getElementById("menu-price").value.trim();
+            const imageInput = document.getElementById("menu-image");
+
+            const formData = new FormData();
+            formData.append("name", name);
+            formData.append("description", description);
+            formData.append("price", price);
+            if (imageInput.files[0]) {
+                formData.append("image", imageInput.files[0]);
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/api/menu`, {
+                    method: "POST",
+                    body: formData
+                });
+                if (!res.ok) throw new Error("Nie udało się dodać pozycji");
+                menuForm.reset();
+                await fetchMenu();
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        // --- HAPPY HOUR ---
+
+        const happyTextInput = document.getElementById("happy-text");
+        const happyLinkInput = document.getElementById("happy-link");
+        const happyEnabledInput = document.getElementById("happy-enabled");
+        const happyForm = document.getElementById("happy-form");
+        const happyPreviewText = document.getElementById("happy-preview-text");
+
+        function updateHappyPreview() {
+            const txt = happyTextInput.value.trim() || "Tutaj pojawi się treść paska Happy Hour";
+            happyPreviewText.textContent = txt;
+        }
+
+        happyTextInput.addEventListener("input", updateHappyPreview);
+
+        async function fetchHappySettings() {
+            try {
+                const res = await fetch(`${API_BASE}/api/settings/happy-hour`);
+                if (!res.ok) throw new Error("Brak ustawień Happy Hour (jeszcze).");
+                const data = await res.json();
+                happyTextInput.value = data.text || "";
+                happyLinkInput.value = data.link || "";
+                happyEnabledInput.checked = !!data.enabled;
+                updateHappyPreview();
+            } catch (err) {
+                console.warn(err.message);
+            }
+        }
+
+        happyForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const payload = {
+                text: happyTextInput.value.trim(),
+                link: happyLinkInput.value.trim(),
+                enabled: happyEnabledInput.checked
+            };
+
+            try {
+                const res = await fetch(`${API_BASE}/api/settings/happy-hour`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error("Nie udało się zapisać ustawień.");
+                updateHappyPreview();
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        // --- START: inicjalne pobrania i interwały ---
+
+        if (localStorage.getItem("msbAdminUnlocked") === "true") {
+            fetchReservations(true);
+            fetchMenu();
+            fetchHappySettings();
+        }
+
+        // Odświeżanie rezerwacji co 4 sekundy (prawie „real-time” + dźwięk)
+        setInterval(() => {
+            if (localStorage.getItem("msbAdminUnlocked") === "true") {
+                fetchReservations();
+            }
+        }, 4000);
+    </script>
+</body>
+</html>

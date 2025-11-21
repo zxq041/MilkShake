@@ -15,12 +15,12 @@
     <style>
         /* === PALETA KOLORÓW - EATMI ORANGE === */
         :root {
-            --primary-color: #FF6A00;      /* Eatmi Orange */
-            --secondary-color: #FF9100;    /* Jaśniejszy pomarańcz */
-            --accent-color: #FFE0B2;       /* Ciepły kremowy akcent */
-            --background-light: #FFF6EC;   /* Delikatne, ciepłe tło */
-            --background-dark: #22100A;    /* Głęboki brąz pod ciemne sekcje */
-            --text-color-dark: #2B1300;    /* Ciemny, ciepły brąz */
+            --primary-color: #FF6A00;
+            --secondary-color: #FF9100;
+            --accent-color: #FFE0B2;
+            --background-light: #FFF6EC;
+            --background-dark: #22100A;
+            --text-color-dark: #2B1300;
             --text-color-light: #FFFFFF;
             --gradient-bg: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             --shadow: 0px 10px 30px rgba(0, 0, 0, 0.12);
@@ -250,11 +250,15 @@
 
         /* --- FILTRY KATEGORII --- */
         .menu-filters {
-            margin: 40px 0 30px;
+            margin: 40px 0 20px;
             display: flex;
             flex-wrap: wrap;
             gap: 12px;
             justify-content: center;
+        }
+
+        .menu-subfilters {
+            margin-top: 10px;
         }
 
         .filter-btn {
@@ -304,8 +308,9 @@
             box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
-                        box-shadow 0.3s ease;
+            transition:
+                transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                box-shadow 0.3s ease;
         }
 
         .menu-item-card:hover {
@@ -385,6 +390,13 @@
         .menu-item-extra {
             font-size: 0.8rem;
             opacity: 0.7;
+        }
+
+        .menu-empty {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.95rem;
+            color: rgba(43, 19, 0, 0.7);
         }
 
         /* --- STOPKA --- */
@@ -497,6 +509,11 @@
                 font-size: 1.4rem;
             }
 
+            /* PRZYCISK NIE NACHODZI NA MOBILE – chowamy go, zostaje link "Rezerwacja" w menu */
+            .nav-btn {
+                display: none;
+            }
+
             .hamburger {
                 display: block;
                 z-index: 1001;
@@ -548,7 +565,6 @@
 <header class="header" id="header">
     <div class="container">
         <nav class="navbar">
-            <!-- Załóżmy, że index.html to strona główna -->
             <a href="index.html#home" class="logo">
                 <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="Logo MilkShake Bar">
                 <span>MilkShake Bar</span>
@@ -579,7 +595,7 @@
                     <h1>Nasze <span class="highlight">menu</span></h1>
                     <p>Od kremowych milkshake’ów, przez autorskie desery, aż po soczyste burgery. 
                         Wybierz swój nastrój i znajdź idealną pozycję na dziś.</p>
-                    <p class="menu-section-subtitle">Przeglądaj kategorie lub zobacz wszystko naraz.</p>
+                    <p class="menu-section-subtitle">Shakes – koktajl na bazie lodów włoskich 300 ml.</p>
                 </div>
                 <div class="menu-hero-visual">
                     <img src="https://i.imgur.com/kfE4j7j.jpeg" alt="Milkshake dekorowany słodkościami">
@@ -597,37 +613,50 @@
         <div class="container">
             <h2 class="section-title">Wybierz kategorię</h2>
 
-            <div class="menu-filters">
+            <!-- GŁÓWNE KATEGORIE -->
+            <div class="menu-filters" id="mainFilters">
                 <button class="filter-btn active" data-filter="all">
                     <i class="fas fa-layer-group"></i> Wszystko
                 </button>
-                <button class="filter-btn" data-filter="deser">
-                    <i class="fas fa-ice-cream"></i> Desery
+                <button class="filter-btn" data-filter="sniadania">
+                    <i class="fas fa-egg"></i> Śniadania
                 </button>
                 <button class="filter-btn" data-filter="shake">
                     <i class="fas fa-blender"></i> Shakes
                 </button>
+                <button class="filter-btn" data-filter="deser">
+                    <i class="fas fa-ice-cream"></i> Desery
+                </button>
+                <button class="filter-btn" data-filter="texmex">
+                    <i class="fas fa-pepper-hot"></i> Tex Mex
+                </button>
+                <button class="filter-btn" data-filter="kanapki">
+                    <i class="fas fa-bread-slice"></i> Kanapki
+                </button>
                 <button class="filter-btn" data-filter="burger">
                     <i class="fas fa-burger"></i> Burgery
                 </button>
-                <button class="filter-btn" data-filter="snack">
-                    <i class="fas fa-bowl-food"></i> Przekąski
+                <button class="filter-btn" data-filter="kawa-herbata">
+                    <i class="fas fa-mug-hot"></i> Kawa i herbata
                 </button>
-                <button class="filter-btn" data-filter="drink">
-                    <i class="fas fa-mug-hot"></i> Napoje
+                <button class="filter-btn" data-filter="napoje-soki">
+                    <i class="fas fa-glass-water"></i> Napoje i świeże soki
                 </button>
             </div>
 
+            <!-- PODKATEGORIE (dynamicznie zmieniane w JS) -->
+            <div class="menu-filters menu-subfilters" id="subFilters"></div>
+
             <div class="menu-grid" id="menuGrid">
                 <!-- SHAKES -->
-                <article class="menu-item-card" data-category="shake">
+                <article class="menu-item-card" data-category="shake" data-subcategory="best-of">
                     <div class="menu-item-image">
                         <img src="https://i.imgur.com/kfE4j7j.jpeg" alt="MilkShake Oreo Deluxe">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
                             <h3 class="menu-item-title">MilkShake #1 Oreo Deluxe</h3>
-                            <span class="menu-item-category-pill">Shake</span>
+                            <span class="menu-item-category-pill">Shake • Best of</span>
                         </div>
                         <p class="menu-item-desc">
                             Gofr amerykański z ciasteczkami Oreo, białą czekoladą, kremowym mascarpone,
@@ -640,14 +669,14 @@
                     </div>
                 </article>
 
-                <article class="menu-item-card" data-category="shake">
+                <article class="menu-item-card" data-category="shake" data-subcategory="klasyka">
                     <div class="menu-item-image">
                         <img src="https://i.imgur.com/dsMynF5.png" alt="MilkShake Czekoladowy Crunch">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
                             <h3 class="menu-item-title">MilkShake #2 Choco Crunch</h3>
-                            <span class="menu-item-category-pill">Shake</span>
+                            <span class="menu-item-category-pill">Shake • Klasyka</span>
                         </div>
                         <p class="menu-item-desc">
                             Czekoladowy milkshake na bazie lodów rzemieślniczych, z chrupiącymi kulkami
@@ -660,14 +689,14 @@
                     </div>
                 </article>
 
-                <article class="menu-item-card" data-category="shake">
+                <article class="menu-item-card" data-category="shake" data-subcategory="owocowe">
                     <div class="menu-item-image">
                         <img src="https://i.imgur.com/7Bx2X7g.png" alt="MilkShake Truskawkowy Cloud">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
                             <h3 class="menu-item-title">MilkShake #3 Strawberry Cloud</h3>
-                            <span class="menu-item-category-pill">Shake</span>
+                            <span class="menu-item-category-pill">Shake • Owocowe</span>
                         </div>
                         <p class="menu-item-desc">
                             Aksamitny shake truskawkowy ze świeżymi owocami, bitą śmietaną,
@@ -681,14 +710,14 @@
                 </article>
 
                 <!-- DESERY -->
-                <article class="menu-item-card" data-category="deser">
+                <article class="menu-item-card" data-category="deser" data-subcategory="desery-lodowe">
                     <div class="menu-item-image">
                         <img src="https://i.imgur.com/frz51UG.png" alt="Deser Brownie Lava">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
                             <h3 class="menu-item-title">Brownie Lava</h3>
-                            <span class="menu-item-category-pill">Deser</span>
+                            <span class="menu-item-category-pill">Deser • Desery lodowe</span>
                         </div>
                         <p class="menu-item-desc">
                             Ciepłe brownie z płynnym wnętrzem, podawane z lodami waniliowymi,
@@ -701,14 +730,14 @@
                     </div>
                 </article>
 
-                <article class="menu-item-card" data-category="deser">
+                <article class="menu-item-card" data-category="deser" data-subcategory="pancakes">
                     <div class="menu-item-image">
                         <img src="https://i.imgur.com/GRvCj6z.png" alt="Deser Pancake Berry Stack">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
                             <h3 class="menu-item-title">Pancake Berry Stack</h3>
-                            <span class="menu-item-category-pill">Deser</span>
+                            <span class="menu-item-category-pill">Deser • Pancakes</span>
                         </div>
                         <p class="menu-item-desc">
                             Stos puszystych pancake’ów z sosem klonowym, świeżymi owocami leśnymi
@@ -721,14 +750,14 @@
                     </div>
                 </article>
 
-                <article class="menu-item-card" data-category="deser">
+                <article class="menu-item-card" data-category="deser" data-subcategory="gofry-amerykanskie">
                     <div class="menu-item-image">
                         <img src="https://i.imgur.com/XIdoN0y.png" alt="Deser Classic Waffle">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
                             <h3 class="menu-item-title">Classic Waffle</h3>
-                            <span class="menu-item-category-pill">Deser</span>
+                            <span class="menu-item-category-pill">Deser • Gofry amerykańskie</span>
                         </div>
                         <p class="menu-item-desc">
                             Klasyczny gofr amerykański z cukrem pudrem, bitą śmietaną 
@@ -802,15 +831,15 @@
                     </div>
                 </article>
 
-                <!-- PRZEKĄSKI -->
-                <article class="menu-item-card" data-category="snack">
+                <!-- PRZEKĄSKI / STARTERY (pod Kanapki) -->
+                <article class="menu-item-card" data-category="kanapki" data-subcategory="startery">
                     <div class="menu-item-image">
                         <img src="https://i.imgur.com/8fDvYFs.jpeg" alt="Frytki belgijskie">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
                             <h3 class="menu-item-title">Frytki belgijskie</h3>
-                            <span class="menu-item-category-pill">Przekąska</span>
+                            <span class="menu-item-category-pill">Starter</span>
                         </div>
                         <p class="menu-item-desc">
                             Złociste, podwójnie smażone frytki belgijskie z solą morską 
@@ -823,14 +852,14 @@
                     </div>
                 </article>
 
-                <article class="menu-item-card" data-category="snack">
+                <article class="menu-item-card" data-category="kanapki" data-subcategory="startery">
                     <div class="menu-item-image">
                         <img src="https://i.imgur.com/0dBBh9X.jpeg" alt="Krążki cebulowe">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
                             <h3 class="menu-item-title">Krążki cebulowe</h3>
-                            <span class="menu-item-category-pill">Przekąska</span>
+                            <span class="menu-item-category-pill">Starter</span>
                         </div>
                         <p class="menu-item-desc">
                             Chrupiące krążki cebulowe w złocistej panierce, 
@@ -843,15 +872,15 @@
                     </div>
                 </article>
 
-                <!-- NAPOJE -->
-                <article class="menu-item-card" data-category="drink">
+                <!-- NAPOJE & KAWA -->
+                <article class="menu-item-card" data-category="napoje-soki">
                     <div class="menu-item-image">
                         <img src="https://i.imgur.com/t0n9H2p.jpeg" alt="Lemoniada cytrusowa">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
                             <h3 class="menu-item-title">Lemoniada cytrusowa</h3>
-                            <span class="menu-item-category-pill">Napój</span>
+                            <span class="menu-item-category-pill">Napój & świeży sok</span>
                         </div>
                         <p class="menu-item-desc">
                             Orzeźwiająca domowa lemoniada na bazie cytryn, limonki i pomarańczy,
@@ -864,14 +893,14 @@
                     </div>
                 </article>
 
-                <article class="menu-item-card" data-category="drink">
+                <article class="menu-item-card" data-category="kawa-herbata">
                     <div class="menu-item-image">
                         <img src="https://i.imgur.com/5UpwP8R.jpeg" alt="Cold brew coffee">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
                             <h3 class="menu-item-title">Cold Brew Coffee</h3>
-                            <span class="menu-item-category-pill">Napój</span>
+                            <span class="menu-item-category-pill">Kawa</span>
                         </div>
                         <p class="menu-item-desc">
                             Powoli macerowana na zimno kawa speciality, podawana z kostkami lodu
@@ -884,6 +913,10 @@
                     </div>
                 </article>
             </div>
+
+            <p class="menu-empty" id="menuEmpty" style="display:none;">
+                Brak pozycji w tej kategorii (wkrótce dodamy więcej!).
+            </p>
         </div>
     </section>
 </main>
@@ -948,9 +981,122 @@
         if (hamburger) hamburger.addEventListener('click', toggleMenu);
         navLinks.forEach(link => link.addEventListener('click', closeMenu));
 
-        // filtrowanie pozycji
-        const filterButtons = document.querySelectorAll('.filter-btn');
+        // FILTROWANIE
+        const filterButtons = document.querySelectorAll('.filter-btn[data-filter]');
+        const subFiltersContainer = document.getElementById('subFilters');
         const menuItems = document.querySelectorAll('.menu-item-card');
+        const emptyState = document.getElementById('menuEmpty');
+
+        let currentMainFilter = 'all';
+        let currentSubFilter = 'all';
+
+        const subFiltersConfig = {
+            shake: [
+                { value: 'klasyka', label: 'Klasyka' },
+                { value: 'best-of', label: 'Best of' },
+                { value: 'owocowe', label: 'Owocowe' },
+                { value: 'proteinowe', label: 'Proteinowe' },
+                { value: 'vip', label: 'Tylko dla VIPów' }
+            ],
+            deser: [
+                { value: 'lody-wloskie', label: 'Lody włoskie' },
+                { value: 'desery-lodowe', label: 'Desery lodowe' },
+                { value: 'gofry-amerykanskie', label: 'Gofry amerykańskie' },
+                { value: 'pancakes', label: 'Pancakes' }
+            ],
+            texmex: [
+                { value: 'fajita', label: 'Fajita' },
+                { value: 'quesadillas', label: 'Quesadillas' },
+                { value: 'pasta', label: 'Pasta' },
+                { value: 'churros', label: 'Churros' },
+                { value: 'salaty', label: 'Sałaty' }
+            ],
+            kanapki: [
+                { value: 'kanapki', label: 'Kanapki' },
+                { value: 'startery', label: 'Startery' },
+                { value: 'dania-glowne', label: 'Dania główne' },
+                { value: 'zestawy', label: 'Zestawy' }
+            ],
+            sniadania: [
+                { value: 'sniadania', label: 'Śniadania' },
+                { value: 'kanapki-sniadaniowe', label: 'Kanapki' },
+                { value: 'chiquita', label: 'Chiquita' },
+                { value: 'sniadania-keto', label: 'Śniadania keto' },
+                { value: 'zestaw-sniadaniowy', label: 'Zestaw' }
+            ]
+        };
+
+        function createSubFilters(mainCategory) {
+            subFiltersContainer.innerHTML = '';
+            currentSubFilter = 'all';
+
+            const config = subFiltersConfig[mainCategory];
+            if (!config) return;
+
+            // przycisk "Wszystkie"
+            const allBtn = document.createElement('button');
+            allBtn.className = 'filter-btn subfilter-btn active';
+            allBtn.dataset.subfilter = 'all';
+            allBtn.textContent = 'Wszystkie';
+            subFiltersContainer.appendChild(allBtn);
+
+            allBtn.addEventListener('click', () => {
+                document
+                    .querySelectorAll('.subfilter-btn')
+                    .forEach(b => b.classList.remove('active'));
+                allBtn.classList.add('active');
+                currentSubFilter = 'all';
+                applyFilters();
+            });
+
+            // pozostałe podkategorie
+            config.forEach(sub => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn subfilter-btn';
+                btn.dataset.subfilter = sub.value;
+                btn.textContent = sub.label;
+                subFiltersContainer.appendChild(btn);
+
+                btn.addEventListener('click', () => {
+                    document
+                        .querySelectorAll('.subfilter-btn')
+                        .forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentSubFilter = sub.value;
+                    applyFilters();
+                });
+            });
+        }
+
+        function applyFilters() {
+            let visibleCount = 0;
+
+            menuItems.forEach(item => {
+                const category = item.dataset.category;
+                const subcategory = item.dataset.subcategory || 'all';
+
+                let show = true;
+
+                if (currentMainFilter !== 'all' && category !== currentMainFilter) {
+                    show = false;
+                }
+
+                if (show && currentSubFilter !== 'all' && subcategory !== currentSubFilter) {
+                    show = false;
+                }
+
+                if (show) {
+                    item.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            if (emptyState) {
+                emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+            }
+        }
 
         filterButtons.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -959,16 +1105,22 @@
                 filterButtons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
 
-                menuItems.forEach(item => {
-                    const category = item.dataset.category;
-                    if (filter === 'all' || filter === category) {
-                        item.style.display = 'flex';
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
+                currentMainFilter = filter || 'all';
+
+                // generowanie podkategorii dla danej kategorii
+                if (currentMainFilter === 'all') {
+                    subFiltersContainer.innerHTML = '';
+                    currentSubFilter = 'all';
+                } else {
+                    createSubFilters(currentMainFilter);
+                }
+
+                applyFilters();
             });
         });
+
+        // start: wszystko widoczne, bez podkategorii
+        applyFilters();
     });
 </script>
 

@@ -2,7 +2,7 @@ const CACHE = "msb-admin-v1";
 const ASSETS = [
   "/admin.html",
   "/manifest.json",
-  "/mnt/data/3db59495-772a-4e81-b1ce-ac7e1504f75a.png"
+  "/favicon.png"
 ];
 
 self.addEventListener("install", e=>{

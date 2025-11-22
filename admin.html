@@ -2,8 +2,17 @@
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>MilkShake Bar — Panel Administratora</title>
+
+  <!-- PWA meta -->
+  <meta name="theme-color" content="#FF6A00">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="MilkShake Admin">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/icon-192.png">
+  <link rel="apple-touch-icon" href="/icon-192.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,7 +20,6 @@
 
   <style>
     :root{
-      /* EATMI ORANGE THEME */
       --primary: #FF6A00;
       --primary-2: #FF9100;
       --bg: #FFF6EC;
@@ -49,7 +57,7 @@
       min-height:100vh;
     }
 
-    /* Sidebar */
+    /* Sidebar desktop */
     .sidebar{
       background: linear-gradient(180deg, #fff 0%, #fff7ef 100%);
       border-right: var(--border);
@@ -101,10 +109,6 @@
     }
     .nav a.active .dot{ background:#fff; box-shadow:none; }
 
-    .quick{
-      margin-top:14px; padding-top:14px; border-top: var(--border);
-      display:grid; gap:8px;
-    }
     .btn{
       border:none; outline:none; cursor:pointer;
       padding:11px 12px; border-radius:12px; font-weight:800;
@@ -118,32 +122,23 @@
       color:#fff; border:none;
       box-shadow: 0 10px 25px rgba(255,106,0,.35);
     }
-    .btn.ghost{ background: transparent; box-shadow:none; }
 
     /* Main */
-    .main{padding:18px 22px 26px;}
+    .main{padding:14px 16px 90px;} /* na dole miejsce na mobile nav */
 
     /* Topbar */
     .topbar{
-      display:flex; align-items:center; gap:12px;
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
       background: #fff; border: var(--border);
       padding:12px; border-radius:14px; box-shadow: var(--shadow);
       position:sticky; top:12px; z-index:5;
-    }
-    .topbar .search{
-      flex:1; display:flex; align-items:center; gap:10px;
-      background: var(--panel-2); border: var(--border);
-      padding:10px 12px; border-radius:12px;
-    }
-    .topbar input{
-      width:100%; background:transparent; border:none; outline:none; color:var(--text);
-      font-size:15px; font-weight:700;
     }
     .chip{
       padding:8px 10px; border-radius:999px; font-weight:800; font-size:12px;
       background: rgba(255,106,0,.12); color:#B94D00; border:1px solid rgba(255,106,0,.3);
       white-space:nowrap;
     }
+    .muted{ color:var(--muted); font-weight:700; }
 
     /* Grid cards */
     .grid{
@@ -162,6 +157,18 @@
     .section{margin-top:12px; display:none;}
     .section.active{display:block;}
 
+    /* Latest list */
+    .latest{display:grid; gap:8px; max-height:320px; overflow:auto;}
+    .latest .item{
+      background: var(--panel-2);
+      border: var(--border);
+      padding:10px 12px;
+      border-radius:12px;
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      font-weight:800;
+    }
+    .latest .item small{color:var(--muted); font-weight:700;}
+
     /* Table */
     .table-wrap{
       margin-top:12px; overflow:auto;
@@ -170,7 +177,7 @@
       background: var(--panel);
       box-shadow: var(--shadow);
     }
-    table{width:100%; border-collapse:collapse; min-width:880px;}
+    table{width:100%; border-collapse:collapse; min-width:820px;}
     thead th{
       text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.8px;
       color:#B94D00; font-weight:900; padding:12px 14px; background: var(--panel-2);
@@ -185,50 +192,19 @@
       padding:6px 8px; border-radius:999px; font-size:12px; font-weight:900;
       display:inline-flex; align-items:center; gap:6px;
     }
-    .status.new{
-      background:rgba(255,145,0,.12);
-      color:#A65C00; border:1px solid rgba(255,145,0,.35);
-    }
-    .status.accepted{
-      background:rgba(25,179,107,.12);
-      color:#0E7A47; border:1px solid rgba(25,179,107,.35);
-    }
-    .status.cancelled{
-      background:rgba(228,77,77,.12);
-      color:#A02A2A; border:1px solid rgba(228,77,77,.35);
-    }
+    .status.new{ background:rgba(255,145,0,.12); color:#A65C00; border:1px solid rgba(255,145,0,.35); }
+    .status.accepted{ background:rgba(25,179,107,.12); color:#0E7A47; border:1px solid rgba(25,179,107,.35); }
+    .status.cancelled{ background:rgba(228,77,77,.12); color:#A02A2A; border:1px solid rgba(228,77,77,.35); }
 
     .actions{display:flex; gap:8px; flex-wrap:wrap;}
     .actions .btn{padding:7px 10px; font-size:12px; border-radius:10px;}
-    .btn.good{
-      background: rgba(25,179,107,.12);
-      border:1px solid rgba(25,179,107,.35);
-      color:#0E7A47;
-    }
-    .btn.bad{
-      background: rgba(228,77,77,.12);
-      border:1px solid rgba(228,77,77,.35);
-      color:#A02A2A;
-    }
-
-    .muted{ color:var(--muted); font-weight:700; }
-
-    /* Latest list */
-    .latest{display:grid; gap:8px; max-height:260px; overflow:auto;}
-    .latest .item{
-      background: var(--panel-2);
-      border: var(--border);
-      padding:10px 12px;
-      border-radius:12px;
-      display:flex; justify-content:space-between; align-items:center; gap:10px;
-      font-weight:800;
-    }
-    .latest .item small{color:var(--muted); font-weight:700;}
+    .btn.good{ background: rgba(25,179,107,.12); border:1px solid rgba(25,179,107,.35); color:#0E7A47; }
+    .btn.bad{ background: rgba(228,77,77,.12); border:1px solid rgba(228,77,77,.35); color:#A02A2A; }
 
     /* Products */
     .product-grid{
       margin-top:12px;
-      display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:10px;
+      display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:10px;
     }
     .product{
       background: var(--panel); border: var(--border); border-radius:14px; overflow:hidden;
@@ -240,33 +216,84 @@
     /* Happy */
     .hh-row{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
     .hh-row input{
-      flex:1; min-width:240px;
+      flex:1; min-width:220px;
       background: var(--panel-2); border: var(--border); color:var(--text);
       padding:12px; border-radius:12px; font-weight:800; outline:none;
     }
 
     /* Toast */
     .toast{
-      position:fixed; right:16px; bottom:16px; z-index:999;
+      position:fixed; left:50%; transform:translateX(-50%);
+      bottom:78px; z-index:999;
       background: #fff; border: var(--border);
-      color:var(--text); padding:12px 14px; border-radius:12px;
+      color:var(--text); padding:12px 14px; border-radius:999px;
       font-weight:900; box-shadow: var(--shadow);
-      opacity:0; transform: translateY(8px); transition:.2s;
+      opacity:0; transition:.2s;
+      max-width:92vw; text-align:center;
     }
-    .toast.show{ opacity:1; transform: translateY(0); }
+    .toast.show{ opacity:1; }
+
+    /* Mobile bottom nav */
+    .mobile-nav{
+      display:none;
+      position:fixed; bottom:0; left:0; right:0; z-index:20;
+      background:#fff; border-top:var(--border);
+      padding:8px 8px env(safe-area-inset-bottom);
+      display:flex; justify-content:space-around; gap:6px;
+      box-shadow: 0 -10px 30px rgba(43,19,0,.08);
+    }
+    .mobile-nav button{
+      flex:1; border:none; background:transparent; padding:10px 6px;
+      border-radius:12px; font-weight:900; color:var(--text);
+      display:flex; flex-direction:column; align-items:center; gap:4px; font-size:12px;
+    }
+    .mobile-nav button.active{
+      background: var(--panel-2);
+      color: var(--primary);
+    }
 
     @media (max-width: 1100px){
       .grid{ grid-template-columns: repeat(2,1fr); }
+    }
+    @media (max-width: 900px){
       .layout{ grid-template-columns: 1fr; }
-      .sidebar{ position:relative; height:auto; }
+      .sidebar{ display:none; }
+      .mobile-nav{ display:flex; }
+      table{ min-width:700px; }
     }
   </style>
 </head>
 <body>
 
+<!-- LOCKSCREEN -->
+<div id="lock" style="
+  position:fixed; inset:0; background:rgba(255,246,236,.96);
+  display:flex; align-items:center; justify-content:center; z-index:9999;
+  padding:20px;">
+  <div style="
+    width:min(420px,100%); background:#fff; border:var(--border); box-shadow:var(--shadow);
+    border-radius:20px; padding:18px; text-align:center;">
+    <div style="font-weight:900;font-size:20px;color:var(--primary)">Panel Administratora</div>
+    <div class="muted" style="margin-top:6px">Wpisz kod dostępu</div>
+
+    <input id="lockInput" type="password" inputmode="numeric" pattern="[0-9]*"
+      placeholder="••••" maxlength="4"
+      style="
+        margin-top:12px; width:100%; font-size:22px; text-align:center; letter-spacing:8px;
+        padding:14px; border-radius:12px; border:var(--border); outline:none; font-weight:900;" />
+
+    <button id="unlockBtn" class="btn primary" style="width:100%; margin-top:12px">
+      Otwórz panel
+    </button>
+    <div id="lockErr" style="margin-top:8px;color:#e44d4d;font-weight:800;display:none">
+      Zły kod
+    </div>
+  </div>
+</div>
+
 <div class="layout">
 
-  <!-- SIDEBAR -->
+  <!-- SIDEBAR DESKTOP -->
   <aside class="sidebar">
     <div class="logo">
       <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="logo">
@@ -282,25 +309,18 @@
       <a data-tab="products"><span class="dot"></span> Produkty</a>
       <a data-tab="happy"><span class="dot"></span> Happy Hour</a>
     </nav>
-
-    <div class="quick">
-      <button id="addDummy" class="btn primary">Dodaj testową rezerwację</button>
-      <button id="clearData" class="btn">Wyczyść lokalne dane</button>
-      <button id="exportBtn" class="btn ghost">Eksport JSON</button>
-    </div>
   </aside>
 
   <!-- MAIN -->
   <main class="main">
 
-    <!-- TOPBAR -->
+    <!-- TOPBAR (bez wyszukiwarki) -->
     <div class="topbar">
-      <div class="search">
-        🔎
-        <input id="searchRes" placeholder="Szukaj rezerwacji po imieniu / tel / strefie…" />
-      </div>
       <div class="chip" id="topHappyPreview">Brak Happy Hour</div>
       <div class="muted" style="font-size:12px">Aktualizacja: <span id="lastUpdate">-</span></div>
+      <div style="margin-left:auto">
+        <button id="newResBtn" class="btn primary">Dodaj rezerwację ręcznie</button>
+      </div>
     </div>
 
     <!-- STATS -->
@@ -326,10 +346,7 @@
     <!-- DASHBOARD -->
     <section id="tab-dashboard" class="section active">
       <div class="card" style="margin-top:12px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <h3 style="margin:0">Ostatnie rezerwacje</h3>
-          <button id="newResBtn" class="btn primary">Dodaj ręcznie</button>
-        </div>
+        <h3 style="margin:0">Ostatnie rezerwacje</h3>
         <div id="latestList" class="latest" style="margin-top:10px"></div>
       </div>
     </section>
@@ -374,7 +391,15 @@
   </main>
 </div>
 
-<!-- row templates -->
+<!-- MOBILE NAV -->
+<div class="mobile-nav" id="mobileNav">
+  <button data-tab="dashboard" class="active">🏠<span>Home</span></button>
+  <button data-tab="reservations">📅<span>Rezerwacje</span></button>
+  <button data-tab="products">🍨<span>Produkty</span></button>
+  <button data-tab="happy">⚡<span>Happy Hour</span></button>
+</div>
+
+<!-- templates -->
 <template id="res-row-tpl">
   <tr>
     <td class="r-name"></td>
@@ -407,10 +432,35 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
   // ---------------------------
+  // ACCESS CODE LOCK
+  // ---------------------------
+  const ACCESS_CODE = "0051";
+  const lock = document.getElementById("lock");
+  const lockInput = document.getElementById("lockInput");
+  const unlockBtn = document.getElementById("unlockBtn");
+  const lockErr = document.getElementById("lockErr");
+
+  function tryUnlock(){
+    if(lockInput.value === ACCESS_CODE){
+      lock.style.display = "none";
+      lockErr.style.display="none";
+      // odblokuj audio i pozwolenia po wejściu
+      unlockAudioOnce();
+      requestNotifPermission();
+    } else {
+      lockErr.style.display="block";
+      lockInput.value="";
+      lockInput.focus();
+    }
+  }
+  unlockBtn.addEventListener("click", tryUnlock);
+  lockInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") tryUnlock(); });
+
+  // ---------------------------
   // Local cache
   // ---------------------------
   const DB = {
-    key: 'msb_admin_v2',
+    key: 'msb_admin_v3',
     read(){
       try{return JSON.parse(localStorage.getItem(this.key))||{reservations:[],products:[],happy:''}}
       catch(e){return {reservations:[],products:[],happy:''}}
@@ -423,7 +473,7 @@
   let state = DB.read();
 
   // ---------------------------
-  // Ding-ding sound — 5 seconds tail
+  // Ding-ding sound — 5s tail
   // ---------------------------
   let audioCtx = null;
   let audioUnlocked = false;
@@ -434,7 +484,7 @@
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
       audioCtx.resume().then(() => {
         audioUnlocked = true;
-        playDing(true);
+        playDing(true); // pre-warm
       }).catch(()=>{});
     } catch (e) {}
   }
@@ -446,9 +496,7 @@
   function playDing(silentTest=false){
     try{
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === "suspended") {
-        audioCtx.resume().catch(()=>{});
-      }
+      if (audioCtx.state === "suspended") audioCtx.resume().catch(()=>{});
 
       const now = audioCtx.currentTime;
       const TAIL = 5.0;
@@ -474,7 +522,35 @@
       tone(1180, now + 0.22, TAIL, 0.65);
       tone(1760, now + 0.02, TAIL, 0.20);
       tone(2360, now + 0.24, TAIL, 0.22);
+    }catch(e){}
+  }
 
+  // ---------------------------
+  // Notifications (PWA/mobile)
+  // ---------------------------
+  function requestNotifPermission(){
+    if(!("Notification" in window)) return;
+    if(Notification.permission === "default"){
+      Notification.requestPermission().catch(()=>{});
+    }
+  }
+
+  function showReservationNotification(resv){
+    if(!("Notification" in window)) return;
+    if(Notification.permission !== "granted") return;
+
+    const title = "Nowa rezerwacja";
+    const body = `${resv.name} • ${resv.date} ${resv.time} • ${resv.guests} os.`;
+
+    try{
+      new Notification(title, {
+        body,
+        icon: "/icon-192.png",
+        badge: "/icon-192.png",
+        tag: "msb-new-reservation",
+        renotify: true,
+        vibrate: [200,100,200]
+      });
     }catch(e){}
   }
 
@@ -488,14 +564,19 @@
     setTimeout(()=>t.classList.remove("show"), 2200);
   }
 
+  function setActiveTab(tab){
+    qsa(".nav a").forEach(x=>x.classList.toggle("active", x.dataset.tab===tab));
+    qsa(".section").forEach(s=>s.classList.toggle("active", s.id==="tab-"+tab));
+
+    // mobile nav highlight
+    qsa("#mobileNav button").forEach(b=>b.classList.toggle("active", b.dataset.tab===tab));
+  }
+
   qsa(".nav a").forEach(a=>{
-    a.addEventListener("click", ()=>{
-      qsa(".nav a").forEach(x=>x.classList.remove("active"));
-      a.classList.add("active");
-      const tab = a.dataset.tab;
-      qsa(".section").forEach(s=>s.classList.remove("active"));
-      qs("#tab-"+tab).classList.add("active");
-    });
+    a.addEventListener("click", ()=>setActiveTab(a.dataset.tab));
+  });
+  qsa("#mobileNav button").forEach(b=>{
+    b.addEventListener("click", ()=>setActiveTab(b.dataset.tab));
   });
 
   function refreshStats(){
@@ -548,19 +629,15 @@
     return `<span class="status ${s}">${labels[s]||s}</span>`;
   }
 
-  function renderReservations(filter=""){
+  function renderReservations(){
     const tbody = qs("#resTable tbody");
     tbody.innerHTML = "";
-    const f = filter.trim().toLowerCase();
 
     const rows = state.reservations
       .slice()
       .sort((a,b)=> new Date(a.date+"T"+a.time) - new Date(b.date+"T"+b.time));
 
     rows.forEach((r, idx)=>{
-      const hay = (r.name+" "+r.phone+" "+(r.room||"")).toLowerCase();
-      if(f && !hay.includes(f)) return;
-
       const tr = document.importNode(qs("#res-row-tpl").content,true).children[0];
       tr.querySelector(".r-name").textContent = r.name;
       tr.querySelector(".r-phone").textContent = r.phone;
@@ -598,7 +675,7 @@
 
   function refreshAll(){
     DB.write(state);
-    renderReservations(qs("#searchRes").value||"");
+    renderReservations();
     renderLatest();
     renderProducts();
     refreshStats();
@@ -631,6 +708,7 @@
     refreshAll();
   }
 
+  // Products
   function renderProducts(){
     const grid = qs("#productGrid");
     if(!grid) return;
@@ -669,6 +747,7 @@
     refreshAll();
   }
 
+  // Happy hour
   function saveHappy(){
     state.happy = qs("#hhText").value.trim();
     toast("Zapisano Happy Hour (lokalnie)");
@@ -681,36 +760,12 @@
     refreshAll();
   }
 
-  qs("#addDummy").onclick = ()=>{
-    const tmp = {
-      name:"Test User", phone:"+48 700 000 001",
-      date:new Date().toISOString().split("T")[0],
-      time:"19:00", guests:2, room:"Sala główna",
-      status:"new", created:new Date().toISOString()
-    };
-    state.reservations.unshift(tmp);
-    toast("Dodano testową (lokalnie)");
-    refreshAll();
-  };
-  qs("#clearData").onclick = ()=>{
-    if(!confirm("Na pewno wyczyścić lokalny cache?")) return;
-    state = {reservations:[],products:[],happy:""};
-    toast("Cache wyczyszczony");
-    refreshAll();
-  };
-  qs("#exportBtn").onclick = ()=>{
-    const a=document.createElement("a");
-    a.href="data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(state,null,2));
-    a.download="msb-data.json";
-    document.body.appendChild(a); a.click(); a.remove();
-  };
-
   qs("#newResBtn").onclick = addReservationInteractive;
   qs("#addProductBtn")?.addEventListener("click", addProductInteractive);
   qs("#saveHH")?.addEventListener("click", saveHappy);
   qs("#clearHH")?.addEventListener("click", clearHappy);
-  qs("#searchRes").addEventListener("input", ()=>renderReservations(qs("#searchRes").value));
 
+  // Init
   (function init(){
     state = DB.read();
     state.reservations ||= [];
@@ -721,6 +776,9 @@
     refreshAll();
   })();
 
+  // ---------------------------
+  // Server sync + realtime
+  // ---------------------------
   async function loadFromServer(){
     try{
       const res = await fetch("/api/data", {cache:"no-store"});
@@ -749,8 +807,12 @@
   socket.on("reservation:new", (resv)=>{
     state.reservations.unshift(resv);
     refreshAll();
+
     playDing();
     toast("Nowa rezerwacja: " + resv.name);
+
+    if(navigator.vibrate) navigator.vibrate([200,100,200]);
+    showReservationNotification(resv);
   });
 
   socket.on("state:update", (db)=>{
@@ -763,6 +825,13 @@
   });
 
   loadFromServer();
+
+  // ---------------------------
+  // PWA SW register (jeśli plik istnieje)
+  // ---------------------------
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("/sw.js").catch(()=>{});
+  }
 </script>
 </body>
 </html>

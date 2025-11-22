@@ -20,7 +20,7 @@
             --secondary-color: #FF9100;    /* Jaśniejszy pomarańcz */
             --accent-color: #FFE0B2;       /* Ciepły kremowy akcent */
             --background-light: #FFF6EC;   /* Delikatne, ciepłe tło */
-            --background-dark: #22100A;    /* Głęboki brąz pod ciemne sekcje */
+            --background-dark: #22110A;    /* Głęboki brąz pod ciemne sekcje */
             --text-color-dark: #2B1300;    /* Ciemny, ciepły brąz */
             --text-color-light: #FFFFFF;
             --gradient-bg: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
@@ -418,87 +418,6 @@
             filter: grayscale(20%) sepia(30%) hue-rotate(-15deg) saturate(140%);
         }
 
-        /* --- SEKCJA REZERWACJI --- */
-        #reservation {
-            background-color: #fff;
-        }
-        .reservation-wrapper {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 60px;
-            align-items: center;
-            background-color: #fff;
-            padding: 60px;
-            border-radius: 30px;
-            box-shadow: var(--shadow);
-        }
-        .seating-map-container {
-            text-align: center;
-        }
-        .seating-map-container h3 {
-            margin-bottom: 20px;
-            font-size: 1.8rem;
-        }
-        #seating-map {
-            width: 100%;
-            height: auto;
-            border: 2px solid #eee;
-            border-radius: var(--border-radius);
-        }
-        #seating-map .table {
-            transition: all 0.3s ease;
-        }
-        #seating-map .table.available {
-            fill: #FFD7B2;
-            cursor: pointer;
-        }
-        #seating-map .table.available:hover {
-            fill: #FFB26B;
-            transform: scale(1.05);
-        }
-        #seating-map .table.selected {
-            fill: var(--primary-color);
-            stroke: var(--secondary-color);
-            stroke-width: 5px;
-        }
-        #seating-map .table.unavailable {
-            fill: #e0e0e0;
-            cursor: not-allowed;
-        }
-        #seating-map text {
-            font-family: 'Poppins', sans-serif;
-            font-weight: 600;
-            fill: var(--text-color-dark);
-            pointer-events: none;
-        }
-
-        .form-container h3 {
-            margin-bottom: 20px;
-            font-size: 1.8rem;
-        }
-        .form-group {
-            position: relative;
-            margin-bottom: 25px;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 18px 25px;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            font-family: 'Poppins', sans-serif;
-            font-size: 1.1rem;
-            transition: border-color 0.3s ease;
-        }
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
-        .form-group input#selected-seat-display {
-            background-color: #fdf4ea;
-            font-weight: 600;
-            color: var(--secondary-color);
-        }
-
         /* --- STOPKA --- */
         .footer {
             background-color: var(--background-dark);
@@ -631,7 +550,7 @@
         /* --- Responsywność --- */
         @media(max-width: 1024px) {
             .reservation-wrapper {
-                grid-template-columns: 1fr;
+                padding: 30px;
             }
         }
         
@@ -671,11 +590,118 @@
                 grid-template-columns: 1fr;
                 padding: 40px;
             }
-            .reservation-wrapper { padding: 30px; }
             .gallery-grid { columns: 2 200px; }
             .footer-grid { text-align: center; }
             .footer-col h4::after { left: 50%; transform: translateX(-50%); }
             .footer-socials { justify-content: center; }
+        }
+
+        /* === DODATKOWE STYLE DLA ZMIENIONEJ SEKCJI REZERWACJI === */
+        .reservation-wrapper.grid-two-col {
+          display: grid;
+          grid-template-columns: 1fr 420px;
+          gap: 32px;
+          align-items: start;
+          background-color: #fff;
+          padding: 32px;
+          border-radius: 20px;
+          box-shadow: var(--shadow);
+          max-width: 1100px;
+          margin: 0 auto;
+        }
+
+        .form-container h3, .reservation-summary h3 {
+          margin-bottom: 18px;
+          font-size: 1.6rem;
+        }
+
+        .booking-form .form-row {
+          display: flex;
+          gap: 18px;
+          margin-bottom: 14px;
+        }
+
+        .booking-form .form-group {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .booking-form .form-group.fullwidth { flex: 1 1 100%; }
+
+        .booking-form label {
+          font-size: 0.95rem;
+          margin-bottom: 8px;
+          color: var(--text-color-dark);
+          font-weight: 600;
+        }
+
+        .booking-form input[type="text"],
+        .booking-form input[type="tel"],
+        .booking-form input[type="date"],
+        .booking-form input[type="time"],
+        .booking-form select {
+          width: 100%;
+          padding: 12px 14px;
+          border: 2px solid #e9e6e3;
+          border-radius: 12px;
+          font-family: 'Poppins', sans-serif;
+          font-size: 1rem;
+          transition: border-color 0.2s ease, box-shadow 0.15s ease;
+        }
+        .booking-form input:focus, .booking-form select:focus {
+          outline: none;
+          border-color: var(--primary-color);
+          box-shadow: 0 6px 18px rgba(255,106,0,0.08);
+        }
+
+        .room-options {
+          display: flex;
+          gap: 12px;
+          flex-wrap: wrap;
+        }
+        .room-label {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 12px;
+          border-radius: 999px;
+          background: rgba(0,0,0,0.03);
+          font-size: 0.95rem;
+        }
+        .room-label input { transform: translateY(1px); }
+
+        .booking-submit {
+          width: 100%;
+          padding: 14px 18px;
+          border-radius: 12px;
+          font-weight: 700;
+        }
+
+        .reservation-summary {
+          background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.95));
+          padding: 20px;
+          border-radius: 14px;
+          color: var(--text-color-dark);
+        }
+
+        .summary-card {
+          background: #fff;
+          padding: 14px;
+          border-radius: 12px;
+          box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+          margin-bottom: 16px;
+        }
+        .summary-card p { margin: 8px 0; font-size: 0.98rem; }
+
+        .map-mini { margin-top: 6px; }
+
+        @media (max-width: 992px) {
+          .reservation-wrapper.grid-two-col {
+            grid-template-columns: 1fr;
+            padding: 22px;
+          }
+          .booking-form .form-row { flex-direction: column; }
         }
     </style>
 </head>
@@ -789,73 +815,93 @@
             </div>
         </section>
         
+        <!-- === SEKCJA REZERWACJI (POPRAWIONA: WYRÓWNAJ, DWA KOLUMNOWE LAYOUT) === -->
         <section id="reservation" class="section">
-            <div class="container">
-                <h2 class="section-title fade-in">Zarezerwuj swoje idealne miejsce</h2>
-                <div class="reservation-wrapper fade-in">
-                    <div class="seating-map-container">
-                        <h3>1. Wybierz miejsce na mapie</h3>
-                        <svg id="seating-map" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
-                            <rect width="500" height="500" fill="#FFF6EC"/>
-                            <rect x="20" y="20" width="460" height="20" fill="#FFE0B2" />
-                            <text x="250" y="38" text-anchor="middle" font-size="14">OKNO</text>
-                            <rect x="440" y="80" width="40" height="340" fill="#FFE0B2" />
-                            <text x="460" y="250" text-anchor="middle" font-size="14" transform="rotate(90, 460, 250)">BAR</text>
-                            
-                            <g class="table available" id="table-1" data-name="Stolik 1 (2 os.)">
-                                <circle cx="80" cy="80" r="30"/>
-                                <text x="80" y="85" text-anchor="middle" font-size="14">S1</text>
-                            </g>
-                            <g class="table available" id="table-2" data-name="Stolik 2 (2 os.)">
-                                <circle cx="180" cy="80" r="30"/>
-                                <text x="180" y="85" text-anchor="middle" font-size="14">S2</text>
-                            </g>
-                            <g class="table available" id="booth-1" data-name="Loża 1 (4 os.)">
-                                <rect x="50" y="200" width="100" height="60" rx="10"/>
-                                <text x="100" y="235" text-anchor="middle" font-size="14">L1</text>
-                            </g>
-                             <g class="table available" id="booth-2" data-name="Loża 2 (4 os.)">
-                                <rect x="50" y="300" width="100" height="60" rx="10"/>
-                                <text x="100" y="335" text-anchor="middle" font-size="14">L2</text>
-                            </g>
-                             <g class="table available" id="table-4" data-name="Stolik 4 (3 os.)">
-                                <rect x="220" y="250" width="80" height="80" rx="10"/>
-                                <text x="260" y="290" text-anchor="middle" font-size="14">S4</text>
-                            </g>
+          <div class="container">
+            <h2 class="section-title fade-in">Zarezerwuj swoje idealne miejsce</h2>
 
-                            <g class="table unavailable" id="table-3">
-                                <circle cx="280" cy="80" r="30"/>
-                                <text x="280" y="85" text-anchor="middle" font-size="14">S3</text>
-                            </g>
-                        </svg>
+            <div class="reservation-wrapper grid-two-col fade-in" id="reservation-wrapper">
+              <!-- LEWA KOLUMNA: FORMULARZ -->
+              <div class="form-container">
+                <h3>Wypełnij swoje dane</h3>
+
+                <form id="bookingForm" class="booking-form" aria-label="Formularz rezerwacji">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="name">Imię i nazwisko</label>
+                      <input id="name" name="name" type="text" placeholder="Jan Kowalski" required>
                     </div>
-                    <div class="form-container">
-                        <h3>2. Wypełnij swoje dane</h3>
-                        <form id="bookingForm">
-                            <div class="form-group">
-                                <input type="text" id="selected-seat-display" name="selected_seat_display" placeholder="Najpierw wybierz miejsce na mapie" readonly>
-                                <input type="hidden" id="selected-seat-value" name="selected_seat_value" required>
-                            </div>
-                             <div class="form-group">
-                                <input type="text" id="name" name="name" required placeholder="Imię i nazwisko">
-                            </div>
-                            <div class="form-group">
-                                <input type="tel" id="phone" name="phone" required placeholder="Numer telefonu">
-                            </div>
-                            <div class="form-group">
-                                <input type="date" id="date" name="date" required>
-                            </div>
-                            <div class="form-group">
-                                <input type="time" id="time" name="time" required min="12:00" max="22:00">
-                            </div>
-                            <div class="form-group">
-                                <input type="number" id="guests" name="guests" min="1" max="10" required placeholder="Liczba gości">
-                            </div>
-                            <button type="submit" class="btn btn-primary" style="width: 100%;">Zarezerwuj teraz <i class="fas fa-check"></i></button>
-                        </form>
+                    <div class="form-group">
+                      <label for="phone">Telefon</label>
+                      <input id="phone" name="phone" type="tel" placeholder="+48 700 000 000" required>
                     </div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="date">Data</label>
+                      <input id="date" name="date" type="date" required>
+                    </div>
+                    <div class="form-group">
+                      <label for="time">Godzina</label>
+                      <input id="time" name="time" type="time" required>
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="guests">Ilość osób</label>
+                      <select id="guests" name="guests" required>
+                        <option value="1">1 osoba</option>
+                        <option value="2" selected>2 osoby</option>
+                        <option value="3">3 osoby</option>
+                        <option value="4">4 osoby</option>
+                        <option value="5">5+ osób</option>
+                      </select>
+                    </div>
+
+                    <div class="form-group">
+                      <label>Strefa</label>
+                      <div class="room-options" role="radiogroup" aria-label="Wybierz strefę">
+                        <label class="room-label"><input type="radio" name="room" value="Sala frontowa" required> Sala frontowa</label>
+                        <label class="room-label"><input type="radio" name="room" value="Sala główna"> Sala główna</label>
+                        <label class="room-label"><input type="radio" name="room" value="Kącik dla dzieci"> Kącik dla dzieci</label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group fullwidth">
+                      <label for="notes">Dodatkowe informacje (opcjonalnie)</label>
+                      <input id="notes" name="notes" type="text" placeholder="np. urodziny, alergie">
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <button type="submit" class="btn btn-primary booking-submit">Zarezerwuj teraz <i class="fas fa-check"></i></button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- PRAWA KOLUMNA: PODSUMOWANIE / WIZUAL -->
+              <aside class="reservation-summary" aria-live="polite">
+                <h3>Twoja rezerwacja</h3>
+                <div class="summary-card">
+                  <p><strong>Imię:</strong> <span id="summary-name">—</span></p>
+                  <p><strong>Telefon:</strong> <span id="summary-phone">—</span></p>
+                  <p><strong>Data:</strong> <span id="summary-date">—</span></p>
+                  <p><strong>Godzina:</strong> <span id="summary-time">—</span></p>
+                  <p><strong>Ilość osób:</strong> <span id="summary-guests">—</span></p>
+                  <p><strong>Strefa:</strong> <span id="summary-room">—</span></p>
+                  <p><strong>Uwagi:</strong> <span id="summary-notes">—</span></p>
                 </div>
+
+                <div class="map-mini">
+                  <img src="https://i.imgur.com/xppt7GP.jpeg" alt="Wnętrze MilkShake Bar" style="width:100%; border-radius:12px;">
+                </div>
+              </aside>
             </div>
+          </div>
         </section>
 
         <section id="location" class="section">
@@ -963,7 +1009,7 @@
             const toggleMenu = () => navMenu.classList.toggle('active');
             const closeMenu = () => navMenu.classList.remove('active');
 
-            hamburger.addEventListener('click', toggleMenu);
+            if (hamburger) hamburger.addEventListener('click', toggleMenu);
             navLinks.forEach(link => link.addEventListener('click', closeMenu));
 
             // --- Animacje "fade-in" przy przewijaniu ---
@@ -977,7 +1023,7 @@
             }, { threshold: 0.1 });
 
             document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-            
+                        
             // --- Aktywne linki w nawigacji ---
             const sections = document.querySelectorAll('section[id]');
             const updateActiveLink = () => {
@@ -999,23 +1045,6 @@
             window.addEventListener('scroll', updateActiveLink);
             updateActiveLink();
 
-            // --- INTERAKTYWNA MAPA MIEJSC ---
-            const tables = document.querySelectorAll('#seating-map .table.available');
-            const selectedSeatDisplay = document.getElementById('selected-seat-display');
-            const selectedSeatValue = document.getElementById('selected-seat-value');
-
-            tables.forEach(table => {
-                table.addEventListener('click', () => {
-                    tables.forEach(t => t.classList.remove('selected'));
-                    
-                    table.classList.add('selected');
-                    
-                    const seatName = table.dataset.name;
-                    selectedSeatDisplay.value = `Wybrano: ${seatName}`;
-                    selectedSeatValue.value = table.id;
-                });
-            });
-
             // --- TOAST (POWIADOMIENIE) ---
             const reservationToast = document.getElementById('reservation-toast');
             const reservationToastText = document.getElementById('reservation-toast-text');
@@ -1032,60 +1061,109 @@
                 }, 4000);
             }
 
-            // --- OBSŁUGA FORMULARZA REZERWACJI ---
-            const bookingForm = document.getElementById('bookingForm');
-            bookingForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                if (!selectedSeatValue.value) {
-                    showReservationToast('Najpierw wybierz miejsce na mapie 📍', true);
-                    return;
+            // --- OBSŁUGA FORMULARZA REZERWACJI (NOWA WERSJA Z PODSUMOWANIEM) ---
+            (function(){
+                const bookingForm = document.getElementById('bookingForm');
+                if (!bookingForm) return;
+
+                const inputs = {
+                  name: document.getElementById('name'),
+                  phone: document.getElementById('phone'),
+                  date: document.getElementById('date'),
+                  time: document.getElementById('time'),
+                  guests: document.getElementById('guests'),
+                  notes: document.getElementById('notes'),
+                  roomRadios: bookingForm.querySelectorAll('input[name="room"]')
+                };
+
+                const summary = {
+                  name: document.getElementById('summary-name'),
+                  phone: document.getElementById('summary-phone'),
+                  date: document.getElementById('summary-date'),
+                  time: document.getElementById('summary-time'),
+                  guests: document.getElementById('summary-guests'),
+                  room: document.getElementById('summary-room'),
+                  notes: document.getElementById('summary-notes')
+                };
+
+                // Ustaw minimalną datę (dzisiaj)
+                if (inputs.date) {
+                  const today = new Date();
+                  const iso = today.toISOString().split('T')[0];
+                  inputs.date.setAttribute('min', iso);
                 }
 
-                const submitButton = bookingForm.querySelector('button[type="submit"]');
-                const originalButtonText = submitButton.innerHTML;
-                submitButton.disabled = true;
-                submitButton.innerHTML = 'Wysyłanie...';
+                function updateSummary() {
+                  summary.name.textContent  = inputs.name.value || '—';
+                  summary.phone.textContent = inputs.phone.value || '—';
+                  summary.date.textContent  = inputs.date.value || '—';
+                  summary.time.textContent  = inputs.time.value || '—';
+                  summary.guests.textContent = inputs.guests.value || '—';
+                  summary.notes.textContent = inputs.notes.value || '—';
+                  const selectedRoom = Array.from(inputs.roomRadios).find(r => r.checked);
+                  summary.room.textContent = selectedRoom ? selectedRoom.value : '—';
+                }
 
-                const formData = new FormData(bookingForm);
-                const data = Object.fromEntries(formData.entries());
+                // Podpinamy event listenery
+                const attach = (el) => {
+                  if (!el) return;
+                  if (NodeList.prototype.isPrototypeOf(el)) {
+                    el.forEach(item => {
+                      item.addEventListener('change', updateSummary);
+                      item.addEventListener('input', updateSummary);
+                    });
+                  } else {
+                    el.addEventListener('input', updateSummary);
+                    el.addEventListener('change', updateSummary);
+                  }
+                };
 
-                try {
+                Object.values(inputs).forEach(attach);
+
+                updateSummary();
+
+                bookingForm.addEventListener('submit', async (e) => {
+                  e.preventDefault();
+                  const submitButton = bookingForm.querySelector('button[type="submit"]');
+                  const originalText = submitButton.innerHTML;
+                  submitButton.disabled = true;
+                  submitButton.innerHTML = 'Wysyłanie...';
+
+                  const formData = new FormData(bookingForm);
+                  const data = Object.fromEntries(formData.entries());
+
+                  try {
+                    // Wyślij do API (jeśli masz). Jeśli nie, endpoint zwróci błąd.
                     const response = await fetch('/api/rezerwacje', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(data),
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(data)
                     });
 
                     if (!response.ok) {
-                        const errorData = await response.json().catch(() => ({}));
-                        throw new Error(errorData.message || 'Wystąpił błąd serwera.');
+                      const errorData = await response.json().catch(() => ({}));
+                      throw new Error(errorData.message || 'Wystąpił błąd serwera.');
                     }
-                    
-                    const seatName = (data.selected_seat_display || '').replace('Wybrano: ', '');
-                    showReservationToast(`Dziękujemy! Rezerwacja na "${seatName}" została złożona. 🧡`);
-                    
-                    bookingForm.reset();
-                    selectedSeatDisplay.value = "Najpierw wybierz miejsce na mapie";
-                    selectedSeatValue.value = "";
-                    tables.forEach(t => t.classList.remove('selected'));
 
-                } catch (error) {
-                    console.error('Błąd podczas wysyłania rezerwacji:', error);
-                    showReservationToast(`Błąd: ${error.message}`, true);
-                } finally {
+                    if (typeof showReservationToast === 'function') {
+                      showReservationToast('Dziękujemy! Twoja rezerwacja została złożona. 🧡');
+                    }
+
+                    bookingForm.reset();
+                    updateSummary();
+
+                  } catch (err) {
+                    console.error(err);
+                    if (typeof showReservationToast === 'function') {
+                      showReservationToast(`Błąd: ${err.message}`, true);
+                    }
+                  } finally {
                     submitButton.disabled = false;
-                    submitButton.innerHTML = originalButtonText;
-                }
-            });
-            
-            // --- Ustawienie minimalnej daty w formularzu ---
-            const dateInput = document.getElementById('date');
-            if(dateInput) {
-                dateInput.setAttribute('min', new Date().toISOString().split('T')[0]);
-            }
+                    submitButton.innerHTML = originalText;
+                  }
+                });
+            })();
+
         });
     </script>
 </body>

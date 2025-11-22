@@ -416,7 +416,7 @@
   let state = DB.read();
 
   // ---------------------------
-  // Ding-ding sound (WebAudio) — autoplay-safe
+  // Ding-ding sound (WebAudio) — faster, louder, longer
   // ---------------------------
   let audioCtx = null;
   let audioUnlocked = false;
@@ -425,10 +425,12 @@
     if (audioUnlocked) return;
     try {
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+
       audioCtx.resume().then(() => {
         audioUnlocked = true;
         console.log("[ADMIN] audio unlocked");
-        // cichy ping testowy, żeby przeglądarka "złapała" audio
+
+        // pre-warm: króciutki niesłyszalny ping
         playDing(true);
       }).catch(()=>{});
     } catch(e){}
@@ -441,21 +443,18 @@
 
   function playDing(silentTest=false){
     try{
-      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-
-      if (audioCtx.state === "suspended") {
-        audioCtx.resume().catch(()=>{});
-      }
+      if (!audioCtx) return;
+      if (!audioUnlocked) return;
 
       const now = audioCtx.currentTime;
 
-      function tone(freq, start, dur, gain=0.25){
+      function tone(freq, start, dur, peakGain){
         const o = audioCtx.createOscillator();
         const g = audioCtx.createGain();
         o.type = "sine";
         o.frequency.value = freq;
 
-        const realGain = silentTest ? 0.0001 : gain;
+        const realGain = silentTest ? 0.0001 : peakGain;
 
         g.gain.setValueAtTime(0.0001, start);
         g.gain.exponentialRampToValueAtTime(realGain, start + 0.02);
@@ -466,12 +465,14 @@
         o.stop(start + dur);
       }
 
-      // „ding ding”
-      tone(950,  now,       0.18);
-      tone(1200, now + 0.2, 0.18);
+      // GŁOŚNIEJ + DŁUŻEJ + bardziej "dzwonkowo"
+      tone(880,  now,        0.35, 0.55);
+      tone(1180, now + 0.22, 0.35, 0.60);
+      tone(1760, now + 0.02, 0.45, 0.18);
+      tone(2360, now + 0.24, 0.45, 0.20);
 
     }catch(e){
-      console.warn("[ADMIN] audio blocked:", e);
+      console.warn("[ADMIN] audio error:", e);
     }
   }
 
@@ -767,7 +768,7 @@
     state.reservations.unshift(resv);
     refreshAll();
 
-    // DZWONEK + toast
+    // dzwonek natychmiast + dłuższy/głośniejszy
     playDing();
     toast("Nowa rezerwacja: " + resv.name);
   });

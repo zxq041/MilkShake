@@ -25,16 +25,17 @@
       --warn: #f1c40f;
 
       --radius: 16px;
-      --radius-sm: 12px;
       --shadow: 0 18px 60px rgba(0,0,0,.5);
       --border: 1px solid rgba(255,255,255,.06);
     }
 
     *{box-sizing:border-box}
     body{
-      margin:0; font-family:Inter,system-ui,Arial; background: radial-gradient(1200px 600px at 10% -10%, #1a1330 0%, transparent 60%),
-                radial-gradient(1000px 600px at 110% 0%, #1e2b39 0%, transparent 60%),
-                var(--bg);
+      margin:0; font-family:Inter,system-ui,Arial;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, #1a1330 0%, transparent 60%),
+        radial-gradient(1000px 600px at 110% 0%, #1e2b39 0%, transparent 60%),
+        var(--bg);
       color:var(--text);
     }
 
@@ -67,17 +68,14 @@
     }
     .logo .title small{color:var(--muted); font-weight:600}
 
-    .nav{
-      display:flex; flex-direction:column; gap:6px; margin-top:10px;
-    }
+    .nav{display:flex; flex-direction:column; gap:6px; margin-top:10px;}
     .nav a{
       text-decoration:none; color:var(--text);
       padding:12px 14px; border-radius:12px;
       display:flex; align-items:center; gap:10px;
-      background: transparent; border:1px solid transparent;
+      border:1px solid transparent;
       font-weight:700; letter-spacing:.2px;
-      transition:.15s;
-      cursor:pointer;
+      transition:.15s; cursor:pointer;
     }
     .nav a:hover{
       background: var(--panel);
@@ -114,9 +112,7 @@
     .btn.ghost{ background: transparent; }
 
     /* Main */
-    .main{
-      padding:18px 22px 26px;
-    }
+    .main{padding:18px 22px 26px;}
 
     /* Topbar */
     .topbar{
@@ -150,17 +146,12 @@
       border-radius: var(--radius); padding:14px;
       box-shadow: var(--shadow);
     }
-    .stat{
-      display:flex; flex-direction:column; gap:4px;
-    }
-    .stat .k{ font-size:26px; font-weight:900; }
-    .stat .l{ color:var(--muted); font-weight:700; font-size:13px; }
+    .stat{display:flex; flex-direction:column; gap:4px;}
+    .stat .k{font-size:26px; font-weight:900;}
+    .stat .l{color:var(--muted); font-weight:700; font-size:13px;}
 
-    .section{
-      margin-top:12px;
-      display:none;
-    }
-    .section.active{ display:block; }
+    .section{margin-top:12px; display:none;}
+    .section.active{display:block;}
 
     /* Table */
     .table-wrap{
@@ -170,9 +161,7 @@
       background: var(--panel);
       box-shadow: var(--shadow);
     }
-    table{
-      width:100%; border-collapse:collapse; min-width:880px;
-    }
+    table{width:100%; border-collapse:collapse; min-width:880px;}
     thead th{
       text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.8px;
       color:var(--muted); font-weight:800; padding:12px 14px; background: var(--panel-2);
@@ -187,26 +176,28 @@
       padding:6px 8px; border-radius:999px; font-size:12px; font-weight:900;
       display:inline-flex; align-items:center; gap:6px;
     }
-    .status.new{ background:rgba(241,196,15,.12); color:#f9e390; border:1px solid rgba(241,196,15,.35); }
-    .status.accepted{ background:rgba(46,204,113,.12); color:#a6f3c8; border:1px solid rgba(46,204,113,.35); }
-    .status.cancelled{ background:rgba(255,107,107,.12); color:#ffc5c5; border:1px solid rgba(255,107,107,.35); }
+    .status.new{
+      background:rgba(241,196,15,.12);
+      color:#f9e390; border:1px solid rgba(241,196,15,.35);
+    }
+    .status.accepted{
+      background:rgba(46,204,113,.12);
+      color:#a6f3c8; border:1px solid rgba(46,204,113,.35);
+    }
+    .status.cancelled{
+      background:rgba(255,107,107,.12);
+      color:#ffc5c5; border:1px solid rgba(255,107,107,.35);
+    }
 
-    .actions{
-      display:flex; gap:8px; flex-wrap:wrap;
-    }
-    .actions .btn{
-      padding:7px 10px; font-size:12px; border-radius:10px;
-    }
+    .actions{display:flex; gap:8px; flex-wrap:wrap;}
+    .actions .btn{padding:7px 10px; font-size:12px; border-radius:10px;}
     .btn.good{ background: rgba(46,204,113,.12); border:1px solid rgba(46,204,113,.35); }
     .btn.bad{ background: rgba(255,107,107,.12); border:1px solid rgba(255,107,107,.35); }
 
     .muted{ color:var(--muted); font-weight:600; }
 
     /* Latest list */
-    .latest{
-      display:grid; gap:8px;
-      max-height:260px; overflow:auto;
-    }
+    .latest{display:grid; gap:8px; max-height:260px; overflow:auto;}
     .latest .item{
       background: var(--panel-2);
       border: var(--border);
@@ -215,7 +206,7 @@
       display:flex; justify-content:space-between; align-items:center; gap:10px;
       font-weight:700;
     }
-    .latest .item small{ color:var(--muted); font-weight:700; }
+    .latest .item small{color:var(--muted); font-weight:700;}
 
     /* Products */
     .product-grid{
@@ -399,7 +390,7 @@
 <script src="/socket.io/socket.io.js"></script>
 <script>
   // ---------------------------
-  // Local cache (optional)
+  // Local cache
   // ---------------------------
   const DB = {
     key: 'msb_admin_v2',
@@ -412,11 +403,10 @@
 
   const qs = s=>document.querySelector(s);
   const qsa = s=>document.querySelectorAll(s);
-
   let state = DB.read();
 
   // ---------------------------
-  // Ding-ding sound (WebAudio) — faster, louder, longer
+  // Ding-ding sound — fast, loud, long + autoplay-safe
   // ---------------------------
   let audioCtx = null;
   let audioUnlocked = false;
@@ -425,26 +415,24 @@
     if (audioUnlocked) return;
     try {
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-
       audioCtx.resume().then(() => {
         audioUnlocked = true;
-        console.log("[ADMIN] audio unlocked");
-
-        // pre-warm: króciutki niesłyszalny ping
+        // pre-warm cichy ping
         playDing(true);
       }).catch(()=>{});
-    } catch(e){}
+    } catch (e) {}
   }
 
-  // odblokuj audio na pierwszym geście użytkownika
   ["click","touchstart","keydown"].forEach(evt=>{
     window.addEventListener(evt, unlockAudioOnce, { once:true, passive:true });
   });
 
   function playDing(silentTest=false){
     try{
-      if (!audioCtx) return;
-      if (!audioUnlocked) return;
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume().catch(()=>{});
+      }
 
       const now = audioCtx.currentTime;
 
@@ -465,15 +453,13 @@
         o.stop(start + dur);
       }
 
-      // GŁOŚNIEJ + DŁUŻEJ + bardziej "dzwonkowo"
-      tone(880,  now,        0.35, 0.55);
-      tone(1180, now + 0.22, 0.35, 0.60);
-      tone(1760, now + 0.02, 0.45, 0.18);
-      tone(2360, now + 0.24, 0.45, 0.20);
+      // mocny „ding ding” + harmoniczne
+      tone(880,  now,        0.35, 0.60);
+      tone(1180, now + 0.22, 0.35, 0.65);
+      tone(1760, now + 0.02, 0.45, 0.20);
+      tone(2360, now + 0.24, 0.45, 0.22);
 
-    }catch(e){
-      console.warn("[ADMIN] audio error:", e);
-    }
+    }catch(e){}
   }
 
   // ---------------------------
@@ -486,7 +472,6 @@
     setTimeout(()=>t.classList.remove("show"), 2200);
   }
 
-  // Nav tabs
   qsa(".nav a").forEach(a=>{
     a.addEventListener("click", ()=>{
       qsa(".nav a").forEach(x=>x.classList.remove("active"));
@@ -603,7 +588,6 @@
     refreshStats();
   }
 
-  // Local-only actions
   function updateResStatus(index, status){
     const r = state.reservations[index]; if(!r) return;
     r.status = status; r.updated = new Date().toISOString();
@@ -652,7 +636,6 @@
       grid.appendChild(node);
     });
   }
-
   function addProductInteractive(){
     const title = prompt("Nazwa produktu"); if(!title) return;
     const price = prompt("Cena (PLN)","19");
@@ -661,7 +644,6 @@
     toast("Dodano produkt (lokalnie)");
     refreshAll();
   }
-
   function editProduct(idx){
     const p = state.products[idx];
     const title = prompt("Nazwa produktu", p.title); if(!title) return;
@@ -697,14 +679,12 @@
     toast("Dodano testową (lokalnie)");
     refreshAll();
   };
-
   qs("#clearData").onclick = ()=>{
     if(!confirm("Na pewno wyczyścić lokalny cache?")) return;
     state = {reservations:[],products:[],happy:""};
     toast("Cache wyczyszczony");
     refreshAll();
   };
-
   qs("#exportBtn").onclick = ()=>{
     const a=document.createElement("a");
     a.href="data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(state,null,2));
@@ -716,10 +696,9 @@
   qs("#addProductBtn")?.addEventListener("click", addProductInteractive);
   qs("#saveHH")?.addEventListener("click", saveHappy);
   qs("#clearHH")?.addEventListener("click", clearHappy);
-
   qs("#searchRes").addEventListener("input", ()=>renderReservations(qs("#searchRes").value));
 
-  // Init from cache first
+  // Init from cache
   (function init(){
     state = DB.read();
     state.reservations ||= [];
@@ -744,16 +723,10 @@
       qs("#hhText").value = state.happy;
       qs("#topHappyPreview").textContent = state.happy || "Brak Happy Hour";
       refreshAll();
-      console.log("[ADMIN] loaded from server");
-    }catch(e){
-      console.warn("[ADMIN] server load failed, using cache", e);
-    }
+    }catch(e){}
   }
 
   const socket = io({transports:["websocket"], upgrade:false});
-
-  socket.on("connect", ()=>console.log("[ADMIN] socket connected", socket.id));
-  socket.on("connect_error", (err)=>console.error("[ADMIN] socket error", err));
 
   socket.on("state:init", (db)=>{
     state.reservations = db.reservations || [];
@@ -768,7 +741,7 @@
     state.reservations.unshift(resv);
     refreshAll();
 
-    // dzwonek natychmiast + dłuższy/głośniejszy
+    // DZWONEK
     playDing();
     toast("Nowa rezerwacja: " + resv.name);
   });

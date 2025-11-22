@@ -4,434 +4,755 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>MilkShake Bar — Panel Administratora</title>
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --primary:#FF6A00; --secondary:#FF9100; --bg:#FFF6EC; --dark:#22110A; --text:#2B1300; --card:#fff; --muted:#7a6b64; --glass: rgba(255,255,255,0.88);
-      --radius:14px; --shadow: 0 8px 30px rgba(0,0,0,0.08);
+      --bg: #0b0d12;
+      --panel: #111420;
+      --panel-2: #161a28;
+      --panel-3: #1a2031;
+      --text: #e9ecf5;
+      --muted: #9aa3b2;
+
+      --primary: #ff7a18;
+      --primary-2: #ff9a3c;
+      --good: #2ecc71;
+      --bad: #ff6b6b;
+      --warn: #f1c40f;
+
+      --radius: 16px;
+      --radius-sm: 12px;
+      --shadow: 0 18px 60px rgba(0,0,0,.5);
+      --border: 1px solid rgba(255,255,255,.06);
     }
+
     *{box-sizing:border-box}
-    html,body{height:100%}
     body{
-      margin:0; font-family:'Poppins',sans-serif; background:linear-gradient(180deg,var(--bg) 0%, #fff 40%); color:var(--text);
+      margin:0; font-family:Inter,system-ui,Arial; background: radial-gradient(1200px 600px at 10% -10%, #1a1330 0%, transparent 60%),
+                radial-gradient(1000px 600px at 110% 0%, #1e2b39 0%, transparent 60%),
+                var(--bg);
+      color:var(--text);
     }
 
-    /* Header */
-    .topbar{
-      position:sticky; top:0; z-index:80; backdrop-filter: blur(6px);
-      background: linear-gradient(90deg,var(--primary),var(--secondary)); color:#fff; padding:14px 24px; display:flex; align-items:center; gap:18px; box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    .layout{
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      min-height:100vh;
     }
-    .brand{display:flex; align-items:center; gap:12px; font-weight:800; font-size:1.15rem}
-    .brand img{width:44px; height:44px; border-radius:10px; object-fit:cover; box-shadow:0 6px 18px rgba(0,0,0,0.18)}
-    .top-actions{margin-left:auto; display:flex; gap:10px; align-items:center}
-    .happy-badge{background: rgba(255,255,255,0.12); padding:8px 12px; border-radius:999px; font-weight:600}
-
-    /* Layout */
-    .wrap{display:grid; grid-template-columns: 260px 1fr; gap:24px; padding:28px; max-width:1300px; margin:20px auto}
 
     /* Sidebar */
-    .sidebar{background:var(--card); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow); height:calc(100vh - 140px); overflow:auto}
-    .sidebar .menu{list-style:none; padding:0; margin:0}
-    .sidebar .menu li{margin-bottom:10px}
-    .side-link{display:flex; gap:12px; align-items:center; padding:10px 12px; border-radius:10px; color:var(--text); text-decoration:none; font-weight:600}
-    .side-link.active{background:linear-gradient(90deg,var(--primary),var(--secondary)); color:#fff}
-    .side-link i{width:22px; text-align:center}
+    .sidebar{
+      background: linear-gradient(180deg, #0f1220 0%, #0b0d12 100%);
+      border-right: var(--border);
+      padding:18px;
+      position:sticky; top:0; height:100vh;
+    }
+    .logo{
+      display:flex; align-items:center; gap:12px;
+      padding:10px 10px 18px;
+      border-bottom: var(--border);
+      margin-bottom:12px;
+    }
+    .logo img{
+      width:46px; height:46px; border-radius:12px; object-fit:cover;
+      box-shadow: 0 8px 20px rgba(0,0,0,.5);
+    }
+    .logo .title{
+      font-weight:900; letter-spacing:.3px;
+      display:flex; flex-direction:column;
+    }
+    .logo .title small{color:var(--muted); font-weight:600}
 
-    /* Content area */
-    .content{min-height:60vh}
-    .card{background:var(--card); border-radius:12px; padding:18px; box-shadow:var(--shadow);}
+    .nav{
+      display:flex; flex-direction:column; gap:6px; margin-top:10px;
+    }
+    .nav a{
+      text-decoration:none; color:var(--text);
+      padding:12px 14px; border-radius:12px;
+      display:flex; align-items:center; gap:10px;
+      background: transparent; border:1px solid transparent;
+      font-weight:700; letter-spacing:.2px;
+      transition:.15s;
+      cursor:pointer;
+    }
+    .nav a:hover{
+      background: var(--panel);
+      border-color: rgba(255,255,255,.07);
+      transform: translateX(2px);
+    }
+    .nav a.active{
+      background: linear-gradient(90deg, rgba(255,122,24,.18), rgba(255,154,60,.12));
+      border-color: rgba(255,122,24,.35);
+      box-shadow: inset 0 0 0 1px rgba(255,122,24,.15);
+      color:#fff;
+    }
+    .nav .dot{
+      width:8px; height:8px; border-radius:999px; background:var(--primary);
+      box-shadow:0 0 12px rgba(255,122,24,.9);
+    }
 
-    /* Dashboard grid */
-    .grid{display:grid; gap:18px}
-    .stats{grid-template-columns: repeat(4,1fr);}
-    .chart-row{grid-template-columns: 1fr 420px}
+    .quick{
+      margin-top:14px; padding-top:14px; border-top: var(--border);
+      display:grid; gap:8px;
+    }
+    .btn{
+      border:none; outline:none; cursor:pointer;
+      padding:11px 12px; border-radius:12px; font-weight:800;
+      background: var(--panel-2); color:var(--text);
+      border: var(--border); transition:.15s;
+    }
+    .btn:hover{ transform: translateY(-1px); background: var(--panel-3); }
+    .btn.primary{
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+      color:#111; border:none;
+      box-shadow: 0 10px 25px rgba(255,122,24,.35);
+    }
+    .btn.ghost{ background: transparent; }
 
-    .stat{display:flex; flex-direction:column; gap:6px}
-    .stat .k{font-size:1.6rem; font-weight:800}
-    .stat .l{color:var(--muted); font-weight:600}
+    /* Main */
+    .main{
+      padding:18px 22px 26px;
+    }
 
-    /* Reservations table */
-    table{width:100%; border-collapse:collapse}
-    th,td{padding:12px 10px; text-align:left; border-bottom:1px solid #f1ece8}
-    .actions button{margin-right:8px}
+    /* Topbar */
+    .topbar{
+      display:flex; align-items:center; gap:12px;
+      background: var(--panel); border: var(--border);
+      padding:12px; border-radius:14px; box-shadow: var(--shadow);
+      position:sticky; top:12px; z-index:5;
+    }
+    .topbar .search{
+      flex:1; display:flex; align-items:center; gap:10px;
+      background: var(--panel-2); border: var(--border);
+      padding:10px 12px; border-radius:12px;
+    }
+    .topbar input{
+      width:100%; background:transparent; border:none; outline:none; color:var(--text);
+      font-size:15px; font-weight:600;
+    }
+    .chip{
+      padding:8px 10px; border-radius:999px; font-weight:800; font-size:12px;
+      background: rgba(255,122,24,.12); color:#ffd5b5; border:1px solid rgba(255,122,24,.3);
+      white-space:nowrap;
+    }
 
-    /* Forms */
-    .form-row{display:flex; gap:12px}
-    .form-row .form-group{flex:1; display:flex; flex-direction:column; gap:6px}
-    input,select,textarea{padding:10px 12px; border-radius:10px; border:1px solid #eee; font-size:0.95rem}
-    .muted{color:var(--muted); font-size:0.9rem}
+    /* Grid cards */
+    .grid{
+      display:grid; gap:12px; margin-top:12px;
+      grid-template-columns: repeat(4,1fr);
+    }
+    .card{
+      background: var(--panel); border: var(--border);
+      border-radius: var(--radius); padding:14px;
+      box-shadow: var(--shadow);
+    }
+    .stat{
+      display:flex; flex-direction:column; gap:4px;
+    }
+    .stat .k{ font-size:26px; font-weight:900; }
+    .stat .l{ color:var(--muted); font-weight:700; font-size:13px; }
 
-    /* Products gallery */
-    .product-grid{display:grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); gap:12px}
-    .product{border-radius:10px; overflow:hidden; border:1px solid #f3efeb;}
-    .product img{width:100%; height:140px; object-fit:cover}
-    .product .meta{padding:10px}
+    .section{
+      margin-top:12px;
+      display:none;
+    }
+    .section.active{ display:block; }
 
-    /* Happy hour editor */
-    .hh-bar{padding:10px 14px; border-radius:10px; background:linear-gradient(90deg,var(--primary),var(--secondary)); color:#fff; display:flex; gap:12px; align-items:center}
+    /* Table */
+    .table-wrap{
+      margin-top:12px; overflow:auto;
+      border-radius: var(--radius);
+      border: var(--border);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    table{
+      width:100%; border-collapse:collapse; min-width:880px;
+    }
+    thead th{
+      text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.8px;
+      color:var(--muted); font-weight:800; padding:12px 14px; background: var(--panel-2);
+      position:sticky; top:0;
+    }
+    tbody td{
+      padding:12px 14px; border-top: var(--border); font-weight:600; font-size:14px;
+    }
+    tbody tr:hover{ background: rgba(255,255,255,.03); }
 
-    /* small screens */
-    @media(max-width:900px){.wrap{grid-template-columns:1fr; padding:16px} .sidebar{height:auto} .stats{grid-template-columns: repeat(2,1fr)} .chart-row{grid-template-columns:1fr}}
+    .status{
+      padding:6px 8px; border-radius:999px; font-size:12px; font-weight:900;
+      display:inline-flex; align-items:center; gap:6px;
+    }
+    .status.new{ background:rgba(241,196,15,.12); color:#f9e390; border:1px solid rgba(241,196,15,.35); }
+    .status.accepted{ background:rgba(46,204,113,.12); color:#a6f3c8; border:1px solid rgba(46,204,113,.35); }
+    .status.cancelled{ background:rgba(255,107,107,.12); color:#ffc5c5; border:1px solid rgba(255,107,107,.35); }
+
+    .actions{
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .actions .btn{
+      padding:7px 10px; font-size:12px; border-radius:10px;
+    }
+    .btn.good{ background: rgba(46,204,113,.12); border:1px solid rgba(46,204,113,.35); }
+    .btn.bad{ background: rgba(255,107,107,.12); border:1px solid rgba(255,107,107,.35); }
+
+    .muted{ color:var(--muted); font-weight:600; }
+
+    /* Latest list */
+    .latest{
+      display:grid; gap:8px;
+      max-height:260px; overflow:auto;
+    }
+    .latest .item{
+      background: var(--panel-2);
+      border: var(--border);
+      padding:10px 12px;
+      border-radius:12px;
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      font-weight:700;
+    }
+    .latest .item small{ color:var(--muted); font-weight:700; }
+
+    /* Products */
+    .product-grid{
+      margin-top:12px;
+      display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:10px;
+    }
+    .product{
+      background: var(--panel); border: var(--border); border-radius:14px; overflow:hidden;
+    }
+    .product img{ width:100%; height:140px; object-fit:cover; }
+    .product .meta{ padding:10px 12px; display:grid; gap:6px; }
+
+    /* Happy */
+    .hh-row{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+    .hh-row input{
+      flex:1; min-width:240px;
+      background: var(--panel-2); border: var(--border); color:var(--text);
+      padding:12px; border-radius:12px; font-weight:700; outline:none;
+    }
+
+    /* Toast */
+    .toast{
+      position:fixed; right:16px; bottom:16px; z-index:999;
+      background: var(--panel-2);
+      border: var(--border);
+      color:var(--text); padding:12px 14px; border-radius:12px;
+      font-weight:800; box-shadow: var(--shadow);
+      opacity:0; transform: translateY(8px); transition:.2s;
+    }
+    .toast.show{ opacity:1; transform: translateY(0); }
+
+    @media (max-width: 1100px){
+      .grid{ grid-template-columns: repeat(2,1fr); }
+      .layout{ grid-template-columns: 1fr; }
+      .sidebar{ position:relative; height:auto; }
+    }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div class="brand"><img src="https://i.imgur.com/Twr2Rms.jpeg" alt="logo"><span>MilkShake Bar — Panel Admin</span></div>
-    <div class="top-actions">
-      <div class="happy-badge" id="topHappyPreview">Brak informacji Happy Hour</div>
-      <button class="btn" id="exportBtn" title="Eksport danych" style="background:#fff;padding:8px 10px;border-radius:10px;font-weight:700">Eksport JSON</button>
-    </div>
-  </div>
 
-  <div class="wrap">
-    <aside class="sidebar card">
-      <ul class="menu">
-        <li><a href="#home" class="side-link active" data-tab="home"><i class="fas fa-home"></i> Strona główna</a></li>
-        <li><a href="#reservations" class="side-link" data-tab="reservations"><i class="fas fa-calendar-check"></i> Rezerwacje</a></li>
-        <li><a href="#products" class="side-link" data-tab="products"><i class="fas fa-ice-cream"></i> Produkty</a></li>
-        <li><a href="#happy" class="side-link" data-tab="happy"><i class="fas fa-bolt"></i> Happy Hour</a></li>
-      </ul>
+<div class="layout">
 
-      <hr style="margin:16px 0;border:none;border-top:1px solid #faf2ee">
-      <div class="muted">Szybkie akcje</div>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
-        <button id="addDummy" class="btn" style="padding:10px;border-radius:10px;background:var(--primary);color:#fff;font-weight:700">Dodaj testową rezerwację</button>
-        <button id="clearData" class="btn" style="padding:10px;border-radius:10px;background:#eee;color:var(--text);font-weight:700">Wyczyść lokalne dane</button>
-      </div>
-    </aside>
-
-    <main class="content">
-      <!-- HOME -->
-      <section id="tab-home" class="tab card">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <h2>Panel główny</h2>
-          <div class="muted">Ostatnia aktualizacja: <span id="lastUpdate">-</span></div>
-        </div>
-
-        <div class="grid stats" id="dashboardStats" style="grid-template-columns:repeat(3,1fr);gap:18px">
-          <div class="card stat">
-            <div class="k" id="stat-total">0</div>
-            <div class="l">Wszystkie rezerwacje</div>
-          </div>
-          <div class="card stat">
-            <div class="k" id="stat-today">0</div>
-            <div class="l">Dziś</div>
-          </div>
-          <div class="card stat">
-            <div class="k" id="stat-upcoming">0</div>
-            <div class="l">Nadchodzące</div>
-          </div>
-        </div>
-
-        <div class="grid chart-row" style="margin-top:18px">
-          <div class="card">
-            <h3>Wykres rezerwacji (ostatnie 7 dni)</h3>
-            <canvas id="chart" height="140" style="width:100%"></canvas>
-          </div>
-          <div class="card">
-            <h3>Ostatnie rezerwacje</h3>
-            <div id="latestList" style="max-height:220px;overflow:auto"></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- RESERVATIONS -->
-      <section id="tab-reservations" class="tab card" style="display:none">
-        <h2>Rezerwacje</h2>
-        <div style="display:flex;gap:12px;margin-top:12px;margin-bottom:12px">
-          <input type="text" id="searchRes" placeholder="Szukaj po imieniu, telefonie..." style="flex:1;padding:10px;border-radius:10px;border:1px solid #eee">
-          <button id="newResBtn" class="btn" style="background:var(--primary);color:#fff;border-radius:10px;padding:10px 14px;font-weight:700">Dodaj ręcznie</button>
-        </div>
-
-        <div class="card" style="overflow:auto">
-          <table id="resTable">
-            <thead>
-              <tr><th>Imię</th><th>Tel</th><th>Data</th><th>Godz.</th><th>Osób</th><th>Strefa</th><th>Akcje</th></tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- PRODUCTS -->
-      <section id="tab-products" class="tab card" style="display:none">
-        <h2>Produkty</h2>
-        <div style="display:flex;gap:12px;margin-top:12px;margin-bottom:12px">
-          <button id="addProductBtn" class="btn" style="background:var(--primary);color:#fff;border-radius:10px;padding:10px 14px;font-weight:700">Dodaj produkt</button>
-          <div class="muted">Produkty są przechowywane lokalnie (preview dla strony)</div>
-        </div>
-        <div class="product-grid" id="productGrid"></div>
-      </section>
-
-      <!-- HAPPY HOUR -->
-      <section id="tab-happy" class="tab card" style="display:none">
-        <h2>Happy Hour</h2>
-        <p class="muted">Edytuj wiadomość, która pojawi się na pasku strony głównej (topbar)</p>
-        <div style="margin-top:12px;display:grid;gap:12px">
-          <input type="text" id="hhText" placeholder="np. Happy Hour 17:00-19:00 - 20% na wszystkie milkshake'i" />
-          <div style="display:flex;gap:8px">
-            <button id="saveHH" class="btn" style="background:var(--primary);color:#fff;border-radius:10px;padding:10px 12px;font-weight:700">Zapisz</button>
-            <button id="clearHH" class="btn" style="background:#eee;border-radius:10px;padding:10px 12px">Wyczyść</button>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <template id="res-row-tpl">
-    <tr>
-      <td class="r-name"></td>
-      <td class="r-phone"></td>
-      <td class="r-date"></td>
-      <td class="r-time"></td>
-      <td class="r-guests"></td>
-      <td class="r-room"></td>
-      <td class="actions"></td>
-    </tr>
-  </template>
-
-  <template id="product-tpl">
-    <div class="product card">
-      <img src="" alt="">
-      <div class="meta">
-        <div class="p-title"></div>
-        <div class="p-price"></div>
-        <div style="margin-top:8px"><button class="btn editP">Edytuj</button> <button class="btn delP" style="background:#ffdddd">Usuń</button></div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="logo">
+      <div class="title">
+        MilkShake Bar
+        <small>Panel Administratora</small>
       </div>
     </div>
-  </template>
 
-  <!-- Socket.IO client from your server -->
-  <script src="/socket.io/socket.io.js"></script>
+    <nav class="nav">
+      <a class="active" data-tab="dashboard"><span class="dot"></span> Dashboard</a>
+      <a data-tab="reservations"><span class="dot"></span> Rezerwacje</a>
+      <a data-tab="products"><span class="dot"></span> Produkty</a>
+      <a data-tab="happy"><span class="dot"></span> Happy Hour</a>
+    </nav>
 
-  <script>
-    // --- Simple local DB using localStorage (cache/offline) ---
-    const DB = {
-      key: 'msb_admin_v1',
-      read(){ try{return JSON.parse(localStorage.getItem(this.key))||{reservations:[],products:[],happy:''}}catch(e){return {reservations:[],products:[],happy:''}}},
-      write(data){localStorage.setItem(this.key,JSON.stringify(data));}
-    };
+    <div class="quick">
+      <button id="addDummy" class="btn primary">Dodaj testową rezerwację</button>
+      <button id="clearData" class="btn">Wyczyść lokalne dane</button>
+      <button id="exportBtn" class="btn ghost">Eksport JSON</button>
+    </div>
+  </aside>
 
-    // --- UI helpers ---
-    const qs = s=>document.querySelector(s);
-    const qsa = s=>document.querySelectorAll(s);
+  <!-- MAIN -->
+  <main class="main">
 
-    let state = DB.read();
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="search">
+        🔎
+        <input id="searchRes" placeholder="Szukaj rezerwacji po imieniu / tel / strefie…" />
+      </div>
+      <div class="chip" id="topHappyPreview">Brak Happy Hour</div>
+      <div class="muted" style="font-size:12px">Aktualizacja: <span id="lastUpdate">-</span></div>
+    </div>
 
-    // --- Navigation ---
-    qsa('.side-link').forEach(a=>a.addEventListener('click', (e)=>{
-      e.preventDefault(); const tab=a.dataset.tab;
-      qsa('.side-link').forEach(x=>x.classList.remove('active')); a.classList.add('active');
-      qsa('.tab').forEach(t=>t.style.display='none'); qs('#tab-'+tab).style.display='block';
-    }))
+    <!-- STATS -->
+    <div class="grid">
+      <div class="card stat">
+        <div class="k" id="stat-total">0</div>
+        <div class="l">Wszystkie rezerwacje</div>
+      </div>
+      <div class="card stat">
+        <div class="k" id="stat-today">0</div>
+        <div class="l">Dziś</div>
+      </div>
+      <div class="card stat">
+        <div class="k" id="stat-upcoming">0</div>
+        <div class="l">Nadchodzące</div>
+      </div>
+      <div class="card stat">
+        <div class="k" id="stat-new">0</div>
+        <div class="l">Nowe (nieodebrane)</div>
+      </div>
+    </div>
 
-    // --- Dashboard stats & chart ---
-    function refreshStats(){
-      const now = new Date();
-      const all = state.reservations.length;
-      const today = state.reservations.filter(r=> r.date === now.toISOString().split('T')[0]).length;
-      const upcoming = state.reservations.filter(r=> new Date(r.date+'T'+r.time) > now).length;
-      qs('#stat-total').textContent = all;
-      qs('#stat-today').textContent = today;
-      qs('#stat-upcoming').textContent = upcoming;
-      qs('#lastUpdate').textContent = (new Date()).toLocaleString();
-      renderLatest(); drawChart();
-    }
+    <!-- DASHBOARD -->
+    <section id="tab-dashboard" class="section active">
+      <div class="card" style="margin-top:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <h3 style="margin:0">Ostatnie rezerwacje</h3>
+          <button id="newResBtn" class="btn">Dodaj ręcznie</button>
+        </div>
+        <div id="latestList" class="latest" style="margin-top:10px"></div>
+      </div>
+    </section>
 
-    function renderLatest(){
-      const list = qs('#latestList'); list.innerHTML='';
-      const last = state.reservations.slice().sort((a,b)=> new Date(b.created)-new Date(a.created)).slice(0,6);
-      if(!last.length) { list.innerHTML='<div class="muted">Brak rezerwacji</div>'; return}
-      last.forEach(r=>{
-        const el = document.createElement('div'); el.style.padding='8px 6px'; el.style.borderBottom='1px solid #f5f0ec';
-        el.innerHTML = `<strong>${r.name}</strong> • ${r.date} ${r.time} • ${r.guests} os. • <span class="muted">${r.room}</span>`;
-        list.appendChild(el);
-      })
-    }
+    <!-- RESERVATIONS -->
+    <section id="tab-reservations" class="section">
+      <div class="table-wrap">
+        <table id="resTable">
+          <thead>
+            <tr>
+              <th>Imię</th><th>Tel</th><th>Data</th><th>Godz.</th>
+              <th>Osób</th><th>Strefa</th><th>Status</th><th>Akcje</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
 
-    // --- Chart: simple bar chart last 7 days ---
-    function drawChart(){
-      const c = qs('#chart'); const ctx = c.getContext('2d'); const w=c.width = c.clientWidth; const h=c.height = 160; ctx.clearRect(0,0,w,h);
-      const days = []; for(let i=6;i>=0;i--){const d=new Date(); d.setDate(d.getDate()-i); days.push(d.toISOString().split('T')[0])}
-      const counts = days.map(d=> state.reservations.filter(r=>r.date===d).length);
-      const max = Math.max(1, ...counts);
-      const pad=20; const barW = (w - pad*2)/counts.length * 0.7; counts.forEach((v,i)=>{
-        const x = pad + i*((w-pad*2)/counts.length) + ((w-pad*2)/counts.length - barW)/2;
-        const barH = (v/max)*(h-60);
-        ctx.fillStyle = 'rgba(255,106,0,0.85)'; ctx.fillRect(x, h-30-barH, barW, barH);
-        ctx.fillStyle = '#7a6b64'; ctx.font='12px Poppins'; ctx.fillText(v, x+barW/2 - 6, h-35-barH);
-        ctx.fillStyle = '#7a6b64'; ctx.font='11px Poppins'; const label = days[i].slice(5); ctx.fillText(label, x-8, h-8);
-      })
-    }
+    <!-- PRODUCTS -->
+    <section id="tab-products" class="section">
+      <div class="card" style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0">Produkty (preview)</h3>
+        <button id="addProductBtn" class="btn primary">Dodaj produkt</button>
+      </div>
+      <div id="productGrid" class="product-grid"></div>
+    </section>
 
-    // --- Reservations table render ---
-    function renderReservations(filter=''){
-      const tbody = qs('#resTable tbody'); tbody.innerHTML='';
-      const rows = state.reservations.slice().sort((a,b)=> new Date(a.date+'T'+a.time) - new Date(b.date+'T'+b.time));
-      const f = filter.trim().toLowerCase();
-      rows.forEach((r,idx)=>{
-        if(f){ const hay = (r.name+' '+r.phone+' '+r.room).toLowerCase(); if(!hay.includes(f)) return }
-        const tr = document.importNode(qs('#res-row-tpl').content,true).children[0];
-        tr.querySelector('.r-name').textContent = r.name;
-        tr.querySelector('.r-phone').textContent = r.phone;
-        tr.querySelector('.r-date').textContent = r.date;
-        tr.querySelector('.r-time').textContent = r.time;
-        tr.querySelector('.r-guests').textContent = r.guests;
-        tr.querySelector('.r-room').textContent = r.room;
-        const actions = tr.querySelector('.actions');
-        const accept = document.createElement('button'); accept.className='btn'; accept.textContent='Odbierz'; accept.addEventListener('click',()=>updateResStatus(idx,'accepted'));
-        const cancel = document.createElement('button'); cancel.className='btn'; cancel.textContent='Anuluj'; cancel.addEventListener('click',()=>updateResStatus(idx,'cancelled'));
-        const del = document.createElement('button'); del.className='btn'; del.style.background='#ffdddd'; del.textContent='Usuń'; del.addEventListener('click',()=>deleteRes(idx));
-        actions.appendChild(accept); actions.appendChild(cancel); actions.appendChild(del);
-        tbody.appendChild(tr);
-      })
-    }
+    <!-- HAPPY -->
+    <section id="tab-happy" class="section">
+      <div class="card" style="margin-top:12px">
+        <h3 style="margin-top:0">Happy Hour</h3>
+        <div class="muted">Ta wiadomość pokaże się na stronie głównej.</div>
+        <div class="hh-row">
+          <input id="hhText" placeholder="np. Happy Hour 17:00–19:00 • -20% na milkshake'i" />
+          <button id="saveHH" class="btn primary">Zapisz</button>
+          <button id="clearHH" class="btn">Wyczyść</button>
+        </div>
+      </div>
+    </section>
 
-    function updateResStatus(index, status){
-      const r = state.reservations[index]; if(!r) return;
-      r.status = status; r.updated = new Date().toISOString(); DB.write(state); notify('Status zaktualizowany'); refreshAll();
-    }
-    function deleteRes(index){ if(!confirm('Usunąć tę rezerwację?')) return; state.reservations.splice(index,1); DB.write(state); refreshAll(); }
+  </main>
+</div>
 
-    // --- Add reservation modal (simple prompt flow) ---
-    function addReservationInteractive(){
-      const name = prompt('Imię i nazwisko'); if(!name) return;
-      const phone = prompt('Telefon', '+48 '); if(!phone) return;
-      const date = prompt('Data (YYYY-MM-DD)', new Date().toISOString().split('T')[0]); if(!date) return;
-      const time = prompt('Godzina (HH:MM)', '19:00'); if(!time) return;
-      const guests = prompt('Ilość osób','2'); const room = prompt('Strefa','Sala główna');
-      const obj = {name,phone,date,time,guests,room,status:'new',created:new Date().toISOString()};
-      state.reservations.push(obj); DB.write(state); notify('Dodano rezerwację (lokalnie)'); refreshAll();
-    }
+<!-- row templates -->
+<template id="res-row-tpl">
+  <tr>
+    <td class="r-name"></td>
+    <td class="r-phone"></td>
+    <td class="r-date"></td>
+    <td class="r-time"></td>
+    <td class="r-guests"></td>
+    <td class="r-room"></td>
+    <td class="r-status"></td>
+    <td class="r-actions"></td>
+  </tr>
+</template>
 
-    // --- Products ---
-    function renderProducts(){
-      const grid = qs('#productGrid'); grid.innerHTML='';
-      state.products.forEach((p,idx)=>{
-        const node = document.importNode(qs('#product-tpl').content,true).children[0];
-        node.querySelector('img').src = p.image || 'https://i.imgur.com/kfE4j7j.jpeg';
-        node.querySelector('.p-title').textContent = p.title;
-        node.querySelector('.p-price').textContent = p.price + ' PLN';
-        node.querySelector('.editP').addEventListener('click',()=>editProduct(idx));
-        node.querySelector('.delP').addEventListener('click',()=>{ if(confirm('Usuń produkt?')){ state.products.splice(idx,1); DB.write(state); renderProducts(); notify('Usunięto produkt')}})
-        grid.appendChild(node);
-      })
-    }
-    function addProductInteractive(){
-      const title = prompt('Nazwa produktu'); if(!title) return; const price = prompt('Cena (PLN)','19'); const img = prompt('URL obrazka','https://i.imgur.com/kfE4j7j.jpeg');
-      state.products.push({title,price,img,image:img}); DB.write(state); renderProducts(); notify('Dodano produkt (lokalnie)');
-    }
-    function editProduct(idx){ const p=state.products[idx]; const title = prompt('Nazwa produktu',p.title); if(!title) return; const price = prompt('Cena',p.price); const img = prompt('URL obrazka',p.image);
-      p.title=title; p.price=price; p.image=img; DB.write(state); renderProducts(); notify('Zaktualizowano produkt (lokalnie)'); }
+<template id="product-tpl">
+  <div class="product">
+    <img src="" alt="">
+    <div class="meta">
+      <div class="p-title" style="font-weight:800"></div>
+      <div class="p-price" style="color:var(--muted);font-weight:800"></div>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button class="btn editP">Edytuj</button>
+        <button class="btn bad delP">Usuń</button>
+      </div>
+    </div>
+  </div>
+</template>
 
-    // --- Happy Hour ---
-    function saveHappy(){ state.happy = qs('#hhText').value.trim(); DB.write(state); qs('#topHappyPreview').textContent = state.happy || 'Brak informacji Happy Hour'; notify('Zapisano wiadomość (lokalnie)'); }
-    function clearHappy(){ state.happy=''; DB.write(state); qs('#hhText').value=''; qs('#topHappyPreview').textContent = 'Brak informacji Happy Hour'; notify('Wyczyszczono (lokalnie)'); }
+<div id="toast" class="toast"></div>
 
-    // --- Utilities ---
-    function notify(msg){
-      const el = document.createElement('div'); el.textContent = msg; el.style.position='fixed'; el.style.right='18px'; el.style.bottom='18px'; el.style.background='var(--primary)'; el.style.color='#fff'; el.style.padding='10px 14px'; el.style.borderRadius='10px'; el.style.boxShadow='0 8px 30px rgba(0,0,0,0.18)'; document.body.appendChild(el);
-      setTimeout(()=>el.remove(),2500);
-    }
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  // ---------------------------
+  // Local cache (optional)
+  // ---------------------------
+  const DB = {
+    key: 'msb_admin_v2',
+    read(){
+      try{return JSON.parse(localStorage.getItem(this.key))||{reservations:[],products:[],happy:''}}
+      catch(e){return {reservations:[],products:[],happy:''}}
+    },
+    write(data){ localStorage.setItem(this.key, JSON.stringify(data)); }
+  };
 
-    function refreshAll(){ renderReservations(qs('#searchRes').value||''); renderProducts(); refreshStats(); }
+  const qs = s=>document.querySelector(s);
+  const qsa = s=>document.querySelectorAll(s);
 
-    // --- Wire up buttons ---
-    qs('#addDummy').addEventListener('click',()=>{
-      const tmp = {name:'Test User',phone:'+48 700 000 001',date:new Date().toISOString().split('T')[0],time:'19:00',guests:2,room:'Sala główna',status:'new',created:new Date().toISOString()};
-      state.reservations.push(tmp); DB.write(state); refreshAll(); notify('Dodano testową rezerwację (lokalnie)');
-    })
-    qs('#clearData').addEventListener('click',()=>{ if(!confirm('Na pewno wyczyścić wszystkie dane lokalne?')) return; state={reservations:[],products:[],happy:''}; DB.write(state); refreshAll(); notify('Dane wyczyszczone'); })
-    qs('#newResBtn').addEventListener('click',addReservationInteractive);
-    qs('#searchRes').addEventListener('input',()=>renderReservations(qs('#searchRes').value));
-    qs('#addProductBtn').addEventListener('click',addProductInteractive);
-    qs('#saveHH').addEventListener('click',saveHappy);
-    qs('#clearHH').addEventListener('click',clearHappy);
-    qs('#exportBtn').addEventListener('click',()=>{ const a=document.createElement('a'); a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(state, null, 2)); a.download='msb-data.json'; document.body.appendChild(a); a.click(); a.remove(); });
+  let state = DB.read();
 
-    // --- Init ---
-    (function init(){
-      state = DB.read();
-      if(!state.reservations) state.reservations=[];
-      if(!state.products) state.products=[];
-      if(!state.happy) state.happy='';
-      qs('#hhText').value = state.happy || '';
-      qs('#topHappyPreview').textContent = state.happy || 'Brak informacji Happy Hour';
-      refreshAll();
-    })();
+  // ---------------------------
+  // Ding-ding sound (WebAudio)
+  // ---------------------------
+  function playDing(){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const now = ctx.currentTime;
 
-    window.msbAdmin = { refreshAll };
-
-    // =========================
-    //  SERVER SYNC + REALTIME
-    // =========================
-
-    async function loadFromServer() {
-      try {
-        const res = await fetch('/api/data', { cache: 'no-store' });
-        if (!res.ok) throw new Error('API error ' + res.status);
-        const db = await res.json();
-
-        state.reservations = db.reservations || [];
-        state.products = db.products || state.products || [];
-        state.happy = db.happy || state.happy || '';
-
-        DB.write(state);
-
-        qs('#hhText').value = state.happy || '';
-        qs('#topHappyPreview').textContent = state.happy || 'Brak informacji Happy Hour';
-        refreshAll();
-        console.log('[ADMIN] loaded from server', state);
-      } catch (e) {
-        console.error('[ADMIN] loadFromServer failed:', e);
-        notify('Nie udało się pobrać danych z serwera, używam lokalnych.');
+      function tone(freq, start, dur){
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = "sine";
+        o.frequency.value = freq;
+        g.gain.setValueAtTime(0.0001, start);
+        g.gain.exponentialRampToValueAtTime(0.25, start + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+        o.connect(g).connect(ctx.destination);
+        o.start(start);
+        o.stop(start + dur);
       }
+
+      tone(950, now, 0.18);
+      tone(1200, now + 0.2, 0.18);
+
+      setTimeout(()=>ctx.close(), 700);
+    }catch(e){
+      console.warn("Audio blocked:", e);
+    }
+  }
+
+  // ---------------------------
+  // UI
+  // ---------------------------
+  function toast(msg){
+    const t = qs("#toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"), 2200);
+  }
+
+  // Nav tabs
+  qsa(".nav a").forEach(a=>{
+    a.addEventListener("click", ()=>{
+      qsa(".nav a").forEach(x=>x.classList.remove("active"));
+      a.classList.add("active");
+      const tab = a.dataset.tab;
+      qsa(".section").forEach(s=>s.classList.remove("active"));
+      qs("#tab-"+tab).classList.add("active");
+    });
+  });
+
+  function refreshStats(){
+    const now = new Date();
+    const all = state.reservations.length;
+    const today = state.reservations.filter(r=> r.date === now.toISOString().split("T")[0]).length;
+    const upcoming = state.reservations.filter(r=> new Date(r.date+"T"+r.time) > now).length;
+    const newCount = state.reservations.filter(r=> (r.status||"new")==="new").length;
+
+    qs("#stat-total").textContent = all;
+    qs("#stat-today").textContent = today;
+    qs("#stat-upcoming").textContent = upcoming;
+    qs("#stat-new").textContent = newCount;
+    qs("#lastUpdate").textContent = new Date().toLocaleString();
+  }
+
+  function renderLatest(){
+    const box = qs("#latestList");
+    box.innerHTML = "";
+    const last = state.reservations
+      .slice()
+      .sort((a,b)=> new Date(b.created||0)-new Date(a.created||0))
+      .slice(0,8);
+
+    if(!last.length){
+      box.innerHTML = `<div class="muted">Brak rezerwacji</div>`;
+      return;
     }
 
-    const socket = io({
-      transports: ["websocket"],
-      upgrade: false
+    last.forEach(r=>{
+      const div = document.createElement("div");
+      div.className = "item";
+      div.innerHTML = `
+        <div>
+          <div style="font-weight:900">${r.name}</div>
+          <small>${r.phone} • ${r.room || "Sala główna"}</small>
+        </div>
+        <div style="text-align:right">
+          <div>${r.date} ${r.time}</div>
+          <small>${r.guests} os.</small>
+        </div>
+      `;
+      box.appendChild(div);
     });
+  }
 
-    socket.on("connect", () => {
-      console.log("[ADMIN] socket connected", socket.id);
+  function statusBadge(status){
+    const s = (status||"new");
+    const labels = { new:"Nowa", accepted:"Odebrana", cancelled:"Anulowana" };
+    return `<span class="status ${s}">${labels[s]||s}</span>`;
+  }
+
+  function renderReservations(filter=""){
+    const tbody = qs("#resTable tbody");
+    tbody.innerHTML = "";
+    const f = filter.trim().toLowerCase();
+
+    const rows = state.reservations
+      .slice()
+      .sort((a,b)=> new Date(a.date+"T"+a.time) - new Date(b.date+"T"+b.time));
+
+    rows.forEach((r, idx)=>{
+      const hay = (r.name+" "+r.phone+" "+(r.room||"")).toLowerCase();
+      if(f && !hay.includes(f)) return;
+
+      const tr = document.importNode(qs("#res-row-tpl").content,true).children[0];
+      tr.querySelector(".r-name").textContent = r.name;
+      tr.querySelector(".r-phone").textContent = r.phone;
+      tr.querySelector(".r-date").textContent = r.date;
+      tr.querySelector(".r-time").textContent = r.time;
+      tr.querySelector(".r-guests").textContent = r.guests;
+      tr.querySelector(".r-room").textContent = r.room || "Sala główna";
+      tr.querySelector(".r-status").innerHTML = statusBadge(r.status);
+
+      const actions = tr.querySelector(".r-actions");
+      actions.className = "actions";
+
+      const accept = document.createElement("button");
+      accept.className = "btn good";
+      accept.textContent = "Odbierz";
+      accept.onclick = ()=>updateResStatus(idx,"accepted");
+
+      const cancel = document.createElement("button");
+      cancel.className = "btn";
+      cancel.textContent = "Anuluj";
+      cancel.onclick = ()=>updateResStatus(idx,"cancelled");
+
+      const del = document.createElement("button");
+      del.className = "btn bad";
+      del.textContent = "Usuń";
+      del.onclick = ()=>deleteRes(idx);
+
+      actions.appendChild(accept);
+      actions.appendChild(cancel);
+      actions.appendChild(del);
+
+      tbody.appendChild(tr);
     });
+  }
 
-    socket.on("connect_error", (err) => {
-      console.error("[ADMIN] socket connect error", err);
+  function refreshAll(){
+    DB.write(state);
+    renderReservations(qs("#searchRes").value||"");
+    renderLatest();
+    renderProducts();
+    refreshStats();
+  }
+
+  // Local-only actions (jak chcesz to spiąć z serwerem, dopiszę Ci endpointy)
+  function updateResStatus(index, status){
+    const r = state.reservations[index]; if(!r) return;
+    r.status = status; r.updated = new Date().toISOString();
+    toast("Status zaktualizowany");
+    refreshAll();
+  }
+  function deleteRes(index){
+    if(!confirm("Usunąć tę rezerwację?")) return;
+    state.reservations.splice(index,1);
+    toast("Usunięto rezerwację");
+    refreshAll();
+  }
+
+  function addReservationInteractive(){
+    const name = prompt("Imię i nazwisko"); if(!name) return;
+    const phone = prompt("Telefon", "+48 "); if(!phone) return;
+    const date = prompt("Data (YYYY-MM-DD)", new Date().toISOString().split("T")[0]); if(!date) return;
+    const time = prompt("Godzina (HH:MM)", "19:00"); if(!time) return;
+    const guests = prompt("Ilość osób","2");
+    const room = prompt("Strefa","Sala główna");
+
+    const obj = {name,phone,date,time,guests,room,status:"new",created:new Date().toISOString()};
+    state.reservations.unshift(obj);
+    toast("Dodano rezerwację (lokalnie)");
+    refreshAll();
+  }
+
+  // Products
+  function renderProducts(){
+    const grid = qs("#productGrid");
+    if(!grid) return;
+    grid.innerHTML="";
+    (state.products||[]).forEach((p,idx)=>{
+      const node = document.importNode(qs("#product-tpl").content,true).children[0];
+      node.querySelector("img").src = p.image || "https://i.imgur.com/kfE4j7j.jpeg";
+      node.querySelector(".p-title").textContent = p.title || "Produkt";
+      node.querySelector(".p-price").textContent = (p.price||"0")+" PLN";
+      node.querySelector(".editP").onclick = ()=>editProduct(idx);
+      node.querySelector(".delP").onclick = ()=>{
+        if(confirm("Usuń produkt?")){
+          state.products.splice(idx,1);
+          toast("Usunięto produkt (lokalnie)");
+          refreshAll();
+        }
+      };
+      grid.appendChild(node);
     });
+  }
 
-    socket.on("state:init", (db) => {
-      console.log("[ADMIN] state:init", db);
+  function addProductInteractive(){
+    const title = prompt("Nazwa produktu"); if(!title) return;
+    const price = prompt("Cena (PLN)","19");
+    const img = prompt("URL obrazka","https://i.imgur.com/kfE4j7j.jpeg");
+    state.products.push({title,price,image:img});
+    toast("Dodano produkt (lokalnie)");
+    refreshAll();
+  }
+
+  function editProduct(idx){
+    const p = state.products[idx];
+    const title = prompt("Nazwa produktu", p.title); if(!title) return;
+    const price = prompt("Cena", p.price);
+    const img = prompt("URL obrazka", p.image);
+    p.title=title; p.price=price; p.image=img;
+    toast("Zapisano produkt (lokalnie)");
+    refreshAll();
+  }
+
+  // Happy
+  function saveHappy(){
+    state.happy = qs("#hhText").value.trim();
+    toast("Zapisano Happy Hour (lokalnie)");
+    refreshAll();
+  }
+  function clearHappy(){
+    state.happy="";
+    qs("#hhText").value="";
+    toast("Wyczyszczono Happy Hour (lokalnie)");
+    refreshAll();
+  }
+
+  // Buttons
+  qs("#addDummy").onclick = ()=>{
+    const tmp = {
+      name:"Test User", phone:"+48 700 000 001",
+      date:new Date().toISOString().split("T")[0],
+      time:"19:00", guests:2, room:"Sala główna",
+      status:"new", created:new Date().toISOString()
+    };
+    state.reservations.unshift(tmp);
+    toast("Dodano testową (lokalnie)");
+    refreshAll();
+  };
+
+  qs("#clearData").onclick = ()=>{
+    if(!confirm("Na pewno wyczyścić lokalny cache?")) return;
+    state = {reservations:[],products:[],happy:""};
+    toast("Cache wyczyszczony");
+    refreshAll();
+  };
+
+  qs("#exportBtn").onclick = ()=>{
+    const a=document.createElement("a");
+    a.href="data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify(state,null,2));
+    a.download="msb-data.json";
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+
+  qs("#newResBtn").onclick = addReservationInteractive;
+  qs("#addProductBtn")?.addEventListener("click", addProductInteractive);
+  qs("#saveHH")?.addEventListener("click", saveHappy);
+  qs("#clearHH")?.addEventListener("click", clearHappy);
+
+  qs("#searchRes").addEventListener("input", ()=>renderReservations(qs("#searchRes").value));
+
+  // Init from cache first
+  (function init(){
+    state = DB.read();
+    state.reservations ||= [];
+    state.products ||= [];
+    state.happy ||= "";
+    qs("#hhText").value = state.happy;
+    qs("#topHappyPreview").textContent = state.happy || "Brak Happy Hour";
+    refreshAll();
+  })();
+
+  // ---------------------------
+  // Server sync + realtime
+  // ---------------------------
+  async function loadFromServer(){
+    try{
+      const res = await fetch("/api/data", {cache:"no-store"});
+      if(!res.ok) throw new Error(res.status);
+      const db = await res.json();
       state.reservations = db.reservations || [];
       state.products = db.products || state.products || [];
-      state.happy = db.happy || state.happy || '';
-      DB.write(state);
+      state.happy = db.happy || state.happy || "";
+      qs("#hhText").value = state.happy;
+      qs("#topHappyPreview").textContent = state.happy || "Brak Happy Hour";
       refreshAll();
-    });
+      console.log("[ADMIN] loaded from server");
+    }catch(e){
+      console.warn("[ADMIN] server load failed, using cache", e);
+    }
+  }
 
-    socket.on("reservation:new", (resv) => {
-      console.log("[ADMIN] reservation:new", resv);
-      state.reservations.unshift(resv);
-      DB.write(state);
-      refreshAll();
-      notify("Nowa rezerwacja: " + resv.name);
-    });
+  const socket = io({transports:["websocket"], upgrade:false});
 
-    socket.on("state:update", (db) => {
-      console.log("[ADMIN] state:update", db);
-      state.reservations = db.reservations || [];
-      state.products = db.products || state.products || [];
-      state.happy = db.happy || state.happy || '';
-      DB.write(state);
-      refreshAll();
-    });
+  socket.on("connect", ()=>console.log("[ADMIN] socket connected", socket.id));
+  socket.on("connect_error", (err)=>console.error("[ADMIN] socket error", err));
 
-    loadFromServer();
-  </script>
+  socket.on("state:init", (db)=>{
+    state.reservations = db.reservations || [];
+    state.products = db.products || state.products || [];
+    state.happy = db.happy || state.happy || "";
+    qs("#hhText").value = state.happy;
+    qs("#topHappyPreview").textContent = state.happy || "Brak Happy Hour";
+    refreshAll();
+  });
+
+  socket.on("reservation:new", (resv)=>{
+    // realtime: bez odświeżania
+    state.reservations.unshift(resv);
+    refreshAll();
+
+    // dzwonek + toast
+    playDing();
+    toast("Nowa rezerwacja: " + resv.name);
+  });
+
+  socket.on("state:update", (db)=>{
+    state.reservations = db.reservations || [];
+    state.products = db.products || state.products || [];
+    state.happy = db.happy || state.happy || "";
+    qs("#hhText").value = state.happy;
+    qs("#topHappyPreview").textContent = state.happy || "Brak Happy Hour";
+    refreshAll();
+  });
+
+  loadFromServer();
+</script>
 </body>
 </html>

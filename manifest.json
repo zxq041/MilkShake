@@ -1,0 +1,22 @@
+{
+  "name": "MilkShake Bar Admin",
+  "short_name": "MSB Admin",
+  "start_url": "/admin.html",
+  "display": "standalone",
+  "background_color": "#FFF6EC",
+  "theme_color": "#FF6A00",
+  "icons": [
+    {
+      "src": "/mnt/data/3db59495-772a-4e81-b1ce-ac7e1504f75a.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/mnt/data/3db59495-772a-4e81-b1ce-ac7e1504f75a.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

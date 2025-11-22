@@ -76,7 +76,6 @@
 
     /* small screens */
     @media(max-width:900px){.wrap{grid-template-columns:1fr; padding:16px} .sidebar{height:auto} .stats{grid-template-columns: repeat(2,1fr)} .chart-row{grid-template-columns:1fr}}
-
   </style>
 </head>
 <body>
@@ -180,7 +179,6 @@
           </div>
         </div>
       </section>
-
     </main>
   </div>
 
@@ -207,8 +205,11 @@
     </div>
   </template>
 
+  <!-- Socket.IO client from your server -->
+  <script src="/socket.io/socket.io.js"></script>
+
   <script>
-    // --- Simple local DB using localStorage ---
+    // --- Simple local DB using localStorage (cache/offline) ---
     const DB = {
       key: 'msb_admin_v1',
       read(){ try{return JSON.parse(localStorage.getItem(this.key))||{reservations:[],products:[],happy:''}}catch(e){return {reservations:[],products:[],happy:''}}},
@@ -304,7 +305,7 @@
       const time = prompt('Godzina (HH:MM)', '19:00'); if(!time) return;
       const guests = prompt('Ilość osób','2'); const room = prompt('Strefa','Sala główna');
       const obj = {name,phone,date,time,guests,room,status:'new',created:new Date().toISOString()};
-      state.reservations.push(obj); DB.write(state); notify('Dodano rezerwację'); refreshAll();
+      state.reservations.push(obj); DB.write(state); notify('Dodano rezerwację (lokalnie)'); refreshAll();
     }
 
     // --- Products ---
@@ -322,14 +323,14 @@
     }
     function addProductInteractive(){
       const title = prompt('Nazwa produktu'); if(!title) return; const price = prompt('Cena (PLN)','19'); const img = prompt('URL obrazka','https://i.imgur.com/kfE4j7j.jpeg');
-      state.products.push({title,price,img,image:img}); DB.write(state); renderProducts(); notify('Dodano produkt');
+      state.products.push({title,price,img,image:img}); DB.write(state); renderProducts(); notify('Dodano produkt (lokalnie)');
     }
     function editProduct(idx){ const p=state.products[idx]; const title = prompt('Nazwa produktu',p.title); if(!title) return; const price = prompt('Cena',p.price); const img = prompt('URL obrazka',p.image);
-      p.title=title; p.price=price; p.image=img; DB.write(state); renderProducts(); notify('Zaktualizowano produkt'); }
+      p.title=title; p.price=price; p.image=img; DB.write(state); renderProducts(); notify('Zaktualizowano produkt (lokalnie)'); }
 
     // --- Happy Hour ---
-    function saveHappy(){ state.happy = qs('#hhText').value.trim(); DB.write(state); qs('#topHappyPreview').textContent = state.happy || 'Brak informacji Happy Hour'; notify('Zapisano wiadomość'); }
-    function clearHappy(){ state.happy=''; DB.write(state); qs('#hhText').value=''; qs('#topHappyPreview').textContent = 'Brak informacji Happy Hour'; notify('Wyczyszczono'); }
+    function saveHappy(){ state.happy = qs('#hhText').value.trim(); DB.write(state); qs('#topHappyPreview').textContent = state.happy || 'Brak informacji Happy Hour'; notify('Zapisano wiadomość (lokalnie)'); }
+    function clearHappy(){ state.happy=''; DB.write(state); qs('#hhText').value=''; qs('#topHappyPreview').textContent = 'Brak informacji Happy Hour'; notify('Wyczyszczono (lokalnie)'); }
 
     // --- Utilities ---
     function notify(msg){
@@ -342,7 +343,7 @@
     // --- Wire up buttons ---
     qs('#addDummy').addEventListener('click',()=>{
       const tmp = {name:'Test User',phone:'+48 700 000 001',date:new Date().toISOString().split('T')[0],time:'19:00',guests:2,room:'Sala główna',status:'new',created:new Date().toISOString()};
-      state.reservations.push(tmp); DB.write(state); refreshAll(); notify('Dodano testową rezerwację');
+      state.reservations.push(tmp); DB.write(state); refreshAll(); notify('Dodano testową rezerwację (lokalnie)');
     })
     qs('#clearData').addEventListener('click',()=>{ if(!confirm('Na pewno wyczyścić wszystkie dane lokalne?')) return; state={reservations:[],products:[],happy:''}; DB.write(state); refreshAll(); notify('Dane wyczyszczone'); })
     qs('#newResBtn').addEventListener('click',addReservationInteractive);
@@ -354,15 +355,83 @@
 
     // --- Init ---
     (function init(){
-      // ensure shapes
-      state = DB.read(); if(!state.reservations) state.reservations=[]; if(!state.products) state.products=[]; if(!state.happy) state.happy='';
+      state = DB.read();
+      if(!state.reservations) state.reservations=[];
+      if(!state.products) state.products=[];
+      if(!state.happy) state.happy='';
       qs('#hhText').value = state.happy || '';
       qs('#topHappyPreview').textContent = state.happy || 'Brak informacji Happy Hour';
       refreshAll();
     })();
 
-    // expose refresh function (for external use)
     window.msbAdmin = { refreshAll };
+
+    // =========================
+    //  SERVER SYNC + REALTIME
+    // =========================
+
+    async function loadFromServer() {
+      try {
+        const res = await fetch('/api/data', { cache: 'no-store' });
+        if (!res.ok) throw new Error('API error ' + res.status);
+        const db = await res.json();
+
+        state.reservations = db.reservations || [];
+        state.products = db.products || state.products || [];
+        state.happy = db.happy || state.happy || '';
+
+        DB.write(state);
+
+        qs('#hhText').value = state.happy || '';
+        qs('#topHappyPreview').textContent = state.happy || 'Brak informacji Happy Hour';
+        refreshAll();
+        console.log('[ADMIN] loaded from server', state);
+      } catch (e) {
+        console.error('[ADMIN] loadFromServer failed:', e);
+        notify('Nie udało się pobrać danych z serwera, używam lokalnych.');
+      }
+    }
+
+    const socket = io({
+      transports: ["websocket"],
+      upgrade: false
+    });
+
+    socket.on("connect", () => {
+      console.log("[ADMIN] socket connected", socket.id);
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("[ADMIN] socket connect error", err);
+    });
+
+    socket.on("state:init", (db) => {
+      console.log("[ADMIN] state:init", db);
+      state.reservations = db.reservations || [];
+      state.products = db.products || state.products || [];
+      state.happy = db.happy || state.happy || '';
+      DB.write(state);
+      refreshAll();
+    });
+
+    socket.on("reservation:new", (resv) => {
+      console.log("[ADMIN] reservation:new", resv);
+      state.reservations.unshift(resv);
+      DB.write(state);
+      refreshAll();
+      notify("Nowa rezerwacja: " + resv.name);
+    });
+
+    socket.on("state:update", (db) => {
+      console.log("[ADMIN] state:update", db);
+      state.reservations = db.reservations || [];
+      state.products = db.products || state.products || [];
+      state.happy = db.happy || state.happy || '';
+      DB.write(state);
+      refreshAll();
+    });
+
+    loadFromServer();
   </script>
 </body>
 </html>

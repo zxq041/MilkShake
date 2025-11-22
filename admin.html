@@ -406,7 +406,7 @@
   let state = DB.read();
 
   // ---------------------------
-  // Ding-ding sound — fast, loud, long + autoplay-safe
+  // Ding-ding sound — 5 seconds tail
   // ---------------------------
   let audioCtx = null;
   let audioUnlocked = false;
@@ -417,8 +417,7 @@
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
       audioCtx.resume().then(() => {
         audioUnlocked = true;
-        // pre-warm cichy ping
-        playDing(true);
+        playDing(true); // pre-warm cichy ping
       }).catch(()=>{});
     } catch (e) {}
   }
@@ -435,6 +434,7 @@
       }
 
       const now = audioCtx.currentTime;
+      const TAIL = 5.0; // <- 5 sekund trwania
 
       function tone(freq, start, dur, peakGain){
         const o = audioCtx.createOscillator();
@@ -445,7 +445,7 @@
         const realGain = silentTest ? 0.0001 : peakGain;
 
         g.gain.setValueAtTime(0.0001, start);
-        g.gain.exponentialRampToValueAtTime(realGain, start + 0.02);
+        g.gain.exponentialRampToValueAtTime(realGain, start + 0.03);
         g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
 
         o.connect(g).connect(audioCtx.destination);
@@ -453,11 +453,11 @@
         o.stop(start + dur);
       }
 
-      // mocny „ding ding” + harmoniczne
-      tone(880,  now,        0.35, 0.60);
-      tone(1180, now + 0.22, 0.35, 0.65);
-      tone(1760, now + 0.02, 0.45, 0.20);
-      tone(2360, now + 0.24, 0.45, 0.22);
+      // „ding ding” z 5s ogonem
+      tone(880,  now,        TAIL, 0.60);
+      tone(1180, now + 0.22, TAIL, 0.65);
+      tone(1760, now + 0.02, TAIL, 0.20);
+      tone(2360, now + 0.24, TAIL, 0.22);
 
     }catch(e){}
   }
@@ -615,7 +615,6 @@
     refreshAll();
   }
 
-  // Products
   function renderProducts(){
     const grid = qs("#productGrid");
     if(!grid) return;
@@ -654,7 +653,6 @@
     refreshAll();
   }
 
-  // Happy
   function saveHappy(){
     state.happy = qs("#hhText").value.trim();
     toast("Zapisano Happy Hour (lokalnie)");
@@ -667,7 +665,6 @@
     refreshAll();
   }
 
-  // Buttons
   qs("#addDummy").onclick = ()=>{
     const tmp = {
       name:"Test User", phone:"+48 700 000 001",
@@ -698,7 +695,6 @@
   qs("#clearHH")?.addEventListener("click", clearHappy);
   qs("#searchRes").addEventListener("input", ()=>renderReservations(qs("#searchRes").value));
 
-  // Init from cache
   (function init(){
     state = DB.read();
     state.reservations ||= [];
@@ -709,9 +705,6 @@
     refreshAll();
   })();
 
-  // ---------------------------
-  // Server sync + realtime
-  // ---------------------------
   async function loadFromServer(){
     try{
       const res = await fetch("/api/data", {cache:"no-store"});
@@ -740,9 +733,7 @@
   socket.on("reservation:new", (resv)=>{
     state.reservations.unshift(resv);
     refreshAll();
-
-    // DZWONEK
-    playDing();
+    playDing(); // 5 sekund wybrzmiewania
     toast("Nowa rezerwacja: " + resv.name);
   });
 

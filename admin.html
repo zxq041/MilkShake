@@ -7,34 +7,38 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg: #0b0d12;
-      --panel: #111420;
-      --panel-2: #161a28;
-      --panel-3: #1a2031;
-      --text: #e9ecf5;
-      --muted: #9aa3b2;
+      /* EATMI ORANGE THEME */
+      --primary: #FF6A00;
+      --primary-2: #FF9100;
+      --bg: #FFF6EC;
+      --bg-2: #FFFFFF;
+      --panel: #FFFFFF;
+      --panel-2: #FFF0E1;
+      --panel-3: #FFE2C4;
 
-      --primary: #ff7a18;
-      --primary-2: #ff9a3c;
-      --good: #2ecc71;
-      --bad: #ff6b6b;
-      --warn: #f1c40f;
+      --text: #2B1300;
+      --muted: #7a6b64;
+
+      --good: #19b36b;
+      --bad: #e44d4d;
+      --warn: #f1a400;
 
       --radius: 16px;
-      --shadow: 0 18px 60px rgba(0,0,0,.5);
-      --border: 1px solid rgba(255,255,255,.06);
+      --shadow: 0 12px 40px rgba(43,19,0,.08);
+      --border: 1px solid rgba(255,106,0,.12);
     }
 
     *{box-sizing:border-box}
     body{
-      margin:0; font-family:Inter,system-ui,Arial;
+      margin:0;
+      font-family:Poppins,system-ui,Arial;
       background:
-        radial-gradient(1200px 600px at 10% -10%, #1a1330 0%, transparent 60%),
-        radial-gradient(1000px 600px at 110% 0%, #1e2b39 0%, transparent 60%),
+        radial-gradient(1100px 600px at 10% -20%, #FFE7D0 0%, transparent 60%),
+        radial-gradient(900px 600px at 110% 0%, #FFF1E6 0%, transparent 60%),
         var(--bg);
       color:var(--text);
     }
@@ -47,7 +51,7 @@
 
     /* Sidebar */
     .sidebar{
-      background: linear-gradient(180deg, #0f1220 0%, #0b0d12 100%);
+      background: linear-gradient(180deg, #fff 0%, #fff7ef 100%);
       border-right: var(--border);
       padding:18px;
       position:sticky; top:0; height:100vh;
@@ -60,13 +64,16 @@
     }
     .logo img{
       width:46px; height:46px; border-radius:12px; object-fit:cover;
-      box-shadow: 0 8px 20px rgba(0,0,0,.5);
+      box-shadow: 0 8px 20px rgba(255,106,0,.25);
     }
     .logo .title{
       font-weight:900; letter-spacing:.3px;
       display:flex; flex-direction:column;
     }
-    .logo .title small{color:var(--muted); font-weight:600}
+    .logo .title small{
+      color:var(--muted);
+      font-weight:700;
+    }
 
     .nav{display:flex; flex-direction:column; gap:6px; margin-top:10px;}
     .nav a{
@@ -74,24 +81,25 @@
       padding:12px 14px; border-radius:12px;
       display:flex; align-items:center; gap:10px;
       border:1px solid transparent;
-      font-weight:700; letter-spacing:.2px;
+      font-weight:800; letter-spacing:.2px;
       transition:.15s; cursor:pointer;
     }
     .nav a:hover{
-      background: var(--panel);
-      border-color: rgba(255,255,255,.07);
+      background: var(--panel-2);
+      border-color: rgba(255,106,0,.18);
       transform: translateX(2px);
     }
     .nav a.active{
-      background: linear-gradient(90deg, rgba(255,122,24,.18), rgba(255,154,60,.12));
-      border-color: rgba(255,122,24,.35);
-      box-shadow: inset 0 0 0 1px rgba(255,122,24,.15);
+      background: linear-gradient(90deg, var(--primary), var(--primary-2));
+      border-color: rgba(255,106,0,.4);
       color:#fff;
+      box-shadow: 0 10px 25px rgba(255,106,0,.25);
     }
     .nav .dot{
       width:8px; height:8px; border-radius:999px; background:var(--primary);
-      box-shadow:0 0 12px rgba(255,122,24,.9);
+      box-shadow:0 0 12px rgba(255,106,0,.9);
     }
+    .nav a.active .dot{ background:#fff; box-shadow:none; }
 
     .quick{
       margin-top:14px; padding-top:14px; border-top: var(--border);
@@ -100,16 +108,17 @@
     .btn{
       border:none; outline:none; cursor:pointer;
       padding:11px 12px; border-radius:12px; font-weight:800;
-      background: var(--panel-2); color:var(--text);
+      background: var(--panel); color:var(--text);
       border: var(--border); transition:.15s;
+      box-shadow: 0 6px 16px rgba(43,19,0,.04);
     }
-    .btn:hover{ transform: translateY(-1px); background: var(--panel-3); }
+    .btn:hover{ transform: translateY(-1px); background: #fff; }
     .btn.primary{
       background: linear-gradient(90deg, var(--primary), var(--primary-2));
-      color:#111; border:none;
-      box-shadow: 0 10px 25px rgba(255,122,24,.35);
+      color:#fff; border:none;
+      box-shadow: 0 10px 25px rgba(255,106,0,.35);
     }
-    .btn.ghost{ background: transparent; }
+    .btn.ghost{ background: transparent; box-shadow:none; }
 
     /* Main */
     .main{padding:18px 22px 26px;}
@@ -117,7 +126,7 @@
     /* Topbar */
     .topbar{
       display:flex; align-items:center; gap:12px;
-      background: var(--panel); border: var(--border);
+      background: #fff; border: var(--border);
       padding:12px; border-radius:14px; box-shadow: var(--shadow);
       position:sticky; top:12px; z-index:5;
     }
@@ -128,11 +137,11 @@
     }
     .topbar input{
       width:100%; background:transparent; border:none; outline:none; color:var(--text);
-      font-size:15px; font-weight:600;
+      font-size:15px; font-weight:700;
     }
     .chip{
       padding:8px 10px; border-radius:999px; font-weight:800; font-size:12px;
-      background: rgba(255,122,24,.12); color:#ffd5b5; border:1px solid rgba(255,122,24,.3);
+      background: rgba(255,106,0,.12); color:#B94D00; border:1px solid rgba(255,106,0,.3);
       white-space:nowrap;
     }
 
@@ -147,8 +156,8 @@
       box-shadow: var(--shadow);
     }
     .stat{display:flex; flex-direction:column; gap:4px;}
-    .stat .k{font-size:26px; font-weight:900;}
-    .stat .l{color:var(--muted); font-weight:700; font-size:13px;}
+    .stat .k{font-size:26px; font-weight:900; color:var(--primary);}
+    .stat .l{color:var(--muted); font-weight:800; font-size:13px;}
 
     .section{margin-top:12px; display:none;}
     .section.active{display:block;}
@@ -164,37 +173,45 @@
     table{width:100%; border-collapse:collapse; min-width:880px;}
     thead th{
       text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.8px;
-      color:var(--muted); font-weight:800; padding:12px 14px; background: var(--panel-2);
+      color:#B94D00; font-weight:900; padding:12px 14px; background: var(--panel-2);
       position:sticky; top:0;
     }
     tbody td{
-      padding:12px 14px; border-top: var(--border); font-weight:600; font-size:14px;
+      padding:12px 14px; border-top: var(--border); font-weight:700; font-size:14px;
     }
-    tbody tr:hover{ background: rgba(255,255,255,.03); }
+    tbody tr:hover{ background: rgba(255,106,0,.05); }
 
     .status{
       padding:6px 8px; border-radius:999px; font-size:12px; font-weight:900;
       display:inline-flex; align-items:center; gap:6px;
     }
     .status.new{
-      background:rgba(241,196,15,.12);
-      color:#f9e390; border:1px solid rgba(241,196,15,.35);
+      background:rgba(255,145,0,.12);
+      color:#A65C00; border:1px solid rgba(255,145,0,.35);
     }
     .status.accepted{
-      background:rgba(46,204,113,.12);
-      color:#a6f3c8; border:1px solid rgba(46,204,113,.35);
+      background:rgba(25,179,107,.12);
+      color:#0E7A47; border:1px solid rgba(25,179,107,.35);
     }
     .status.cancelled{
-      background:rgba(255,107,107,.12);
-      color:#ffc5c5; border:1px solid rgba(255,107,107,.35);
+      background:rgba(228,77,77,.12);
+      color:#A02A2A; border:1px solid rgba(228,77,77,.35);
     }
 
     .actions{display:flex; gap:8px; flex-wrap:wrap;}
     .actions .btn{padding:7px 10px; font-size:12px; border-radius:10px;}
-    .btn.good{ background: rgba(46,204,113,.12); border:1px solid rgba(46,204,113,.35); }
-    .btn.bad{ background: rgba(255,107,107,.12); border:1px solid rgba(255,107,107,.35); }
+    .btn.good{
+      background: rgba(25,179,107,.12);
+      border:1px solid rgba(25,179,107,.35);
+      color:#0E7A47;
+    }
+    .btn.bad{
+      background: rgba(228,77,77,.12);
+      border:1px solid rgba(228,77,77,.35);
+      color:#A02A2A;
+    }
 
-    .muted{ color:var(--muted); font-weight:600; }
+    .muted{ color:var(--muted); font-weight:700; }
 
     /* Latest list */
     .latest{display:grid; gap:8px; max-height:260px; overflow:auto;}
@@ -204,7 +221,7 @@
       padding:10px 12px;
       border-radius:12px;
       display:flex; justify-content:space-between; align-items:center; gap:10px;
-      font-weight:700;
+      font-weight:800;
     }
     .latest .item small{color:var(--muted); font-weight:700;}
 
@@ -215,6 +232,7 @@
     }
     .product{
       background: var(--panel); border: var(--border); border-radius:14px; overflow:hidden;
+      box-shadow: var(--shadow);
     }
     .product img{ width:100%; height:140px; object-fit:cover; }
     .product .meta{ padding:10px 12px; display:grid; gap:6px; }
@@ -224,16 +242,15 @@
     .hh-row input{
       flex:1; min-width:240px;
       background: var(--panel-2); border: var(--border); color:var(--text);
-      padding:12px; border-radius:12px; font-weight:700; outline:none;
+      padding:12px; border-radius:12px; font-weight:800; outline:none;
     }
 
     /* Toast */
     .toast{
       position:fixed; right:16px; bottom:16px; z-index:999;
-      background: var(--panel-2);
-      border: var(--border);
+      background: #fff; border: var(--border);
       color:var(--text); padding:12px 14px; border-radius:12px;
-      font-weight:800; box-shadow: var(--shadow);
+      font-weight:900; box-shadow: var(--shadow);
       opacity:0; transform: translateY(8px); transition:.2s;
     }
     .toast.show{ opacity:1; transform: translateY(0); }
@@ -311,7 +328,7 @@
       <div class="card" style="margin-top:12px">
         <div style="display:flex;justify-content:space-between;align-items:center">
           <h3 style="margin:0">Ostatnie rezerwacje</h3>
-          <button id="newResBtn" class="btn">Dodaj ręcznie</button>
+          <button id="newResBtn" class="btn primary">Dodaj ręcznie</button>
         </div>
         <div id="latestList" class="latest" style="margin-top:10px"></div>
       </div>
@@ -375,7 +392,7 @@
   <div class="product">
     <img src="" alt="">
     <div class="meta">
-      <div class="p-title" style="font-weight:800"></div>
+      <div class="p-title" style="font-weight:900"></div>
       <div class="p-price" style="color:var(--muted);font-weight:800"></div>
       <div style="display:flex;gap:8px;margin-top:4px">
         <button class="btn editP">Edytuj</button>
@@ -417,7 +434,7 @@
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
       audioCtx.resume().then(() => {
         audioUnlocked = true;
-        playDing(true); // pre-warm cichy ping
+        playDing(true);
       }).catch(()=>{});
     } catch (e) {}
   }
@@ -434,7 +451,7 @@
       }
 
       const now = audioCtx.currentTime;
-      const TAIL = 5.0; // <- 5 sekund trwania
+      const TAIL = 5.0;
 
       function tone(freq, start, dur, peakGain){
         const o = audioCtx.createOscillator();
@@ -453,7 +470,6 @@
         o.stop(start + dur);
       }
 
-      // „ding ding” z 5s ogonem
       tone(880,  now,        TAIL, 0.60);
       tone(1180, now + 0.22, TAIL, 0.65);
       tone(1760, now + 0.02, TAIL, 0.20);
@@ -733,7 +749,7 @@
   socket.on("reservation:new", (resv)=>{
     state.reservations.unshift(resv);
     refreshAll();
-    playDing(); // 5 sekund wybrzmiewania
+    playDing();
     toast("Nowa rezerwacja: " + resv.name);
   });
 

@@ -416,32 +416,62 @@
   let state = DB.read();
 
   // ---------------------------
-  // Ding-ding sound (WebAudio)
+  // Ding-ding sound (WebAudio) — autoplay-safe
   // ---------------------------
-  function playDing(){
-    try{
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const now = ctx.currentTime;
+  let audioCtx = null;
+  let audioUnlocked = false;
 
-      function tone(freq, start, dur){
-        const o = ctx.createOscillator();
-        const g = ctx.createGain();
+  function unlockAudioOnce() {
+    if (audioUnlocked) return;
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      audioCtx.resume().then(() => {
+        audioUnlocked = true;
+        console.log("[ADMIN] audio unlocked");
+        // cichy ping testowy, żeby przeglądarka "złapała" audio
+        playDing(true);
+      }).catch(()=>{});
+    } catch(e){}
+  }
+
+  // odblokuj audio na pierwszym geście użytkownika
+  ["click","touchstart","keydown"].forEach(evt=>{
+    window.addEventListener(evt, unlockAudioOnce, { once:true, passive:true });
+  });
+
+  function playDing(silentTest=false){
+    try{
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume().catch(()=>{});
+      }
+
+      const now = audioCtx.currentTime;
+
+      function tone(freq, start, dur, gain=0.25){
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
         o.type = "sine";
         o.frequency.value = freq;
+
+        const realGain = silentTest ? 0.0001 : gain;
+
         g.gain.setValueAtTime(0.0001, start);
-        g.gain.exponentialRampToValueAtTime(0.25, start + 0.02);
+        g.gain.exponentialRampToValueAtTime(realGain, start + 0.02);
         g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-        o.connect(g).connect(ctx.destination);
+
+        o.connect(g).connect(audioCtx.destination);
         o.start(start);
         o.stop(start + dur);
       }
 
-      tone(950, now, 0.18);
+      // „ding ding”
+      tone(950,  now,       0.18);
       tone(1200, now + 0.2, 0.18);
 
-      setTimeout(()=>ctx.close(), 700);
     }catch(e){
-      console.warn("Audio blocked:", e);
+      console.warn("[ADMIN] audio blocked:", e);
     }
   }
 
@@ -572,7 +602,7 @@
     refreshStats();
   }
 
-  // Local-only actions (jak chcesz to spiąć z serwerem, dopiszę Ci endpointy)
+  // Local-only actions
   function updateResStatus(index, status){
     const r = state.reservations[index]; if(!r) return;
     r.status = status; r.updated = new Date().toISOString();
@@ -734,11 +764,10 @@
   });
 
   socket.on("reservation:new", (resv)=>{
-    // realtime: bez odświeżania
     state.reservations.unshift(resv);
     refreshAll();
 
-    // dzwonek + toast
+    // DZWONEK + toast
     playDing();
     toast("Nowa rezerwacja: " + resv.name);
   });

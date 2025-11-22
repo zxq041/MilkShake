@@ -6,20 +6,33 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 
-const PUBLIC_DIR = path.join(__dirname, 'public');
+// Jeśli wszystkie pliki są w jednym folderze z server.js:
+const PUBLIC_DIR = __dirname;
 const DB_FILE = path.join(__dirname, 'db.json');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+
+// Socket.io z CORS (bezpieczniej na hostingach)
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"]
+  }
+});
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve static files (index.html, admin.html etc.)
+// Serve static files from root directory
 app.use(express.static(PUBLIC_DIR));
+
+// Route "/" -> index.html (gwarancja że root działa)
+app.get('/', (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
+});
 
 // Simple file-backed DB
 function readDB() {
@@ -35,6 +48,7 @@ function readDB() {
     return { reservations: [], products: [], happy: '' };
   }
 }
+
 function writeDB(data) {
   fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 }
@@ -51,15 +65,16 @@ app.get('/api/rezerwacje', (req, res) => {
   res.json(db.reservations || []);
 });
 
-// API: create reservation (index.html posts here)
+// API: create reservation
 app.post('/api/rezerwacje', (req, res) => {
   try {
     const db = readDB();
     const payload = req.body || {};
 
-    // Basic normalization/validation
     if (!payload.name || !payload.phone || !payload.date || !payload.time) {
-      return res.status(400).json({ message: 'Brakuje wymaganych pól: name, phone, date, time' });
+      return res.status(400).json({
+        message: 'Brakuje wymaganych pól: name, phone, date, time'
+      });
     }
 
     const newRes = {
@@ -79,10 +94,7 @@ app.post('/api/rezerwacje', (req, res) => {
     db.reservations.push(newRes);
     writeDB(db);
 
-    // Emit via WebSocket so admin sees it immediately
     io.emit('reservation:new', newRes);
-
-    // Also emit full state update optionally:
     io.emit('state:update', db);
 
     return res.status(201).json({ ok: true, reservation: newRes });
@@ -92,7 +104,7 @@ app.post('/api/rezerwacje', (req, res) => {
   }
 });
 
-// Optional endpoints to sync products/happy hour from admin panel (if needed)
+// Admin sync endpoints
 app.post('/api/products', (req, res) => {
   try {
     const db = readDB();
@@ -100,8 +112,11 @@ app.post('/api/products', (req, res) => {
     writeDB(db);
     io.emit('state:update', db);
     res.json({ ok: true });
-  } catch (err) { res.status(500).json({ message: 'error' }); }
+  } catch (err) {
+    res.status(500).json({ message: 'error' });
+  }
 });
+
 app.post('/api/happy', (req, res) => {
   try {
     const db = readDB();
@@ -109,20 +124,28 @@ app.post('/api/happy', (req, res) => {
     writeDB(db);
     io.emit('state:update', db);
     res.json({ ok: true });
-  } catch (err) { res.status(500).json({ message: 'error' }); }
+  } catch (err) {
+    res.status(500).json({ message: 'error' });
+  }
 });
 
-// Socket.IO handlers (mainly for broadcasting)
+// Socket.IO handlers
 io.on('connection', (socket) => {
   console.log('Socket connected:', socket.id);
 
-  // On new connection, optionally send full state
   const db = readDB();
   socket.emit('state:init', db);
 
   socket.on('disconnect', () => {
     console.log('Socket disconnected:', socket.id);
   });
+});
+
+// Fallback: jeśli ktoś wchodzi w nieistniejącą trasę
+// a plik istnieje (np. /admin.html), static go obsłuży.
+// Jeśli nie istnieje — wyślij index.html (SPA-safe).
+app.get('*', (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
 // Start server

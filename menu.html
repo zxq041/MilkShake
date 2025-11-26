@@ -3,8 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Menu | MilkShake Bar</title>
-    <meta name="description" content="Pełne menu MilkShake Bar – desery, shakes, burgery i więcej. Sprawdź wszystkie nasze kompozycje smakowe.">
+    <title>Menu MilkShake Bar Słupsk | Shakes, desery, burgery</title>
+    <meta name="description" content="Pełne menu MilkShake Bar w Słupsku – milkshake’i, desery, pancakes, gofry, burgery, śniadania i napoje. Sprawdź wszystkie nasze kompozycje smakowe.">
+    <meta name="keywords" content="menu milkshake bar słupsk, milkshake menu słupsk, desery menu słupsk, burgery menu słupsk">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://www.milkshakebar.pl/menu.html">
+
+    <meta property="og:title" content="Menu MilkShake Bar Słupsk | Shakes, desery, burgery">
+    <meta property="og:description" content="Poznaj pełne menu MilkShake Bar w Słupsku: milkshake’i, desery, burgery, śniadania i napoje.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.milkshakebar.pl/menu.html">
+    <meta property="og:image" content="https://i.imgur.com/kfE4j7j.jpeg">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Menu MilkShake Bar Słupsk | Shakes, desery, burgery">
+    <meta name="twitter:description" content="Pełne menu MilkShake Bar w Słupsku – od milkshake’ów po burgery.">
+    <meta name="twitter:image" content="https://i.imgur.com/kfE4j7j.jpeg">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,7 +27,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <style>
-        /* === PALETA KOLORÓW - EATMI ORANGE === */
         :root {
             --primary-color: #FF6A00;
             --secondary-color: #FF9100;
@@ -71,7 +84,6 @@
             position: relative;
         }
 
-        /* --- Nagłówek --- */
         .header {
             position: fixed;
             top: 0;
@@ -178,7 +190,6 @@
 
         .hamburger { display: none; }
 
-        /* --- HERO MENU --- */
         .menu-hero {
             min-height: 60vh;
             display: flex;
@@ -248,7 +259,6 @@
             font-size: 0.9rem;
         }
 
-        /* --- FILTRY KATEGORII --- */
         .menu-filters {
             margin: 40px 0 20px;
             display: flex;
@@ -287,7 +297,6 @@
             border-color: transparent;
         }
 
-        /* --- LISTA MENU --- */
         .menu-section-subtitle {
             text-align: center;
             margin-bottom: 10px;
@@ -399,7 +408,6 @@
             color: rgba(43, 19, 0, 0.7);
         }
 
-        /* --- STOPKA --- */
         .footer {
             background-color: var(--background-dark);
             color: #ccc;
@@ -487,7 +495,6 @@
             opacity: 0.8;
         }
 
-        /* --- RESPONSYWNOŚĆ --- */
         @media (max-width: 992px) {
             .nav-menu {
                 position: fixed;
@@ -509,7 +516,6 @@
                 font-size: 1.4rem;
             }
 
-            /* PRZYCISK NIE NACHODZI NA MOBILE – chowamy go, zostaje link "Rezerwacja" w menu */
             .nav-btn {
                 display: none;
             }
@@ -566,7 +572,7 @@
     <div class="container">
         <nav class="navbar">
             <a href="index.html#home" class="logo">
-                <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="Logo MilkShake Bar">
+                <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="Logo MilkShake Bar Słupsk">
                 <span>MilkShake Bar</span>
             </a>
             <ul class="nav-menu">
@@ -584,7 +590,6 @@
 </header>
 
 <main>
-    <!-- HERO MENU -->
     <section class="menu-hero">
         <div class="container">
             <div class="menu-hero-inner">
@@ -592,13 +597,13 @@
                     <div class="menu-hero-badge">
                         <i class="fas fa-star"></i> Pełna karta smaków
                     </div>
-                    <h1>Nasze <span class="highlight">menu</span></h1>
+                    <h1>Menu <span class="highlight">MilkShake Bar w Słupsku</span></h1>
                     <p>Od kremowych milkshake’ów, przez autorskie desery, aż po soczyste burgery. 
-                        Wybierz swój nastrój i znajdź idealną pozycję na dziś.</p>
+                        Wybierz swój nastrój i znajdź idealną pozycję na dziś w MilkShake Bar w Słupsku.</p>
                     <p class="menu-section-subtitle">Shakes – koktajl na bazie lodów włoskich 300 ml.</p>
                 </div>
                 <div class="menu-hero-visual">
-                    <img src="https://i.imgur.com/kfE4j7j.jpeg" alt="Milkshake dekorowany słodkościami">
+                    <img src="https://i.imgur.com/kfE4j7j.jpeg" alt="Milkshake w MilkShake Bar Słupsk dekorowany słodkościami">
                     <div class="menu-hero-tag">
                         <strong>30+ pozycji</strong><br>
                         Desery • Shakes • Burgery
@@ -608,12 +613,10 @@
         </div>
     </section>
 
-    <!-- FILTRY + LISTA MENU -->
     <section class="section" id="full-menu">
         <div class="container">
             <h2 class="section-title">Wybierz kategorię</h2>
 
-            <!-- GŁÓWNE KATEGORIE -->
             <div class="menu-filters" id="mainFilters">
                 <button class="filter-btn active" data-filter="all">
                     <i class="fas fa-layer-group"></i> Wszystko
@@ -644,14 +647,12 @@
                 </button>
             </div>
 
-            <!-- PODKATEGORIE (dynamicznie zmieniane w JS) -->
             <div class="menu-filters menu-subfilters" id="subFilters"></div>
 
             <div class="menu-grid" id="menuGrid">
-                <!-- SHAKES -->
                 <article class="menu-item-card" data-category="shake" data-subcategory="best-of">
                     <div class="menu-item-image">
-                        <img src="https://i.imgur.com/kfE4j7j.jpeg" alt="MilkShake Oreo Deluxe">
+                        <img src="https://i.imgur.com/kfE4j7j.jpeg" alt="MilkShake Oreo Deluxe w MilkShake Bar Słupsk">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
@@ -671,7 +672,7 @@
 
                 <article class="menu-item-card" data-category="shake" data-subcategory="klasyka">
                     <div class="menu-item-image">
-                        <img src="https://i.imgur.com/dsMynF5.png" alt="MilkShake Czekoladowy Crunch">
+                        <img src="https://i.imgur.com/dsMynF5.png" alt="MilkShake Choco Crunch w MilkShake Bar Słupsk">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
@@ -691,7 +692,7 @@
 
                 <article class="menu-item-card" data-category="shake" data-subcategory="owocowe">
                     <div class="menu-item-image">
-                        <img src="https://i.imgur.com/7Bx2X7g.png" alt="MilkShake Truskawkowy Cloud">
+                        <img src="https://i.imgur.com/7Bx2X7g.png" alt="MilkShake Strawberry Cloud w MilkShake Bar Słupsk">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
@@ -709,10 +710,9 @@
                     </div>
                 </article>
 
-                <!-- DESERY -->
                 <article class="menu-item-card" data-category="deser" data-subcategory="desery-lodowe">
                     <div class="menu-item-image">
-                        <img src="https://i.imgur.com/frz51UG.png" alt="Deser Brownie Lava">
+                        <img src="https://i.imgur.com/frz51UG.png" alt="Deser Brownie Lava w MilkShake Bar Słupsk">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
@@ -732,7 +732,7 @@
 
                 <article class="menu-item-card" data-category="deser" data-subcategory="pancakes">
                     <div class="menu-item-image">
-                        <img src="https://i.imgur.com/GRvCj6z.png" alt="Deser Pancake Berry Stack">
+                        <img src="https://i.imgur.com/GRvCj6z.png" alt="Deser Pancake Berry Stack w MilkShake Bar Słupsk">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
@@ -752,7 +752,7 @@
 
                 <article class="menu-item-card" data-category="deser" data-subcategory="gofry-amerykanskie">
                     <div class="menu-item-image">
-                        <img src="https://i.imgur.com/XIdoN0y.png" alt="Deser Classic Waffle">
+                        <img src="https://i.imgur.com/XIdoN0y.png" alt="Deser Classic Waffle w MilkShake Bar Słupsk">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
@@ -770,10 +770,9 @@
                     </div>
                 </article>
 
-                <!-- BURGERY -->
                 <article class="menu-item-card" data-category="burger">
                     <div class="menu-item-image">
-                        <img src="https://i.imgur.com/5Hqv7yL.jpeg" alt="Burger Classic Smash">
+                        <img src="https://i.imgur.com/5Hqv7yL.jpeg" alt="Classic Smash Burger w MilkShake Bar Słupsk">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
@@ -793,7 +792,7 @@
 
                 <article class="menu-item-card" data-category="burger">
                     <div class="menu-item-image">
-                        <img src="https://i.imgur.com/Yg5CqKE.jpeg" alt="Burger BBQ Bacon">
+                        <img src="https://i.imgur.com/Yg5CqKE.jpeg" alt="BBQ Bacon Burger w MilkShake Bar Słupsk">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
@@ -813,7 +812,7 @@
 
                 <article class="menu-item-card" data-category="burger">
                     <div class="menu-item-image">
-                        <img src="https://i.imgur.com/3dJ7z0u.jpeg" alt="Burger Vege Halloumi">
+                        <img src="https://i.imgur.com/3dJ7z0u.jpeg" alt="Halloumi Vege Burger w MilkShake Bar Słupsk">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
@@ -831,10 +830,9 @@
                     </div>
                 </article>
 
-                <!-- PRZEKĄSKI / STARTERY (pod Kanapki) -->
                 <article class="menu-item-card" data-category="kanapki" data-subcategory="startery">
                     <div class="menu-item-image">
-                        <img src="https://i.imgur.com/8fDvYFs.jpeg" alt="Frytki belgijskie">
+                        <img src="https://i.imgur.com/8fDvYFs.jpeg" alt="Frytki belgijskie w MilkShake Bar Słupsk">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
@@ -854,7 +852,7 @@
 
                 <article class="menu-item-card" data-category="kanapki" data-subcategory="startery">
                     <div class="menu-item-image">
-                        <img src="https://i.imgur.com/0dBBh9X.jpeg" alt="Krążki cebulowe">
+                        <img src="https://i.imgur.com/0dBBh9X.jpeg" alt="Krążki cebulowe w MilkShake Bar Słupsk">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
@@ -872,10 +870,9 @@
                     </div>
                 </article>
 
-                <!-- NAPOJE & KAWA -->
                 <article class="menu-item-card" data-category="napoje-soki">
                     <div class="menu-item-image">
-                        <img src="https://i.imgur.com/t0n9H2p.jpeg" alt="Lemoniada cytrusowa">
+                        <img src="https://i.imgur.com/t0n9H2p.jpeg" alt="Lemoniada cytrusowa w MilkShake Bar Słupsk">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
@@ -895,7 +892,7 @@
 
                 <article class="menu-item-card" data-category="kawa-herbata">
                     <div class="menu-item-image">
-                        <img src="https://i.imgur.com/5UpwP8R.jpeg" alt="Cold brew coffee">
+                        <img src="https://i.imgur.com/5UpwP8R.jpeg" alt="Cold Brew Coffee w MilkShake Bar Słupsk">
                     </div>
                     <div class="menu-item-content">
                         <div class="menu-item-header">
@@ -926,7 +923,7 @@
         <div class="footer-grid">
             <div class="footer-col">
                 <a href="index.html#home" class="logo">
-                    <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="Logo MilkShake Bar">
+                    <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="Logo MilkShake Bar Słupsk">
                     <span>MilkShake Bar</span>
                 </a>
                 <p>Każdy łyk i każdy kęs to małe dzieło sztuki – wybierz coś z menu i daj się zaskoczyć.</p>
@@ -935,7 +932,7 @@
                 <h4>Nawigacja</h4>
                 <ul>
                     <li><a href="index.html#about">O nas</a></li>
-                    <li><a href="menu.html">Menu</a></li>
+                    <li><a href="menu.html">Pełne menu MilkShake Bar Słupsk</a></li>
                     <li><a href="index.html#gallery">Galeria</a></li>
                     <li><a href="index.html#reservation">Rezerwacja</a></li>
                 </ul>
@@ -964,13 +961,11 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // efekt scrolled dla nagłówka
         const header = document.getElementById('header');
         window.addEventListener('scroll', () => {
             header.classList.toggle('scrolled', window.scrollY > 50);
         });
 
-        // menu mobilne
         const hamburger = document.querySelector('.hamburger');
         const navMenu = document.querySelector('.nav-menu');
         const navLinks = document.querySelectorAll('.nav-link');
@@ -981,7 +976,6 @@
         if (hamburger) hamburger.addEventListener('click', toggleMenu);
         navLinks.forEach(link => link.addEventListener('click', closeMenu));
 
-        // FILTROWANIE
         const filterButtons = document.querySelectorAll('.filter-btn[data-filter]');
         const subFiltersContainer = document.getElementById('subFilters');
         const menuItems = document.querySelectorAll('.menu-item-card');
@@ -1033,7 +1027,6 @@
             const config = subFiltersConfig[mainCategory];
             if (!config) return;
 
-            // przycisk "Wszystkie"
             const allBtn = document.createElement('button');
             allBtn.className = 'filter-btn subfilter-btn active';
             allBtn.dataset.subfilter = 'all';
@@ -1049,7 +1042,6 @@
                 applyFilters();
             });
 
-            // pozostałe podkategorie
             config.forEach(sub => {
                 const btn = document.createElement('button');
                 btn.className = 'filter-btn subfilter-btn';
@@ -1107,7 +1099,6 @@
 
                 currentMainFilter = filter || 'all';
 
-                // generowanie podkategorii dla danej kategorii
                 if (currentMainFilter === 'all') {
                     subFiltersContainer.innerHTML = '';
                     currentSubFilter = 'all';
@@ -1119,12 +1110,9 @@
             });
         });
 
-        
         applyFilters();
     });
 </script>
 
 </body>
 </html>
-
-

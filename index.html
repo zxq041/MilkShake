@@ -3,9 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MilkShake Bar | Nowoczesny Wymiar Smaku</title>
-    <meta name="description" content="Odkryj MilkShake Bar w Słupsku – miejsce, gdzie klasyczne koktajle spotykają nowoczesny design. Poznaj nasze unikalne kompozycje smakowe i zarezerwuj stolik online.">
-    <meta name="keywords" content="milkshake, bar, Słupsk, koktajle, desery, nowoczesny bar, rezerwacja online">
+
+    <title>MilkShake Bar Słupsk | Milkshake, desery i burgery</title>
+
+    <meta name="description" content="MilkShake Bar w Słupsku – kremowe milkshake’i, desery, burgery i śniadania. Zarezerwuj stolik online i odkryj swoje ulubione smaki.">
+    <meta name="keywords" content="milkshake słupsk, milkshake bar słupsk, desery słupsk, burgery słupsk, koktajle mleczne słupsk">
+    <meta name="robots" content="index, follow">
+
+    <link rel="canonical" href="https://www.milkshakebar.pl/">
+
+    <meta property="og:title" content="MilkShake Bar Słupsk | Milkshake, desery i burgery">
+    <meta property="og:description" content="Nowoczesny MilkShake Bar w Słupsku – milkshake’i, desery, burgery i śniadania. Zarezerwuj stolik online.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.milkshakebar.pl/">
+    <meta property="og:image" content="https://i.imgur.com/XIdoN0y.png">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MilkShake Bar Słupsk | Milkshake, desery i burgery">
+    <meta name="twitter:description" content="Kremowe milkshake’i, desery i burgery w Słupsku. Sprawdź nasze menu i zarezerwuj stolik online.">
+    <meta name="twitter:image" content="https://i.imgur.com/XIdoN0y.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,20 +30,19 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
     <style>
-        /* === PALETA KOLORÓW - EATMI ORANGE === */
         :root {
-            --primary-color: #FF6A00;      /* Eatmi Orange */
-            --secondary-color: #FF9100;    /* Jaśniejszy pomarańcz */
-            --accent-color: #FFE0B2;       /* Ciepły kremowy akcent */
-            --background-light: #FFF6EC;   /* Delikatne, ciepłe tło */
-            --background-dark: #22110A;    /* Głęboki brąz pod ciemne sekcje */
-            --text-color-dark: #2B1300;    /* Ciemny, ciepły brąz */
+            --primary-color: #FF6A00;
+            --secondary-color: #FF9100;
+            --accent-color: #FFE0B2;
+            --background-light: #FFF6EC;
+            --background-dark: #22110A;
+            --text-color-dark: #2B1300;
             --text-color-light: #FFFFFF;
             --gradient-bg: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
             --shadow: 0px 10px 30px rgba(0, 0, 0, 0.12);
             --border-radius: 20px;
-            --success-color: #16A34A;      /* Zielone powiadomienie */
-            --error-color: #DC2626;        /* Czerwone powiadomienie */
+            --success-color: #16A34A;
+            --error-color: #DC2626;
         }
 
         *, *::before, *::after {
@@ -70,7 +85,6 @@
             position: relative;
         }
 
-        /* --- Nagłówek --- */
         .header {
             position: fixed;
             top: 0;
@@ -176,7 +190,6 @@
         
         .hamburger { display: none; }
         
-        /* --- Hero Section --- */
         .hero {
             min-height: 100vh;
             display: flex;
@@ -244,13 +257,11 @@
             box-shadow: var(--shadow);
         }
 
-        /* --- Section Styling --- */
         .section {
             padding: 120px 0;
             position: relative;
         }
 
-        /* --- O Nas --- */
         #about {
             background-color: #fff;
         }
@@ -277,7 +288,6 @@
             margin-bottom: 20px;
         }
 
-        /* --- Menu Section --- */
         .menu-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -342,7 +352,6 @@
             -webkit-text-fill-color: transparent;
         }
         
-        /* --- Galeria --- */
         #gallery {
             background-color: #fff;
         }
@@ -366,7 +375,6 @@
             filter: brightness(0.9);
         }
         
-        /* --- Lokalizacja & Kontakt --- */
         .location-contact-grid {
             display: grid;
             grid-template-columns: 1fr 1.2fr;
@@ -418,7 +426,6 @@
             filter: grayscale(20%) sepia(30%) hue-rotate(-15deg) saturate(140%);
         }
 
-        /* --- STOPKA --- */
         .footer {
             background-color: var(--background-dark);
             color: #ccc;
@@ -505,7 +512,6 @@
             opacity: 0.8;
         }
         
-        /* --- Animacje --- */
         .fade-in {
             opacity: 0;
             transform: translateY(50px);
@@ -516,7 +522,6 @@
             transform: translateY(0);
         }
 
-        /* --- TOAST (ZIELONE POWIADOMIENIE) --- */
         .reservation-toast {
             position: fixed;
             bottom: 20px;
@@ -547,7 +552,6 @@
             font-size: 1rem;
         }
 
-        /* --- Responsywność --- */
         @media(max-width: 1024px) {
             .reservation-wrapper {
                 padding: 30px;
@@ -596,7 +600,6 @@
             .footer-socials { justify-content: center; }
         }
 
-        /* === DODATKOWE STYLE DLA ZMIENIONEJ SEKCJI REZERWACJI === */
         .reservation-wrapper.grid-two-col {
           display: grid;
           grid-template-columns: 1fr 420px;
@@ -704,6 +707,57 @@
           .booking-form .form-row { flex-direction: column; }
         }
     </style>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Restaurant",
+      "name": "MilkShake Bar",
+      "image": "https://i.imgur.com/XIdoN0y.png",
+      "@id": "https://www.milkshakebar.pl/",
+      "url": "https://www.milkshakebar.pl/",
+      "telephone": "+48 733 033 100",
+      "priceRange": "$$",
+      "servesCuisine": ["Desery", "Burgery", "Milkshake"],
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Szczecińska 17",
+        "addressLocality": "Słupsk",
+        "postalCode": "76-200",
+        "addressCountry": "PL"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": 54.46737,
+        "longitude": 17.01510
+      },
+      "openingHoursSpecification": [
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": [
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday"
+          ],
+          "opens": "12:00",
+          "closes": "22:00"
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": "Sunday",
+          "opens": "12:00",
+          "closes": "21:00"
+        }
+      ],
+      "sameAs": [
+        "https://www.facebook.com/milkshakebar",
+        "https://www.instagram.com/milkshake_slupsk"
+      ]
+    }
+    </script>
 </head>
 <body>
 
@@ -711,7 +765,7 @@
         <div class="container">
             <nav class="navbar">
                 <a href="#home" class="logo">
-                    <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="Logo MilkShake Bar">
+                    <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="Logo MilkShake Bar Słupsk">
                     <span>MilkShake Bar</span>
                 </a>
                 <ul class="nav-menu">
@@ -734,12 +788,12 @@
             <div class="container">
                 <div class="hero-content">
                     <div class="hero-text fade-in">
-                        <h1>Sztuka idealnego <span class="highlight">Milkshake'a</span></h1>
+                        <h1>Sztuka idealnego <span class="highlight">milkshake'a w Słupsku</span></h1>
                         <p>Zanurz się w świecie kremowej perfekcji. Tworzymy niezapomniane kompozycje, które pobudzą Twoje zmysły i wywołają uśmiech.</p>
                         <a href="#menu" class="btn btn-primary">Zobacz nasze menu <i class="fas fa-arrow-down"></i></a>
                     </div>
                     <div class="hero-image-container fade-in" style="transition-delay: 0.2s;">
-                        <img src="https://i.imgur.com/XIdoN0y.png" alt="Pyszny milkshake z bitą śmietaną" class="hero-image" id="rotating-hero-image">
+                        <img src="https://i.imgur.com/XIdoN0y.png" alt="MilkShake Bar Słupsk - pyszny milkshake z bitą śmietaną" class="hero-image" id="rotating-hero-image">
                     </div>
                 </div>
             </div>
@@ -751,11 +805,11 @@
                 <div class="about-content">
                     <div class="about-text fade-in">
                         <h3>Nasza pasja do smaku.</h3>
-                        <p>MilkShake Bar narodził się z miłości do prostych przyjemności. Wierzymy, że najlepsze smaki pochodzą z najlepszych składników. Dlatego używamy tylko świeżych owoców, prawdziwych lodów rzemieślniczych i naturalnych dodatków.</p>
+                        <p>MilkShake Bar w Słupsku narodził się z miłości do prostych przyjemności. Wierzymy, że najlepsze smaki pochodzą z najlepszych składników. Dlatego używamy tylko świeżych owoców, prawdziwych lodów rzemieślniczych i naturalnych dodatków.</p>
                         <p>Nasza przestrzeń to nowoczesne, pełne energii miejsce, gdzie możesz spotkać się ze znajomymi, zrelaksować i naładować baterie. Każdy milkshake to dla nas małe dzieło sztuki, przygotowane specjalnie dla Ciebie.</p>
                     </div>
                     <div class="about-image fade-in" style="transition-delay: 0.2s;">
-                        <img src="https://i.imgur.com/xppt7GP.jpeg" alt="Nowoczesne wnętrze MilkShake Bar">
+                        <img src="https://i.imgur.com/xppt7GP.jpeg" alt="Wnętrze MilkShake Bar w Słupsku">
                     </div>
                 </div>
             </div>
@@ -767,37 +821,37 @@
                 <div class="menu-grid">
                     <div class="menu-card fade-in">
                         <div class="menu-card-image">
-                            <img src="https://i.imgur.com/kfE4j7j.jpeg" alt="Milkshake truskawkowy z owocami">
+                            <img src="https://i.imgur.com/kfE4j7j.jpeg" alt="Milkshake Oreo w MilkShake Bar Słupsk">
                         </div>
                         <div class="menu-card-content">
                             <h3>MilkShake #1</h3>
-                            <p>Gofr amerykański z ciasteczkami Oreo, białą czekoladą, mascarpone, świeżymi malinami, polewą czekoladową i musem malinowym </p>
+                            <p>Gofr amerykański z ciasteczkami Oreo, białą czekoladą, mascarpone, świeżymi malinami, polewą czekoladową i musem malinowym.</p>
                             <div class="price">21 PLN</div>
                         </div>
                     </div>
                     <div class="menu-card fade-in" style="transition-delay: 0.2s;">
                         <div class="menu-card-image">
-                            <img src="https://i.imgur.com/dsMynF5.png" alt="Milkshake czekoladowy z kulkami">
+                            <img src="https://i.imgur.com/dsMynF5.png" alt="Czekoladowy milkshake w MilkShake Bar Słupsk">
                         </div>
                         <div class="menu-card-content">
                             <h3>MilkShake #2</h3>
-                            <p>Gofr amerykański z ciasteczkami Oreo, białą czekoladą, mascarpone, świeżymi malinami, polewą czekoladową i musem malinowym</p>
+                            <p>Gofr amerykański z ciasteczkami Oreo, białą czekoladą, mascarpone, świeżymi malinami, polewą czekoladową i musem malinowym.</p>
                             <div class="price">23 PLN</div>
                         </div>
                     </div>
                     <div class="menu-card fade-in" style="transition-delay: 0.4s;">
                         <div class="menu-card-image">
-                            <img src="https://i.imgur.com/7Bx2X7g.png" alt="Milkshake o smaku ciasteczkowym">
+                            <img src="https://i.imgur.com/7Bx2X7g.png" alt="Owocowy milkshake w MilkShake Bar Słupsk">
                         </div>
                         <div class="menu-card-content">
                             <h3>MilkShake #3</h3>
-                            <p>Gofr amerykański z ciasteczkami Oreo, białą czekoladą, mascarpone, świeżymi malinami, polewą czekoladową i musem malinowym</p>
+                            <p>Gofr amerykański z ciasteczkami Oreo, białą czekoladą, mascarpone, świeżymi malinami, polewą czekoladową i musem malinowym.</p>
                             <div class="price">24 PLN</div>
                         </div>
                     </div>
                 </div>
                 <div class="see-more-button-container fade-in">
-                    <a href="menu.html" class="btn btn-primary">Zobacz więcej pozycji <i class="fas fa-arrow-right"></i></a>
+                    <a href="menu.html" class="btn btn-primary">Pełne menu MilkShake Bar w Słupsku <i class="fas fa-arrow-right"></i></a>
                 </div>
             </div>
         </section>
@@ -806,23 +860,21 @@
             <div class="container">
                 <h2 class="section-title fade-in">Chwytaj chwile, łap smaki</h2>
                 <div class="gallery-grid fade-in">
-                    <div class="gallery-item"><img src="https://i.imgur.com/XIdoN0y.png" alt="zdj1"></div>
-                    <div class="gallery-item"><img src="https://i.imgur.com/kfE4j7j.jpeg" alt="zdj2"></div>
-                    <div class="gallery-item"><img src="https://i.imgur.com/dsMynF5.png" alt="zdj3"></div>
-                    <div class="gallery-item"><img src="https://i.imgur.com/frz51UG.png" alt="zdj4"></div>
-                    <div class="gallery-item"><img src="https://i.imgur.com/GRvCj6z.png" alt="zdj5"></div>
-                    <div class="gallery-item"><img src="https://i.imgur.com/7Bx2X7g.png" alt="zdj6"></div>
+                    <div class="gallery-item"><img src="https://i.imgur.com/XIdoN0y.png" alt="Milkshake w szklance - MilkShake Bar Słupsk"></div>
+                    <div class="gallery-item"><img src="https://i.imgur.com/kfE4j7j.jpeg" alt="Milkshake z Oreo - MilkShake Bar w Słupsku"></div>
+                    <div class="gallery-item"><img src="https://i.imgur.com/dsMynF5.png" alt="Czekoladowy deser MilkShake Bar Słupsk"></div>
+                    <div class="gallery-item"><img src="https://i.imgur.com/frz51UG.png" alt="Deser Brownie w MilkShake Bar Słupsk"></div>
+                    <div class="gallery-item"><img src="https://i.imgur.com/GRvCj6z.png" alt="Pancakes w MilkShake Bar Słupsk"></div>
+                    <div class="gallery-item"><img src="https://i.imgur.com/7Bx2X7g.png" alt="Owocowy milkshake MilkShake Bar Słupsk"></div>
                 </div>
             </div>
         </section>
         
-        <!-- === SEKCJA REZERWACJI (POPRAWIONA: WYRÓWNAJ, DWA KOLUMNOWE LAYOUT) === -->
         <section id="reservation" class="section">
           <div class="container">
             <h2 class="section-title fade-in">Zarezerwuj swoje idealne miejsce</h2>
 
             <div class="reservation-wrapper grid-two-col fade-in" id="reservation-wrapper">
-              <!-- LEWA KOLUMNA: FORMULARZ -->
               <div class="form-container">
                 <h3>Wypełnij swoje dane</h3>
 
@@ -884,7 +936,6 @@
                 </form>
               </div>
 
-              <!-- PRAWA KOLUMNA: PODSUMOWANIE / WIZUAL -->
               <aside class="reservation-summary" aria-live="polite">
                 <h3>Twoja rezerwacja</h3>
                 <div class="summary-card">
@@ -898,7 +949,7 @@
                 </div>
 
                 <div class="map-mini">
-                  <img src="https://i.imgur.com/xppt7GP.jpeg" alt="Wnętrze MilkShake Bar" style="width:100%; border-radius:12px;">
+                  <img src="https://i.imgur.com/xppt7GP.jpeg" alt="Wnętrze lokalu MilkShake Bar w Słupsku" style="width:100%; border-radius:12px;">
                 </div>
               </aside>
             </div>
@@ -924,7 +975,7 @@
                         </div>
                     </div>
                     <div class="map-container">
-                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2331.002829241513!2d17.01509831582845!3d54.46736898022934!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46fe1e12a4d3148d%3A0xe5a1b37937a6b5a3!2sSzczeci%C5%84ska%2017%2C%2076-200%20S%C5%82upsk!5e0!3m2!1spl!2spl!4v1694080000000" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2331.002829241513!2d17.01509831582845!3d54.46736898022934!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46fe1e12a4d3148d%3A0xe5a1b37937a6b5a3!2sSzczeci%C5%84ska%2017%2C%2076-200%20S%C5%82upsk!5e0!3m2!1spl!2spl!4v1694080000000" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Mapa dojazdu do MilkShake Bar Słupsk"></iframe>
                     </div>
                 </div>
             </div>
@@ -937,7 +988,7 @@
             <div class="footer-grid">
                 <div class="footer-col">
                     <a href="#home" class="logo">
-                        <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="Logo MilkShake Bar">
+                        <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="Logo MilkShake Bar Słupsk">
                         <span>MilkShake Bar</span>
                     </a>
                     <p>Zanurz się w świecie kremowej perfekcji, gdzie każdy koktajl to dzieło sztuki.</p>
@@ -946,7 +997,7 @@
                     <h4>Nawigacja</h4>
                     <ul>
                         <li><a href="#about">O nas</a></li>
-                        <li><a href="#menu">Menu</a></li>
+                        <li><a href="#menu">Menu MilkShake Bar Słupsk</a></li>
                         <li><a href="#gallery">Galeria</a></li>
                         <li><a href="#reservation">Rezerwacja</a></li>
                     </ul>
@@ -956,7 +1007,7 @@
                     <ul>
                         <li><i class="fas fa-map-marker-alt"></i> Szczecińska 17, 76-200 Słupsk</li>
                         <li><i class="fas fa-phone"></i> +48 733 033 100</li>
-                        <li><i class="fas fa-clock"></i> Otwarte: Pn-Pt 8-22, Sb-Nd 10-22</li>
+                        <li><i class="fas fa-clock"></i> Otwarte: Pn-Pt 12-22, Sb 12-22, Nd 12-21</li>
                     </ul>
                 </div>
                 <div class="footer-col">
@@ -973,7 +1024,6 @@
         </div>
     </footer>
 
-    <!-- ZIELONE POWIADOMIENIE O REZERWACJI -->
     <div id="reservation-toast" class="reservation-toast" aria-live="polite">
         <i class="fas fa-check-circle"></i>
         <span id="reservation-toast-text">Rezerwacja została złożona.</span>
@@ -982,7 +1032,6 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
-            // --- Losowanie zdjęcia w hero ---
             const heroImage = document.getElementById('rotating-hero-image');
             if (heroImage) {
                 const images = [
@@ -996,13 +1045,11 @@
                 heroImage.src = images[randomIndex];
             }
 
-            // --- Efekt "scrolled" dla nagłówka ---
             const header = document.getElementById('header');
             window.addEventListener('scroll', () => {
                 header.classList.toggle('scrolled', window.scrollY > 50);
             });
 
-            // --- Menu mobilne ---
             const hamburger = document.querySelector('.hamburger');
             const navMenu = document.querySelector('.nav-menu');
             const navLinks = document.querySelectorAll('.nav-link');
@@ -1013,7 +1060,6 @@
             if (hamburger) hamburger.addEventListener('click', toggleMenu);
             navLinks.forEach(link => link.addEventListener('click', closeMenu));
 
-            // --- Animacje "fade-in" przy przewijaniu ---
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -1025,7 +1071,6 @@
 
             document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
                         
-            // --- Aktywne linki w nawigacji ---
             const sections = document.querySelectorAll('section[id]');
             const updateActiveLink = () => {
                 let currentSection = '';
@@ -1046,7 +1091,6 @@
             window.addEventListener('scroll', updateActiveLink);
             updateActiveLink();
 
-            // --- TOAST (POWIADOMIENIE) ---
             const reservationToast = document.getElementById('reservation-toast');
             const reservationToastText = document.getElementById('reservation-toast-text');
 
@@ -1062,7 +1106,6 @@
                 }, 4000);
             }
 
-            // --- OBSŁUGA FORMULARZA REZERWACJI (NOWA WERSJA Z PODSUMOWANIEM) ---
             (function(){
                 const bookingForm = document.getElementById('bookingForm');
                 if (!bookingForm) return;
@@ -1087,7 +1130,6 @@
                   notes: document.getElementById('summary-notes')
                 };
 
-                // Ustaw minimalną datę (dzisiaj)
                 if (inputs.date) {
                   const today = new Date();
                   const iso = today.toISOString().split('T')[0];
@@ -1105,7 +1147,6 @@
                   summary.room.textContent = selectedRoom ? selectedRoom.value : '—';
                 }
 
-                // Podpinamy event listenery
                 const attach = (el) => {
                   if (!el) return;
                   if (NodeList.prototype.isPrototypeOf(el)) {
@@ -1134,7 +1175,6 @@
                   const data = Object.fromEntries(formData.entries());
 
                   try {
-                    // Wyślij do API (jeśli masz). Jeśli nie, endpoint zwróci błąd.
                     const response = await fetch('/api/rezerwacje', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
@@ -1169,6 +1209,3 @@
     </script>
 </body>
 </html>
-
-
-

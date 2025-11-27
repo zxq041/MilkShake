@@ -5,36 +5,46 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
 
-// Jeśli wszystkie pliki są w jednym folderze z server.js:
 const PUBLIC_DIR = __dirname;
 const DB_FILE = path.join(__dirname, 'db.json');
+const UPLOAD_DIR = path.join(__dirname, 'uploads');
+
+if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR);
+
+// multer storage
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase() || ".jpg";
+    const safe = Date.now() + "-" + Math.random().toString(36).slice(2) + ext;
+    cb(null, safe);
+  }
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 8 * 1024 * 1024 }, // 8MB
+});
 
 const app = express();
 const server = http.createServer(app);
 
-// Socket.io z CORS (bezpieczniej na hostingach)
 const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
-  }
+  cors: { origin: "*", methods: ["GET", "POST"] }
 });
 
-// Middleware
 app.use(cors());
-app.use(express.json({ limit: '15mb' })); // <-- ważne dla base64 zdjęć
-app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Serve static files from root directory
 app.use(express.static(PUBLIC_DIR));
+app.use('/uploads', express.static(UPLOAD_DIR));
 
-// Route "/" -> index.html (gwarancja że root działa)
 app.get('/', (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
-// Simple file-backed DB
 function readDB() {
   try {
     if (!fs.existsSync(DB_FILE)) {
@@ -53,10 +63,9 @@ function writeDB(data) {
   fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 }
 
-// API: get full data
+// API: full data
 app.get('/api/data', (req, res) => {
-  const db = readDB();
-  res.json(db);
+  res.json(readDB());
 });
 
 // API: list reservations
@@ -104,11 +113,22 @@ app.post('/api/rezerwacje', (req, res) => {
   }
 });
 
-// Admin sync endpoints
+// UPLOAD IMAGE
+app.post('/api/upload', upload.single('image'), (req, res) => {
+  try{
+    if(!req.file) return res.status(400).json({ message:"Brak pliku" });
+    const url = "/uploads/" + req.file.filename;
+    res.json({ ok:true, url });
+  }catch(e){
+    res.status(500).json({ message:"Upload error" });
+  }
+});
+
+// PRODUCTS sync
 app.post('/api/products', (req, res) => {
   try {
     const db = readDB();
-    db.products = req.body.products || db.products || [];
+    db.products = req.body.products || [];
     writeDB(db);
     io.emit('state:update', db);
     res.json({ ok: true });
@@ -118,6 +138,7 @@ app.post('/api/products', (req, res) => {
   }
 });
 
+// HAPPY sync
 app.post('/api/happy', (req, res) => {
   try {
     const db = readDB();
@@ -134,21 +155,15 @@ app.post('/api/happy', (req, res) => {
 // Socket.IO handlers
 io.on('connection', (socket) => {
   console.log('Socket connected:', socket.id);
-
-  const db = readDB();
-  socket.emit('state:init', db);
-
-  socket.on('disconnect', () => {
-    console.log('Socket disconnected:', socket.id);
-  });
+  socket.emit('state:init', readDB());
+  socket.on('disconnect', () => console.log('Socket disconnected:', socket.id));
 });
 
-// Fallback: jeśli ktoś wchodzi w nieistniejącą trasę
+// fallback
 app.get('*', (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });
 
-// Start server
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Server started on http://localhost:${PORT}`);

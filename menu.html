@@ -960,160 +960,193 @@
 </footer>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const header = document.getElementById('header');
-        window.addEventListener('scroll', () => {
-            header.classList.toggle('scrolled', window.scrollY > 50);
-        });
+document.addEventListener('DOMContentLoaded', () => {
+  const header = document.getElementById('header');
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 50);
+  });
 
-        const hamburger = document.querySelector('.hamburger');
-        const navMenu = document.querySelector('.nav-menu');
-        const navLinks = document.querySelectorAll('.nav-link');
+  const hamburger = document.querySelector('.hamburger');
+  const navMenu = document.querySelector('.nav-menu');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const toggleMenu = () => navMenu.classList.toggle('active');
+  const closeMenu = () => navMenu.classList.remove('active');
+  if (hamburger) hamburger.addEventListener('click', toggleMenu);
+  navLinks.forEach(link => link.addEventListener('click', closeMenu));
 
-        const toggleMenu = () => navMenu.classList.toggle('active');
-        const closeMenu = () => navMenu.classList.remove('active');
+  const filterButtons = document.querySelectorAll('.filter-btn[data-filter]');
+  const subFiltersContainer = document.getElementById('subFilters');
+  const menuGrid = document.getElementById('menuGrid');
+  const emptyState = document.getElementById('menuEmpty');
 
-        if (hamburger) hamburger.addEventListener('click', toggleMenu);
-        navLinks.forEach(link => link.addEventListener('click', closeMenu));
+  let currentMainFilter = 'all';
+  let currentSubFilter = 'all';
+  let products = [];
 
-        const filterButtons = document.querySelectorAll('.filter-btn[data-filter]');
-        const subFiltersContainer = document.getElementById('subFilters');
-        const menuItems = document.querySelectorAll('.menu-item-card');
-        const emptyState = document.getElementById('menuEmpty');
+  // Subfiltry leciutko mapujemy pod kategorie (opcjonalne)
+  const subFiltersConfig = {
+    shake: [
+      { value: 'klasyka', label: 'Klasyka' },
+      { value: 'best-of', label: 'Best of' },
+      { value: 'owocowe', label: 'Owocowe' },
+      { value: 'proteinowe', label: 'Proteinowe' },
+      { value: 'vip', label: 'Tylko dla VIPów' }
+    ],
+    deser: [
+      { value: 'lody-wloskie', label: 'Lody włoskie' },
+      { value: 'desery-lodowe', label: 'Desery lodowe' },
+      { value: 'gofry-amerykanskie', label: 'Gofry amerykańskie' },
+      { value: 'pancakes', label: 'Pancakes' }
+    ],
+    texmex: [
+      { value: 'fajita', label: 'Fajita' },
+      { value: 'quesadillas', label: 'Quesadillas' },
+      { value: 'pasta', label: 'Pasta' },
+      { value: 'churros', label: 'Churros' },
+      { value: 'salaty', label: 'Sałaty' }
+    ],
+    kanapki: [
+      { value: 'kanapki', label: 'Kanapki' },
+      { value: 'startery', label: 'Startery' },
+      { value: 'dania-glowne', label: 'Dania główne' },
+      { value: 'zestawy', label: 'Zestawy' }
+    ],
+    sniadania: [
+      { value: 'sniadania', label: 'Śniadania' },
+      { value: 'kanapki-sniadaniowe', label: 'Kanapki' },
+      { value: 'chiquita', label: 'Chiquita' },
+      { value: 'sniadania-keto', label: 'Śniadania keto' },
+      { value: 'zestaw-sniadaniowy', label: 'Zestaw' }
+    ]
+  };
 
-        let currentMainFilter = 'all';
-        let currentSubFilter = 'all';
+  function createSubFilters(mainCategory) {
+    subFiltersContainer.innerHTML = '';
+    currentSubFilter = 'all';
 
-        const subFiltersConfig = {
-            shake: [
-                { value: 'klasyka', label: 'Klasyka' },
-                { value: 'best-of', label: 'Best of' },
-                { value: 'owocowe', label: 'Owocowe' },
-                { value: 'proteinowe', label: 'Proteinowe' },
-                { value: 'vip', label: 'Tylko dla VIPów' }
-            ],
-            deser: [
-                { value: 'lody-wloskie', label: 'Lody włoskie' },
-                { value: 'desery-lodowe', label: 'Desery lodowe' },
-                { value: 'gofry-amerykanskie', label: 'Gofry amerykańskie' },
-                { value: 'pancakes', label: 'Pancakes' }
-            ],
-            texmex: [
-                { value: 'fajita', label: 'Fajita' },
-                { value: 'quesadillas', label: 'Quesadillas' },
-                { value: 'pasta', label: 'Pasta' },
-                { value: 'churros', label: 'Churros' },
-                { value: 'salaty', label: 'Sałaty' }
-            ],
-            kanapki: [
-                { value: 'kanapki', label: 'Kanapki' },
-                { value: 'startery', label: 'Startery' },
-                { value: 'dania-glowne', label: 'Dania główne' },
-                { value: 'zestawy', label: 'Zestawy' }
-            ],
-            sniadania: [
-                { value: 'sniadania', label: 'Śniadania' },
-                { value: 'kanapki-sniadaniowe', label: 'Kanapki' },
-                { value: 'chiquita', label: 'Chiquita' },
-                { value: 'sniadania-keto', label: 'Śniadania keto' },
-                { value: 'zestaw-sniadaniowy', label: 'Zestaw' }
-            ]
-        };
+    const config = subFiltersConfig[mainCategory];
+    if (!config) return;
 
-        function createSubFilters(mainCategory) {
-            subFiltersContainer.innerHTML = '';
-            currentSubFilter = 'all';
+    const allBtn = document.createElement('button');
+    allBtn.className = 'filter-btn subfilter-btn active';
+    allBtn.dataset.subfilter = 'all';
+    allBtn.textContent = 'Wszystkie';
+    subFiltersContainer.appendChild(allBtn);
 
-            const config = subFiltersConfig[mainCategory];
-            if (!config) return;
-
-            const allBtn = document.createElement('button');
-            allBtn.className = 'filter-btn subfilter-btn active';
-            allBtn.dataset.subfilter = 'all';
-            allBtn.textContent = 'Wszystkie';
-            subFiltersContainer.appendChild(allBtn);
-
-            allBtn.addEventListener('click', () => {
-                document
-                    .querySelectorAll('.subfilter-btn')
-                    .forEach(b => b.classList.remove('active'));
-                allBtn.classList.add('active');
-                currentSubFilter = 'all';
-                applyFilters();
-            });
-
-            config.forEach(sub => {
-                const btn = document.createElement('button');
-                btn.className = 'filter-btn subfilter-btn';
-                btn.dataset.subfilter = sub.value;
-                btn.textContent = sub.label;
-                subFiltersContainer.appendChild(btn);
-
-                btn.addEventListener('click', () => {
-                    document
-                        .querySelectorAll('.subfilter-btn')
-                        .forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentSubFilter = sub.value;
-                    applyFilters();
-                });
-            });
-        }
-
-        function applyFilters() {
-            let visibleCount = 0;
-
-            menuItems.forEach(item => {
-                const category = item.dataset.category;
-                const subcategory = item.dataset.subcategory || 'all';
-
-                let show = true;
-
-                if (currentMainFilter !== 'all' && category !== currentMainFilter) {
-                    show = false;
-                }
-
-                if (show && currentSubFilter !== 'all' && subcategory !== currentSubFilter) {
-                    show = false;
-                }
-
-                if (show) {
-                    item.style.display = 'flex';
-                    visibleCount++;
-                } else {
-                    item.style.display = 'none';
-                }
-            });
-
-            if (emptyState) {
-                emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
-            }
-        }
-
-        filterButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const filter = btn.dataset.filter;
-
-                filterButtons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-
-                currentMainFilter = filter || 'all';
-
-                if (currentMainFilter === 'all') {
-                    subFiltersContainer.innerHTML = '';
-                    currentSubFilter = 'all';
-                } else {
-                    createSubFilters(currentMainFilter);
-                }
-
-                applyFilters();
-            });
-        });
-
-        applyFilters();
+    allBtn.addEventListener('click', () => {
+      document.querySelectorAll('.subfilter-btn').forEach(b => b.classList.remove('active'));
+      allBtn.classList.add('active');
+      currentSubFilter = 'all';
+      applyFilters();
     });
+
+    config.forEach(sub => {
+      const btn = document.createElement('button');
+      btn.className = 'filter-btn subfilter-btn';
+      btn.dataset.subfilter = sub.value;
+      btn.textContent = sub.label;
+      subFiltersContainer.appendChild(btn);
+
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.subfilter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentSubFilter = sub.value;
+        applyFilters();
+      });
+    });
+  }
+
+  function renderMenuItems(items) {
+    menuGrid.innerHTML = '';
+
+    items.forEach(p => {
+      const article = document.createElement('article');
+      article.className = 'menu-item-card';
+      article.dataset.category = p.category || 'all';
+      article.dataset.subcategory = p.tag || 'all';
+
+      article.innerHTML = `
+        <div class="menu-item-image">
+          <img src="${p.image || 'https://i.imgur.com/kfE4j7j.jpeg'}" alt="${p.title || ''}">
+        </div>
+        <div class="menu-item-content">
+          <div class="menu-item-header">
+            <h3 class="menu-item-title">${p.title || 'Produkt'}</h3>
+            <span class="menu-item-category-pill">
+              ${(p.categoryLabel || p.category || '').toString()}
+              ${p.tag ? ' • ' + p.tag : ''}
+            </span>
+          </div>
+          <p class="menu-item-desc">${p.desc || ''}</p>
+          <div class="menu-item-footer">
+            <span class="menu-item-price">${p.price ?? ''} PLN</span>
+            <span class="menu-item-extra">${p.tag || ''}</span>
+          </div>
+        </div>
+      `;
+      menuGrid.appendChild(article);
+    });
+  }
+
+  function applyFilters() {
+    const cards = menuGrid.querySelectorAll('.menu-item-card');
+    let visibleCount = 0;
+
+    cards.forEach(item => {
+      const category = item.dataset.category;
+      const subcategory = item.dataset.subcategory || 'all';
+      let show = true;
+
+      if (currentMainFilter !== 'all' && category !== currentMainFilter) show = false;
+      if (show && currentSubFilter !== 'all' && subcategory !== currentSubFilter) show = false;
+
+      item.style.display = show ? 'flex' : 'none';
+      if (show) visibleCount++;
+    });
+
+    emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+  }
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter;
+
+      filterButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      currentMainFilter = filter || 'all';
+
+      if (currentMainFilter === 'all') {
+        subFiltersContainer.innerHTML = '';
+        currentSubFilter = 'all';
+      } else {
+        createSubFilters(currentMainFilter);
+      }
+
+      applyFilters();
+    });
+  });
+
+  async function loadProducts() {
+    try {
+      const res = await fetch('/api/data', { cache: 'no-store' });
+      const db = await res.json();
+      products = db.products || [];
+      renderMenuItems(products);
+      applyFilters();
+    } catch (e) {
+      products = [];
+      renderMenuItems([]);
+      applyFilters();
+    }
+  }
+
+  loadProducts();
+});
 </script>
+
 
 </body>
 </html>
+
 

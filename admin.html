@@ -121,7 +121,7 @@
     }
 
     /* Main */
-    .main{padding:14px 16px 90px;} /* na dole miejsce na mobile nav */
+    .main{padding:14px 16px 90px;}
 
     /* Topbar */
     .topbar{
@@ -311,7 +311,7 @@
   <!-- MAIN -->
   <main class="main">
 
-    <!-- TOPBAR (bez wyszukiwarki) -->
+    <!-- TOPBAR -->
     <div class="topbar">
       <div class="chip" id="topHappyPreview">Brak Happy Hour</div>
       <div class="muted" style="font-size:12px">Aktualizacja: <span id="lastUpdate">-</span></div>
@@ -366,7 +366,7 @@
     <!-- PRODUCTS -->
     <section id="tab-products" class="section">
       <div class="card" style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
-        <h3 style="margin:0">Produkty (preview)</h3>
+        <h3 style="margin:0">Produkty (menu)</h3>
         <button id="addProductBtn" class="btn primary">Dodaj produkt</button>
       </div>
       <div id="productGrid" class="product-grid"></div>
@@ -424,6 +424,61 @@
   </div>
 </template>
 
+<!-- MODAL: Dodaj/Edytuj produkt -->
+<div id="productModal" style="
+  position:fixed; inset:0; background:rgba(0,0,0,.35);
+  display:none; align-items:center; justify-content:center; z-index:9998;
+  padding:16px;">
+  <div style="
+    width:min(520px,100%); background:#fff; border:var(--border); box-shadow:var(--shadow);
+    border-radius:20px; padding:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <div style="font-weight:900;font-size:18px;color:var(--primary)" id="pmTitle">Dodaj produkt</div>
+      <button class="btn" id="pmClose">Zamknij</button>
+    </div>
+
+    <div style="display:grid;gap:10px;margin-top:10px">
+      <label style="font-weight:800">Nazwa produktu</label>
+      <input id="pm_name" placeholder="np. MilkShake Oreo Deluxe"
+        style="background:var(--panel-2);border:var(--border);padding:12px;border-radius:12px;font-weight:800" />
+
+      <label style="font-weight:800">Cena (PLN)</label>
+      <input id="pm_price" type="number" min="0" step="1" placeholder="np. 21"
+        style="background:var(--panel-2);border:var(--border);padding:12px;border-radius:12px;font-weight:800" />
+
+      <label style="font-weight:800">Kategoria</label>
+      <select id="pm_category"
+        style="background:var(--panel-2);border:var(--border);padding:12px;border-radius:12px;font-weight:800">
+        <option value="shake">Shakes</option>
+        <option value="deser">Desery</option>
+        <option value="sniadania">Śniadania</option>
+        <option value="texmex">Tex Mex</option>
+        <option value="kanapki">Kanapki</option>
+        <option value="burger">Burgery</option>
+        <option value="kawa-herbata">Kawa i herbata</option>
+        <option value="napoje-soki">Napoje i świeże soki</option>
+      </select>
+
+      <label style="font-weight:800">Tag (np. best-of / owocowe / VIP)</label>
+      <input id="pm_tag" placeholder="np. best-of"
+        style="background:var(--panel-2);border:var(--border);padding:12px;border-radius:12px;font-weight:800" />
+
+      <label style="font-weight:800">Opis</label>
+      <textarea id="pm_desc" rows="3" placeholder="Opis produktu..."
+        style="background:var(--panel-2);border:var(--border);padding:12px;border-radius:12px;font-weight:800;resize:vertical"></textarea>
+
+      <label style="font-weight:800">Zdjęcie (plik lub aparat)</label>
+      <input id="pm_image" type="file" accept="image/*" capture="environment" style="font-weight:800" />
+      <img id="pm_preview" src="" alt="" style="display:none;width:100%;max-height:220px;object-fit:cover;border-radius:12px;border:var(--border)">
+
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:4px">
+        <button class="btn" id="pmCancel">Anuluj</button>
+        <button class="btn primary" id="pmSave">Zapisz produkt</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -441,7 +496,6 @@
     if(lockInput.value === ACCESS_CODE){
       lock.style.display = "none";
       lockErr.style.display="none";
-      // odblokuj audio i pozwolenia po wejściu
       unlockAudioOnce();
       requestNotifPermission();
     } else {
@@ -481,7 +535,7 @@
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
       audioCtx.resume().then(() => {
         audioUnlocked = true;
-        playDing(true); // pre-warm
+        playDing(true);
       }).catch(()=>{});
     } catch (e) {}
   }
@@ -564,8 +618,6 @@
   function setActiveTab(tab){
     qsa(".nav a").forEach(x=>x.classList.toggle("active", x.dataset.tab===tab));
     qsa(".section").forEach(s=>s.classList.toggle("active", s.id==="tab-"+tab));
-
-    // mobile nav highlight
     qsa("#mobileNav button").forEach(b=>b.classList.toggle("active", b.dataset.tab===tab));
   }
 
@@ -689,6 +741,7 @@
     state.reservations.splice(index,1);
     toast("Usunięto rezerwację");
     refreshAll();
+    syncReservationsToServer();
   }
 
   function addReservationInteractive(){
@@ -703,62 +756,179 @@
     state.reservations.unshift(obj);
     toast("Dodano rezerwację (lokalnie)");
     refreshAll();
+    syncReservationsToServer();
   }
 
-  // Products
+  async function syncReservationsToServer(){
+    // opcjonalnie możesz dopisać endpoint jeśli chcesz pełną sync rezerwacji
+  }
+
+  // ---------------------------
+  // PRODUCTS (modal + upload)
+  // ---------------------------
+  const pm = {
+    modal: qs("#productModal"),
+    title: qs("#pmTitle"),
+    close: qs("#pmClose"),
+    cancel: qs("#pmCancel"),
+    save: qs("#pmSave"),
+
+    name: qs("#pm_name"),
+    price: qs("#pm_price"),
+    category: qs("#pm_category"),
+    tag: qs("#pm_tag"),
+    desc: qs("#pm_desc"),
+
+    image: qs("#pm_image"),
+    preview: qs("#pm_preview"),
+  };
+
+  let editingProductIndex = null;
+  let tempImageDataUrl = null;
+
+  function openProductModal(editIndex=null){
+    editingProductIndex = editIndex;
+
+    pm.modal.style.display = "flex";
+    pm.image.value = "";
+    tempImageDataUrl = null;
+    pm.preview.style.display = "none";
+
+    if(editIndex === null){
+      pm.title.textContent = "Dodaj produkt";
+      pm.name.value = "";
+      pm.price.value = "";
+      pm.category.value = "shake";
+      pm.tag.value = "";
+      pm.desc.value = "";
+    } else {
+      const p = state.products[editIndex];
+      pm.title.textContent = "Edytuj produkt";
+      pm.name.value = p.title || "";
+      pm.price.value = p.price ?? "";
+      pm.category.value = p.category || "shake";
+      pm.tag.value = p.tag || "";
+      pm.desc.value = p.desc || "";
+      if(p.image){
+        tempImageDataUrl = p.image;
+        pm.preview.src = p.image;
+        pm.preview.style.display = "block";
+      }
+    }
+  }
+
+  function closeProductModal(){
+    pm.modal.style.display = "none";
+  }
+
+  pm.close.onclick = closeProductModal;
+  pm.cancel.onclick = closeProductModal;
+
+  pm.image.addEventListener("change", () => {
+    const file = pm.image.files && pm.image.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      tempImageDataUrl = e.target.result;
+      pm.preview.src = tempImageDataUrl;
+      pm.preview.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  });
+
   function renderProducts(){
     const grid = qs("#productGrid");
     if(!grid) return;
     grid.innerHTML="";
+
     (state.products||[]).forEach((p,idx)=>{
       const node = document.importNode(qs("#product-tpl").content,true).children[0];
       node.querySelector("img").src = p.image || "https://i.imgur.com/kfE4j7j.jpeg";
       node.querySelector(".p-title").textContent = p.title || "Produkt";
       node.querySelector(".p-price").textContent = (p.price||"0")+" PLN";
-      node.querySelector(".editP").onclick = ()=>editProduct(idx);
+
+      node.querySelector(".editP").onclick = ()=>openProductModal(idx);
       node.querySelector(".delP").onclick = ()=>{
         if(confirm("Usuń produkt?")){
           state.products.splice(idx,1);
-          toast("Usunięto produkt (lokalnie)");
+          toast("Usunięto produkt");
+          syncProductsToServer();
           refreshAll();
         }
       };
       grid.appendChild(node);
     });
   }
-  function addProductInteractive(){
-    const title = prompt("Nazwa produktu"); if(!title) return;
-    const price = prompt("Cena (PLN)","19");
-    const img = prompt("URL obrazka","https://i.imgur.com/kfE4j7j.jpeg");
-    state.products.push({title,price,image:img});
-    toast("Dodano produkt (lokalnie)");
+
+  function saveProductFromModal(){
+    const title = pm.name.value.trim();
+    const price = Number(pm.price.value || 0);
+    const category = pm.category.value;
+    const tag = pm.tag.value.trim();
+    const desc = pm.desc.value.trim();
+    const image = tempImageDataUrl || null;
+
+    if(!title){
+      toast("Podaj nazwę produktu");
+      return;
+    }
+
+    const obj = {
+      id: editingProductIndex === null ? Date.now().toString() : state.products[editingProductIndex].id,
+      title, price, category, tag, desc, image
+    };
+
+    if(editingProductIndex === null){
+      state.products.push(obj);
+      toast("Dodano produkt");
+    } else {
+      state.products[editingProductIndex] = obj;
+      toast("Zapisano zmiany");
+    }
+
+    closeProductModal();
+    syncProductsToServer();
     refreshAll();
   }
-  function editProduct(idx){
-    const p = state.products[idx];
-    const title = prompt("Nazwa produktu", p.title); if(!title) return;
-    const price = prompt("Cena", p.price);
-    const img = prompt("URL obrazka", p.image);
-    p.title=title; p.price=price; p.image=img;
-    toast("Zapisano produkt (lokalnie)");
-    refreshAll();
+
+  pm.save.onclick = saveProductFromModal;
+  qs("#addProductBtn")?.addEventListener("click", ()=>openProductModal(null));
+
+  async function syncProductsToServer(){
+    try{
+      await fetch("/api/products", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ products: state.products })
+      });
+    }catch(e){}
   }
 
   // Happy hour
   function saveHappy(){
     state.happy = qs("#hhText").value.trim();
-    toast("Zapisano Happy Hour (lokalnie)");
+    toast("Zapisano Happy Hour");
     refreshAll();
+    fetch("/api/happy",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ happy: state.happy })
+    }).catch(()=>{});
   }
   function clearHappy(){
     state.happy="";
     qs("#hhText").value="";
-    toast("Wyczyszczono Happy Hour (lokalnie)");
+    toast("Wyczyszczono Happy Hour");
     refreshAll();
+    fetch("/api/happy",{
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify({ happy: "" })
+    }).catch(()=>{});
   }
 
   qs("#newResBtn").onclick = addReservationInteractive;
-  qs("#addProductBtn")?.addEventListener("click", addProductInteractive);
   qs("#saveHH")?.addEventListener("click", saveHappy);
   qs("#clearHH")?.addEventListener("click", clearHappy);
 
@@ -782,8 +952,8 @@
       if(!res.ok) throw new Error(res.status);
       const db = await res.json();
       state.reservations = db.reservations || [];
-      state.products = db.products || state.products || [];
-      state.happy = db.happy || state.happy || "";
+      state.products = db.products || [];
+      state.happy = db.happy || "";
       qs("#hhText").value = state.happy;
       qs("#topHappyPreview").textContent = state.happy || "Brak Happy Hour";
       refreshAll();
@@ -794,8 +964,8 @@
 
   socket.on("state:init", (db)=>{
     state.reservations = db.reservations || [];
-    state.products = db.products || state.products || [];
-    state.happy = db.happy || state.happy || "";
+    state.products = db.products || [];
+    state.happy = db.happy || "";
     qs("#hhText").value = state.happy;
     qs("#topHappyPreview").textContent = state.happy || "Brak Happy Hour";
     refreshAll();
@@ -804,18 +974,16 @@
   socket.on("reservation:new", (resv)=>{
     state.reservations.unshift(resv);
     refreshAll();
-
     playDing();
     toast("Nowa rezerwacja: " + resv.name);
-
     if(navigator.vibrate) navigator.vibrate([200,100,200]);
     showReservationNotification(resv);
   });
 
   socket.on("state:update", (db)=>{
     state.reservations = db.reservations || [];
-    state.products = db.products || state.products || [];
-    state.happy = db.happy || state.happy || "";
+    state.products = db.products || [];
+    state.happy = db.happy || "";
     qs("#hhText").value = state.happy;
     qs("#topHappyPreview").textContent = state.happy || "Brak Happy Hour";
     refreshAll();
@@ -823,15 +991,9 @@
 
   loadFromServer();
 
-  // ---------------------------
-  // PWA SW register (jeśli plik istnieje)
-  // ---------------------------
   if("serviceWorker" in navigator){
     navigator.serviceWorker.register("/sw.js").catch(()=>{});
   }
 </script>
 </body>
 </html>
-
-
-

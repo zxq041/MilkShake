@@ -23,8 +23,8 @@ const io = new Server(server, {
 
 // Middleware
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '15mb' })); // <-- ważne dla base64 zdjęć
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
 // Serve static files from root directory
 app.use(express.static(PUBLIC_DIR));
@@ -113,6 +113,7 @@ app.post('/api/products', (req, res) => {
     io.emit('state:update', db);
     res.json({ ok: true });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'error' });
   }
 });
@@ -125,6 +126,7 @@ app.post('/api/happy', (req, res) => {
     io.emit('state:update', db);
     res.json({ ok: true });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: 'error' });
   }
 });
@@ -142,8 +144,6 @@ io.on('connection', (socket) => {
 });
 
 // Fallback: jeśli ktoś wchodzi w nieistniejącą trasę
-// a plik istnieje (np. /admin.html), static go obsłuży.
-// Jeśli nie istnieje — wyślij index.html (SPA-safe).
 app.get('*', (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
 });

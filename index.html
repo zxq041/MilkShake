@@ -884,5 +884,28 @@
 
         });
     </script>
+
+    <!-- ✅ OPCJONALNIE realtime update paska bez odświeżania -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      try {
+        const socket = io();
+        socket.on("happy-updated", (text) => {
+          const bar = document.getElementById("happyBar");
+          const textEl = document.getElementById("happyBarText");
+          if(!bar || !textEl) return;
+
+          const happy = (text || "").trim();
+          if(happy){
+            textEl.textContent = happy;
+            bar.style.display = "block";
+            document.body.classList.add("has-happybar");
+          }else{
+            bar.style.display = "none";
+            document.body.classList.remove("has-happybar");
+          }
+        });
+      } catch(e){}
+    </script>
 </body>
 </html>

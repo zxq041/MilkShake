@@ -1,3 +1,4 @@
+<!-- index.html (STRONA GŁÓWNA) -->
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -9,8 +10,8 @@
     <meta name="description" content="MilkShake Bar w Słupsku – kremowe milkshake’i, desery, burgery i śniadania. Zarezerwuj stolik online i odkryj swoje ulubione smaki.">
     <meta name="keywords" content="milkshake słupsk, milkshake bar słupsk, desery słupsk, burgery słupsk, koktajle mleczne słupsk">
     <meta name="robots" content="index, follow">
-      <link rel="icon" href="/favicon.png">
-  <link rel="apple-touch-icon" href="/favicon.png">
+    <link rel="icon" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
     <link rel="canonical" href="https://www.milkshakebar.pl/">
 
     <meta property="og:title" content="MilkShake Bar Słupsk | Milkshake, desery i burgery">
@@ -68,6 +69,10 @@
             -webkit-text-fill-color: transparent;
             position: relative;
         }
+
+        /* HAPPY BAR spacing */
+        body.has-happybar .header { top: 36px; }
+        body.has-happybar .hero { padding-top: 136px; }
 
         .header {
             position: fixed; top: 0; left: 0; width: 100%;
@@ -369,6 +374,23 @@
 </head>
 <body>
 
+    <!-- HAPPY HOUR TOP BAR -->
+    <div id="happyBar" style="
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 2000;
+      background: linear-gradient(90deg, #FF6A00, #FF9100);
+      color: white;
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 8px 14px;
+      text-align: center;
+      display: none;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    ">
+      <span id="happyBarText"></span>
+    </div>
+
     <header class="header" id="header">
         <div class="container">
             <nav class="navbar">
@@ -423,7 +445,7 @@
             </div>
         </section>
 
-        <!-- MENU HOME — dynamiczne z admina, wygląd jak dawniej -->
+        <!-- MENU HOME — dynamiczne z admina -->
         <section id="menu" class="section">
           <div class="container">
             <h2 class="section-title fade-in">Odkryj swoje ulubione</h2>
@@ -453,9 +475,6 @@
                 </div>
             </div>
         </section>
-
-        <!-- RESERVATIONS i LOCATION zostają jak miałeś -->
-        <!-- ... tu masz swój kod dalej bez zmian ... -->
 
         <section id="reservation" class="section">
           <div class="container">
@@ -788,7 +807,7 @@
             })();
 
             // -----------------------------------
-            // HOME MENU z admina, wygląd jak dawniej
+            // HOME MENU z admina
             // -----------------------------------
             (async function loadHomeMenu(){
               const grid = document.getElementById("homeMenuGrid");
@@ -836,8 +855,34 @@
               }
             })();
 
+            // -----------------------------------
+            // HAPPY HOUR BAR from admin (db.happy)
+            // -----------------------------------
+            (async function loadHappyBar(){
+              const bar = document.getElementById("happyBar");
+              const textEl = document.getElementById("happyBarText");
+              if(!bar || !textEl) return;
+
+              try{
+                const res = await fetch("/api/data", { cache: "no-store" });
+                if(!res.ok) throw new Error(res.status);
+                const db = await res.json();
+                const happy = (db.happy || "").trim();
+
+                if(happy){
+                  textEl.textContent = happy;
+                  bar.style.display = "block";
+                  document.body.classList.add("has-happybar");
+                } else {
+                  bar.style.display = "none";
+                  document.body.classList.remove("has-happybar");
+                }
+              }catch(e){
+                console.error("Happy bar load failed", e);
+              }
+            })();
+
         });
     </script>
 </body>
 </html>
-

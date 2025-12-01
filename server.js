@@ -1,5 +1,4 @@
-// server.js — MilkShake Bar backend (Express + Socket.IO + db.json)
-// WERSJA: pliki statyczne w tym samym folderze co server.js
+// server.js — MilkShake Bar backend (Express + Socket.IO + MongoDB)
 
 const express = require("express");
 const http = require("http");
@@ -7,78 +6,73 @@ const path = require("path");
 const fs = require("fs");
 const multer = require("multer");
 const { Server } = require("socket.io");
+const mongoose = require("mongoose");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
-// ==========================
-//  BASIC CONFIG
-// ==========================
 const PORT = process.env.PORT || 3000;
+const PUBLIC_DIR = __dirname;
 
-// ✅ TU ZMIANA: public = folder główny projektu
-const PUBLIC_DIR = __dirname; 
-const DB_PATH = path.join(__dirname, "db.json");
+// ==========================
+//  MONGODB CONNECT
+// ==========================
+const MONGO_URL = process.env.MONGO_URL;
 
-// json + forms
+if (!MONGO_URL) {
+  console.error("❌ Brak MONGO_URL w zmiennych Railway!");
+}
+
+mongoose.connect(MONGO_URL, {
+  dbName: "milkshakebar",
+})
+.then(() => console.log("✅ MongoDB connected"))
+.catch(err => console.error("MongoDB connect error:", err));
+
+// ==========================
+//  MODELS
+// ==========================
+const ProductSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  desc: { type: String, default: "" },
+  price: { type: String, default: "" },
+  image: { type: String, default: "" },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const ReservationSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  phone: { type: String, required: true },
+  date: { type: String, required: true },
+  time: { type: String, required: true },
+  guests: { type: String, required: true },
+  room: { type: String, required: true },
+  notes: { type: String, default: "" },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const HappySchema = new mongoose.Schema({
+  text: { type: String, default: "" },
+  updatedAt: { type: Date, default: Date.now }
+});
+
+const Product = mongoose.model("Product", ProductSchema);
+const Reservation = mongoose.model("Reservation", ReservationSchema);
+const HappyBar = mongoose.model("HappyBar", HappySchema);
+
+// ==========================
+//  BASIC EXPRESS CONFIG
+// ==========================
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
-
-// static files (index.html, admin.html, menu.html, sw.js, manifest…)
 app.use(express.static(PUBLIC_DIR));
 
-// uploads folder (w głównym katalogu)
+// uploads
 const UPLOADS_DIR = path.join(__dirname, "uploads");
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 app.use("/uploads", express.static(UPLOADS_DIR));
 
-// ==========================
-//  DB (file-backed)
-// ==========================
-function loadDB() {
-  try {
-    if (!fs.existsSync(DB_PATH)) {
-      const init = { products: [], reservations: [], happy: "" };
-      fs.writeFileSync(DB_PATH, JSON.stringify(init, null, 2), "utf-8");
-      return init;
-    }
-    const raw = fs.readFileSync(DB_PATH, "utf-8");
-    const parsed = JSON.parse(raw || "{}");
-    return {
-      products: parsed.products || [],
-      reservations: parsed.reservations || [],
-      happy: parsed.happy || ""
-    };
-  } catch (e) {
-    console.error("DB load error:", e);
-    return { products: [], reservations: [], happy: "" };
-  }
-}
-
-let db = loadDB();
-
-function saveDB() {
-  try {
-    fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2), "utf-8");
-  } catch (e) {
-    console.error("DB save error:", e);
-  }
-}
-
-const makeId = () =>
-  Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-
-// ==========================
-//  SOCKET.IO
-// ==========================
-io.on("connection", (socket) => {
-  socket.on("disconnect", () => {});
-});
-
-// ==========================
-//  MULTER (IMAGE UPLOAD)
-// ==========================
 const storage = multer.diskStorage({
   destination: (_, __, cb) => cb(null, UPLOADS_DIR),
   filename: (_, file, cb) => {
@@ -90,81 +84,83 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 app.post("/api/upload", upload.single("image"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ ok: false, message: "Brak pliku" });
-  }
-  res.json({ ok: true, url: `/uploads/${req.file.filename}` });
+  if (!req.file) return res.status(400).json({ ok:false, message:"Brak pliku" });
+  res.json({ ok:true, url:`/uploads/${req.file.filename}` });
 });
 
 // ==========================
-//  API: DATA
+//  SOCKET.IO
 // ==========================
-app.get("/api/data", (req, res) => res.json(db));
+io.on("connection", (socket) => {
+  socket.on("disconnect", () => {});
+});
 
-app.patch("/api/data", (req, res) => {
+// ==========================
+//  API: DATA (dla index.html)
+// ==========================
+app.get("/api/data", async (req, res) => {
   try {
-    const { products, happy } = req.body || {};
-    if (Array.isArray(products)) db.products = products;
-    if (typeof happy !== "undefined") db.happy = String(happy || "");
-    saveDB();
+    const products = await Product.find().sort({ createdAt: -1 });
+    const reservations = await Reservation.find().sort({ createdAt: -1 });
+    const happyDoc = await HappyBar.findOne().sort({ updatedAt: -1 });
 
-    if (typeof happy !== "undefined") io.emit("happy-updated", db.happy);
-
-    res.json({ ok: true, db });
+    res.json({
+      products,
+      reservations,
+      happy: happyDoc?.text || ""
+    });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok: false, message: "Błąd aktualizacji danych" });
+    res.status(500).json({ ok:false, message:"Błąd /api/data" });
   }
 });
 
 // ==========================
 //  API: PRODUCTS
 // ==========================
-app.get("/api/produkty", (req, res) => res.json(db.products));
+app.get("/api/produkty", async (req, res) => {
+  const products = await Product.find().sort({ createdAt: -1 });
+  res.json(products);
+});
 
-app.post("/api/produkty", (req, res) => {
+app.post("/api/produkty", async (req, res) => {
   try {
     const p = req.body || {};
-    const product = {
-      id: makeId(),
+    const product = await Product.create({
       title: p.title || p.name || "Produkt",
       desc: p.desc || p.description || "",
       price: p.price ?? "",
-      image: p.image || "",
-      createdAt: Date.now()
-    };
-    db.products.push(product);
-    saveDB();
-    io.emit("products-updated", db.products);
-    res.json({ ok: true, product });
+      image: p.image || ""
+    });
+
+    io.emit("products-updated", await Product.find().sort({ createdAt: -1 }));
+    res.json({ ok:true, product });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok: false, message: "Błąd dodawania produktu" });
+    res.status(500).json({ ok:false, message:"Błąd dodawania produktu" });
   }
 });
 
-app.put("/api/produkty/:id", (req, res) => {
+app.put("/api/produkty/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    const idx = db.products.findIndex(p => p.id === id);
-    if (idx === -1) return res.status(404).json({ ok:false, message:"Nie znaleziono produktu" });
+    const updated = await Product.findByIdAndUpdate(id, req.body, { new:true });
+    if (!updated) return res.status(404).json({ ok:false, message:"Nie znaleziono produktu" });
 
-    db.products[idx] = { ...db.products[idx], ...req.body };
-    saveDB();
-    io.emit("products-updated", db.products);
-    res.json({ ok:true, product: db.products[idx] });
+    io.emit("products-updated", await Product.find().sort({ createdAt: -1 }));
+    res.json({ ok:true, product: updated });
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok:false, message:"Błąd edycji produktu" });
   }
 });
 
-app.delete("/api/produkty/:id", (req, res) => {
+app.delete("/api/produkty/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    db.products = db.products.filter(p => p.id !== id);
-    saveDB();
-    io.emit("products-updated", db.products);
+    await Product.findByIdAndDelete(id);
+
+    io.emit("products-updated", await Product.find().sort({ createdAt: -1 }));
     res.json({ ok:true });
   } catch (e) {
     console.error(e);
@@ -175,32 +171,29 @@ app.delete("/api/produkty/:id", (req, res) => {
 // ==========================
 //  API: RESERVATIONS
 // ==========================
-app.get("/api/rezerwacje", (req, res) => res.json(db.reservations || []));
+app.get("/api/rezerwacje", async (req, res) => {
+  const reservations = await Reservation.find().sort({ createdAt: -1 });
+  res.json(reservations);
+});
 
-app.post("/api/rezerwacje", (req, res) => {
+app.post("/api/rezerwacje", async (req, res) => {
   try {
     const r = req.body || {};
     if (!r.name || !r.phone || !r.date || !r.time || !r.guests || !r.room) {
       return res.status(400).json({ ok:false, message:"Uzupełnij wszystkie wymagane pola." });
     }
 
-    const reservation = {
-      id: makeId(),
+    const reservation = await Reservation.create({
       name: String(r.name),
       phone: String(r.phone),
       date: String(r.date),
       time: String(r.time),
       guests: String(r.guests),
       room: String(r.room),
-      notes: String(r.notes || ""),
-      createdAt: Date.now()
-    };
-
-    db.reservations.push(reservation);
-    saveDB();
+      notes: String(r.notes || "")
+    });
 
     io.emit("new-reservation", reservation);
-
     res.json({ ok:true, reservation });
   } catch (e) {
     console.error(e);
@@ -208,12 +201,10 @@ app.post("/api/rezerwacje", (req, res) => {
   }
 });
 
-app.delete("/api/rezerwacje/:id", (req, res) => {
+app.delete("/api/rezerwacje/:id", async (req, res) => {
   try {
-    const id = req.params.id;
-    db.reservations = db.reservations.filter(x => x.id !== id);
-    saveDB();
-    io.emit("reservations-updated", db.reservations);
+    await Reservation.findByIdAndDelete(req.params.id);
+    io.emit("reservations-updated", await Reservation.find().sort({ createdAt: -1 }));
     res.json({ ok:true });
   } catch (e) {
     console.error(e);
@@ -222,17 +213,17 @@ app.delete("/api/rezerwacje/:id", (req, res) => {
 });
 
 // ==========================
-//  API: HAPPY BAR (PASEK)
+//  API: HAPPY BAR
 // ==========================
-app.post("/api/happy", (req, res) => {
+app.post("/api/happy", async (req, res) => {
   try {
     const { happy } = req.body || {};
-    db.happy = String(happy || "");
-    saveDB();
+    const text = String(happy || "");
 
-    io.emit("happy-updated", db.happy);
+    await HappyBar.create({ text, updatedAt: new Date() });
 
-    res.json({ ok:true, happy: db.happy });
+    io.emit("happy-updated", text);
+    res.json({ ok:true, happy: text });
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok:false, message:"Błąd zapisu paska informacji" });
@@ -240,7 +231,7 @@ app.post("/api/happy", (req, res) => {
 });
 
 // ==========================
-//  ROUTES: /admin bez .html
+//  ROUTES
 // ==========================
 app.get("/admin", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
@@ -250,9 +241,6 @@ app.get("/menu", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "menu.html"));
 });
 
-// ==========================
-//  FALLBACK
-// ==========================
 app.get("*", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });

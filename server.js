@@ -1,4 +1,5 @@
 // server.js — MilkShake Bar backend (Express + Socket.IO + db.json)
+// WERSJA: pliki statyczne w tym samym folderze co server.js
 
 const express = require("express");
 const http = require("http");
@@ -15,18 +16,20 @@ const io = new Server(server, { cors: { origin: "*" } });
 //  BASIC CONFIG
 // ==========================
 const PORT = process.env.PORT || 3000;
-const PUBLIC_DIR = path.join(__dirname, "public");
+
+// ✅ TU ZMIANA: public = folder główny projektu
+const PUBLIC_DIR = __dirname; 
 const DB_PATH = path.join(__dirname, "db.json");
 
 // json + forms
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// static files
+// static files (index.html, admin.html, menu.html, sw.js, manifest…)
 app.use(express.static(PUBLIC_DIR));
 
-// uploads folder
-const UPLOADS_DIR = path.join(PUBLIC_DIR, "uploads");
+// uploads folder (w głównym katalogu)
+const UPLOADS_DIR = path.join(__dirname, "uploads");
 if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 app.use("/uploads", express.static(UPLOADS_DIR));
 
@@ -63,7 +66,6 @@ function saveDB() {
   }
 }
 
-// helper id
 const makeId = () =>
   Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
@@ -71,12 +73,7 @@ const makeId = () =>
 //  SOCKET.IO
 // ==========================
 io.on("connection", (socket) => {
-  // możesz logować jeśli chcesz:
-  // console.log("Socket connected:", socket.id);
-
-  socket.on("disconnect", () => {
-    // console.log("Socket disconnected:", socket.id);
-  });
+  socket.on("disconnect", () => {});
 });
 
 // ==========================
@@ -92,22 +89,18 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// upload endpoint (dla produktów)
 app.post("/api/upload", upload.single("image"), (req, res) => {
-  if (!req.file) return res.status(400).json({ ok: false, message: "Brak pliku" });
+  if (!req.file) {
+    return res.status(400).json({ ok: false, message: "Brak pliku" });
+  }
   res.json({ ok: true, url: `/uploads/${req.file.filename}` });
 });
 
 // ==========================
-//  API: DATA (produkty + happy + rezerwacje)
+//  API: DATA
 // ==========================
+app.get("/api/data", (req, res) => res.json(db));
 
-// cały db (wykorzystuje index.html do menu i happy bar)
-app.get("/api/data", (req, res) => {
-  res.json(db);
-});
-
-// opcjonalny patch (fallback z admina)
 app.patch("/api/data", (req, res) => {
   try {
     const { products, happy } = req.body || {};
@@ -115,9 +108,7 @@ app.patch("/api/data", (req, res) => {
     if (typeof happy !== "undefined") db.happy = String(happy || "");
     saveDB();
 
-    if (typeof happy !== "undefined") {
-      io.emit("happy-updated", db.happy);
-    }
+    if (typeof happy !== "undefined") io.emit("happy-updated", db.happy);
 
     res.json({ ok: true, db });
   } catch (e) {
@@ -129,9 +120,7 @@ app.patch("/api/data", (req, res) => {
 // ==========================
 //  API: PRODUCTS
 // ==========================
-app.get("/api/produkty", (req, res) => {
-  res.json(db.products);
-});
+app.get("/api/produkty", (req, res) => res.json(db.products));
 
 app.post("/api/produkty", (req, res) => {
   try {
@@ -186,13 +175,8 @@ app.delete("/api/produkty/:id", (req, res) => {
 // ==========================
 //  API: RESERVATIONS
 // ==========================
+app.get("/api/rezerwacje", (req, res) => res.json(db.reservations || []));
 
-// lista rezerwacji (admin panel)
-app.get("/api/rezerwacje", (req, res) => {
-  res.json(db.reservations || []);
-});
-
-// dodawanie rezerwacji (formularz na stronie głównej)
 app.post("/api/rezerwacje", (req, res) => {
   try {
     const r = req.body || {};
@@ -215,7 +199,6 @@ app.post("/api/rezerwacje", (req, res) => {
     db.reservations.push(reservation);
     saveDB();
 
-    // realtime do admina
     io.emit("new-reservation", reservation);
 
     res.json({ ok:true, reservation });
@@ -225,7 +208,6 @@ app.post("/api/rezerwacje", (req, res) => {
   }
 });
 
-// opcjonalnie: usuwanie rezerwacji
 app.delete("/api/rezerwacje/:id", (req, res) => {
   try {
     const id = req.params.id;
@@ -240,7 +222,7 @@ app.delete("/api/rezerwacje/:id", (req, res) => {
 });
 
 // ==========================
-//  API: HAPPY BAR (PASEK INFORMACJI)
+//  API: HAPPY BAR (PASEK)
 // ==========================
 app.post("/api/happy", (req, res) => {
   try {
@@ -248,7 +230,6 @@ app.post("/api/happy", (req, res) => {
     db.happy = String(happy || "");
     saveDB();
 
-    // realtime na stronę główną
     io.emit("happy-updated", db.happy);
 
     res.json({ ok:true, happy: db.happy });
@@ -259,19 +240,18 @@ app.post("/api/happy", (req, res) => {
 });
 
 // ==========================
-//  ROUTES: ADMIN WITHOUT .html
+//  ROUTES: /admin bez .html
 // ==========================
 app.get("/admin", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
 });
 
-// (opcjonalnie) krótki alias do menu pod /menu
 app.get("/menu", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "menu.html"));
 });
 
 // ==========================
-//  FALLBACK (SPA-ish)
+//  FALLBACK
 // ==========================
 app.get("*", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "index.html"));

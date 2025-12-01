@@ -8,8 +8,8 @@
     <meta name="keywords" content="menu milkshake bar słupsk, milkshake menu słupsk, desery menu słupsk, burgery menu słupsk">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://www.milkshakebar.pl/menu.html">
-      <link rel="icon" href="/favicon.png">
-  <link rel="apple-touch-icon" href="/favicon.png">
+    <link rel="icon" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/favicon.png">
     <meta property="og:title" content="Menu MilkShake Bar Słupsk | Shakes, desery, burgery">
     <meta property="og:description" content="Poznaj pełne menu MilkShake Bar w Słupsku: milkshake’i, desery, burgery, śniadania i napoje.">
     <meta property="og:type" content="website">
@@ -651,7 +651,7 @@
             <div class="menu-filters menu-subfilters" id="subFilters"></div>
 
             <div class="menu-grid" id="menuGrid">
-                <!-- zostaje puste, bo renderujemy z JS -->
+                <!-- renderuje JS -->
             </div>
 
             <p class="menu-empty" id="menuEmpty" style="display:none;">
@@ -725,7 +725,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentMainFilter = 'all';
   let currentSubFilter = 'all';
 
-  // Subfiltry leciutko mapujemy pod kategorie (opcjonalne)
   const subFiltersConfig = {
     shake: [
       { value: 'klasyka', label: 'Klasyka' },
@@ -744,6 +743,7 @@ document.addEventListener('DOMContentLoaded', () => {
       { value: 'fajita', label: 'Fajita' },
       { value: 'quesadillas', label: 'Quesadillas' },
       { value: 'pasta', label: 'Pasta' },
+      { value: 'stir-fry', label: 'Stir Fry' },  // dodane
       { value: 'churros', label: 'Churros' },
       { value: 'salaty', label: 'Sałaty' }
     ],
@@ -866,76 +866,356 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ======= PRODUKTY Z TWOJEJ GRAFIKI (BEZ ZDJĘĆ) =======
+  // ========= NOWE MENU =========
   const products = [
-    // KAWA
+    // =========================
+    // KAWA-HERBATA / KAWA
+    // =========================
     { category:"kawa-herbata", categoryLabel:"Kawa", title:"Espresso", price:11, desc:"35 ml", tag:"espresso" },
     { category:"kawa-herbata", categoryLabel:"Kawa", title:"Podwójne espresso", price:16, desc:"70 ml", tag:"espresso" },
     { category:"kawa-herbata", categoryLabel:"Kawa", title:"Affogato (espresso z lodami)", price:"22/27", desc:"", tag:"deser kawowy" },
+
     { category:"kawa-herbata", categoryLabel:"Kawa", title:"Kawa czarna", price:"12/17", desc:"200/300 ml", tag:"klasyka" },
     { category:"kawa-herbata", categoryLabel:"Kawa", title:"Kawa biała", price:"12/17", desc:"200/300 ml", tag:"klasyka" },
     { category:"kawa-herbata", categoryLabel:"Kawa", title:"Cappuccino", price:"13/18", desc:"200/300 ml", tag:"klasyka" },
     { category:"kawa-herbata", categoryLabel:"Kawa", title:"Latte", price:"13/18", desc:"200/300 ml", tag:"klasyka" },
+
     { category:"kawa-herbata", categoryLabel:"Kawa", title:"Kawa mrożona", price:26, desc:"300 ml", tag:"na zimno" },
     { category:"kawa-herbata", categoryLabel:"Kawa", title:"Frappe słony karmel", price:27, desc:"Podwójne espresso, kostki lodu, mleko, słony karmel", tag:"na zimno" },
     { category:"kawa-herbata", categoryLabel:"Kawa", title:"Gorąca czekolada", price:21, desc:"200 ml", tag:"na ciepło" },
     { category:"kawa-herbata", categoryLabel:"Kawa", title:"Dodatkowe espresso", price:5, desc:"", tag:"dodatek" },
 
-    // HERBATA
-    { category:"kawa-herbata", categoryLabel:"Herbata", title:"Herbata zielona", price:15, desc:"", tag:"klasyka" },
+    // =========================
+    // KAWA-HERBATA / HERBATA
+    // =========================
+    { category:"kawa-herbata", categoryLabel:"Herbata", title:"Zielona", price:15, desc:"", tag:"klasyka" },
     { category:"kawa-herbata", categoryLabel:"Herbata", title:"English breakfast", price:15, desc:"", tag:"klasyka" },
-    { category:"kawa-herbata", categoryLabel:"Herbata", title:"Piekielna herbata", price:22, desc:"Czarna herbata z miodem, świeżym imbirem, cytrusami, goździkami i malinami", tag:"rozgrzewająca" },
-    { category:"kawa-herbata", categoryLabel:"Herbata", title:"Czort", price:22, desc:"Czarna herbata z naturalnym syropem z czarnego bzu oraz syropem pomarańczowym z imbirem i rozmarynem", tag:"rozgrzewająca" },
-    { category:"kawa-herbata", categoryLabel:"Herbata", title:"Mon Cheri", price:22, desc:"Czarna herbata z naturalnym syropem wiśniowym z kardamonem, truskawkami, wiśniami, anyżem i cytryną", tag:"rozgrzewająca" },
+    { category:"kawa-herbata", categoryLabel:"Herbata", title:"Piekielna herbata", price:22, desc:"", tag:"rozgrzewająca" },
+    { category:"kawa-herbata", categoryLabel:"Herbata", title:"Czort", price:22, desc:"", tag:"rozgrzewająca" },
+    { category:"kawa-herbata", categoryLabel:"Herbata", title:"Mon Cheri", price:22, desc:"", tag:"rozgrzewająca" },
     { category:"kawa-herbata", categoryLabel:"Herbata", title:"Domowa herbata mrożona", price:26, desc:"500 ml", tag:"na zimno" },
 
-    // MATCHA -> kawa-herbata
+    // =========================
+    // KAWA-HERBATA / MATCHA
+    // =========================
     { category:"kawa-herbata", categoryLabel:"Matcha", title:"Matcha latte", price:20, desc:"", tag:"matcha" },
     { category:"kawa-herbata", categoryLabel:"Matcha", title:"Iced matcha", price:25, desc:"", tag:"matcha" },
 
-    // NAPOJE / LEMONIADY
-    { category:"napoje-soki", categoryLabel:"Napoje", title:"Lemoniada cytrusowa", price:"15/30", desc:"400/1200 ml", tag:"lemoniada" },
-    { category:"napoje-soki", categoryLabel:"Napoje", title:"Lemoniada arbuzowa", price:"17/35", desc:"400/1200 ml", tag:"lemoniada" },
-    { category:"napoje-soki", categoryLabel:"Napoje", title:"Lemoniada ananasowa", price:"17/35", desc:"400/1200 ml", tag:"lemoniada" },
-    { category:"napoje-soki", categoryLabel:"Napoje", title:"Lemoniada gruszkowa", price:"17/35", desc:"400/1200 ml", tag:"lemoniada" },
-    { category:"napoje-soki", categoryLabel:"Napoje", title:"Lemoniada malinowa zimna", price:"17/35", desc:"400/1200 ml", tag:"lemoniada" },
-    { category:"napoje-soki", categoryLabel:"Napoje", title:"Lemoniada malinowa ciepła", price:"17/35", desc:"400/1200 ml", tag:"lemoniada" },
+    // =========================
+    // NAPOJE-SOKI / LEMONIADY
+    // =========================
+    { category:"napoje-soki", categoryLabel:"Lemoniada", title:"Cytrusowa", price:"15/30", desc:"400/1200 ml", tag:"lemoniada" },
+    { category:"napoje-soki", categoryLabel:"Lemoniada", title:"Arbuzowa", price:"17/35", desc:"400/1200 ml", tag:"lemoniada" },
+    { category:"napoje-soki", categoryLabel:"Lemoniada", title:"Ananasowa", price:"17/35", desc:"400/1200 ml", tag:"lemoniada" },
+    { category:"napoje-soki", categoryLabel:"Lemoniada", title:"Gruszkowa", price:"17/35", desc:"400/1200 ml", tag:"lemoniada" },
+    { category:"napoje-soki", categoryLabel:"Lemoniada", title:"Malinowa zimna", price:"17/35", desc:"400/1200 ml", tag:"lemoniada" },
+    { category:"napoje-soki", categoryLabel:"Lemoniada", title:"Malinowa ciepła", price:"17/35", desc:"400/1200 ml", tag:"lemoniada" },
+
     { category:"napoje-soki", categoryLabel:"Napoje", title:"Woda z kranu", price:0, desc:"", tag:"" },
     { category:"napoje-soki", categoryLabel:"Napoje", title:"Woda niegazowana", price:8, desc:"500 ml", tag:"" },
     { category:"napoje-soki", categoryLabel:"Napoje", title:"Woda gazowana", price:8, desc:"500 ml", tag:"" },
     { category:"napoje-soki", categoryLabel:"Napoje", title:"Pepsi", price:9, desc:"330 ml", tag:"" },
     { category:"napoje-soki", categoryLabel:"Napoje", title:"Pepsi Max", price:9, desc:"330 ml", tag:"" },
 
-    // ŚWIEŻE SOKI (200 ml)
-    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Sok pomarańczowy", price:19, desc:"200 ml", tag:"świeży sok" },
-    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Sok grejpfrutowy", price:22, desc:"200 ml", tag:"świeży sok" },
-    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Sok pomarańczowo-grejpfrutowy", price:22, desc:"200 ml", tag:"świeży sok" },
-    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Sok jabłkowy", price:19, desc:"200 ml", tag:"świeży sok" },
-    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Sok jabłkowo-gruszkowy", price:19, desc:"200 ml", tag:"świeży sok" },
-    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Marchewka-jabłko-pomarańcza", price:19, desc:"200 ml", tag:"świeży sok" },
-    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Burak-jabłko-pomarańcza-seler", price:22, desc:"200 ml", tag:"świeży sok" },
-    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Jabłko-seler-kiwi", price:22, desc:"200 ml", tag:"świeży sok" },
+    // =========================
+    // NAPOJE-SOKI / ŚWIEŻE SOKI
+    // =========================
+    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Pomarańczowy", price:19, desc:"300 ml", tag:"świeży sok" },
+    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Grejpfrutowy", price:22, desc:"300 ml", tag:"świeży sok" },
+    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Pomarańczowo-grejpfrutowy", price:22, desc:"300 ml", tag:"świeży sok" },
+    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Jabłkowy", price:19, desc:"300 ml", tag:"świeży sok" },
+    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Jabłkowo-gruszkowy", price:19, desc:"300 ml", tag:"świeży sok" },
+    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Marchewka-jabłko-pomarańcza", price:19, desc:"300 ml", tag:"świeży sok" },
+    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Burak-jabłko-pomarańcza-seler", price:22, desc:"300 ml", tag:"świeży sok" },
+    { category:"napoje-soki", categoryLabel:"Świeże soki", title:"Jabłko-seler-kiwi", price:22, desc:"300 ml", tag:"świeży sok" },
 
-    // SMOOTHIES -> napoje-soki
-    { category:"napoje-soki", categoryLabel:"Smoothies", title:"Zielony", price:29, desc:"360 ml • Szpinak, kiwi, pomarańcza, gruszka", tag:"smoothies" },
-    { category:"napoje-soki", categoryLabel:"Smoothies", title:"Żółty", price:29, desc:"360 ml • Banan, jabłko, ananas, mango", tag:"smoothies" },
-    { category:"napoje-soki", categoryLabel:"Smoothies", title:"Pomarańczowy", price:29, desc:"360 ml • Banan, pomarańcza, mango, nerkowce, limonka", tag:"smoothies" },
-    { category:"napoje-soki", categoryLabel:"Smoothies", title:"Czerwony", price:29, desc:"360 ml • Truskawki, maliny, banan, ananas", tag:"smoothies" },
+    // =========================
+    // NAPOJE-SOKI / SMOOTHIES
+    // =========================
+    { category:"napoje-soki", categoryLabel:"Smoothies", title:"Zielony", price:29, desc:"350 ml • szpinak, kiwi, pomarańcza, gruszka", tag:"smoothies" },
+    { category:"napoje-soki", categoryLabel:"Smoothies", title:"Żółty", price:29, desc:"350 ml • banan, jabłko, ananas, mango", tag:"smoothies" },
+    { category:"napoje-soki", categoryLabel:"Smoothies", title:"Pomarańczowy", price:29, desc:"350 ml • banan, pomarańcza, mango, nerkowce, limonka", tag:"smoothies" },
+    { category:"napoje-soki", categoryLabel:"Smoothies", title:"Czerwony", price:29, desc:"350 ml • truskawki, maliny, banan, ananas", tag:"smoothies" },
 
-    // PIWO -> napoje-soki
+    // =========================
+    // NAPOJE-SOKI / PIWO
+    // =========================
     { category:"napoje-soki", categoryLabel:"Piwo", title:"Corona", price:15, desc:"330 ml", tag:"piwo" },
     { category:"napoje-soki", categoryLabel:"Piwo", title:"Piwo bezalkoholowe", price:14, desc:"", tag:"piwo" },
     { category:"napoje-soki", categoryLabel:"Piwo", title:"IPA", price:19, desc:"0,5 l", tag:"piwo" },
     { category:"napoje-soki", categoryLabel:"Piwo", title:"Lager", price:17, desc:"Zapytaj o dostępność", tag:"piwo" },
 
-    // WINO & APERITIFF -> napoje-soki
-    { category:"napoje-soki", categoryLabel:"Wino & Aperitif", title:"Sauvignon blanc (białe wytrawne) – Skarby Mołdawii", price:"22/84/89", desc:"170/500/700 ml", tag:"wino-aperitif" },
-    { category:"napoje-soki", categoryLabel:"Wino & Aperitif", title:"Cabernet sauvignon (czerwone wytrawne) – Skarby Mołdawii", price:"22/84/89", desc:"170/500/700 ml", tag:"wino-aperitif" },
-    { category:"napoje-soki", categoryLabel:"Wino & Aperitif", title:"Hugo", price:35, desc:"Prosecco, woda gazowana, syrop z czarnego bzu, mięta i limonka", tag:"wino-aperitif" },
-    { category:"napoje-soki", categoryLabel:"Wino & Aperitif", title:"Prosecco (wytrawne wino musujące)", price:26, desc:"", tag:"wino-aperitif" }
+    // =========================
+    // NAPOJE-SOKI / WINO & APERITIFF
+    // =========================
+    { category:"napoje-soki", categoryLabel:"Wino & Aperitiff", title:"Sauvignon blanc (białe wytrawne) – Skarby Mołdawii", price:"22/64/89", desc:"170/500/700 ml", tag:"wino-aperitiff" },
+    { category:"napoje-soki", categoryLabel:"Wino & Aperitiff", title:"Cabernet sauvignon (czerwone wytrawne) – Skarby Mołdawii", price:"22/64/89", desc:"170/500/700 ml", tag:"wino-aperitiff" },
+    { category:"napoje-soki", categoryLabel:"Wino & Aperitiff", title:"Hugo", price:35, desc:"Prosecco, woda gazowana, syrop z czarnego bzu, mięta i limonka", tag:"wino-aperitiff" },
+    { category:"napoje-soki", categoryLabel:"Wino & Aperitiff", title:"Prosecco (wytrawne wino musujące)", price:26, desc:"", tag:"wino-aperitiff" },
+
+    // =========================
+    // SHAKE / KLASYKA
+    // =========================
+    { category:"shake", categoryLabel:"Shakes", title:"Śmietankowy", price:18, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Waniliowy", price:19, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Czekoladowy", price:19, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Straciatella", price:19, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Chałwa", price:22, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Krówka", price:22, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Daim", price:22, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Milky Way", price:22, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Oreo", price:22, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Snickers", price:22, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Ptasie mleczko waniliowe", price:22, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Kinder Bueno", price:24, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Reese's Peanut Butter", price:24, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Nutella", price:24, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Raffaello", price:24, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Skittles", price:24, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Ferrero Rocher", price:24, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Maxi King", price:24, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Masło orzechowe", price:24, desc:"", tag:"klasyka" },
+    { category:"shake", categoryLabel:"Shakes", title:"Kawowy", price:24, desc:"", tag:"klasyka" },
+
+    // =========================
+    // SHAKE / TYLKO DLA VIPÓW
+    // =========================
+    { category:"shake", categoryLabel:"Shakes", title:"Ciasteczkowy Potwór", price:37, desc:"", tag:"vip" },
+    { category:"shake", categoryLabel:"Shakes", title:"Pistacjusz", price:37, desc:"", tag:"vip" },
+    { category:"shake", categoryLabel:"Shakes", title:"Marshall", price:37, desc:"", tag:"vip" },
+    { category:"shake", categoryLabel:"Shakes", title:"Cringe", price:37, desc:"", tag:"vip" },
+    { category:"shake", categoryLabel:"Shakes", title:"Cheesecake", price:37, desc:"", tag:"vip" },
+    { category:"shake", categoryLabel:"Shakes", title:"Gonzo", price:37, desc:"", tag:"vip" },
+    { category:"shake", categoryLabel:"Shakes", title:"Johny Pierniczony", price:37, desc:"", tag:"vip" },
+
+    // =========================
+    // SHAKE / BEST OF
+    // =========================
+    { category:"shake", categoryLabel:"Shakes", title:"Banan + maliny", price:26, desc:"", tag:"best-of" },
+    { category:"shake", categoryLabel:"Shakes", title:"Mango + truskawki", price:26, desc:"", tag:"best-of" },
+    { category:"shake", categoryLabel:"Shakes", title:"Kiwi + mango", price:26, desc:"", tag:"best-of" },
+    { category:"shake", categoryLabel:"Shakes", title:"Kinder bueno + maliny", price:28, desc:"", tag:"best-of" },
+    { category:"shake", categoryLabel:"Shakes", title:"Oreo + masło orzechowe", price:28, desc:"", tag:"best-of" },
+    { category:"shake", categoryLabel:"Shakes", title:"Kawa + słony karmel", price:29, desc:"", tag:"best-of" },
+    { category:"shake", categoryLabel:"Shakes", title:"Kawa + Nutella", price:29, desc:"", tag:"best-of" },
+    { category:"shake", categoryLabel:"Shakes", title:"Ptasie mleczko + maliny", price:28, desc:"", tag:"best-of" },
+    { category:"shake", categoryLabel:"Shakes", title:"Raffaello + jagody", price:28, desc:"", tag:"best-of" },
+
+    // =========================
+    // SHAKE / OWOCOWE
+    // =========================
+    { category:"shake", categoryLabel:"Shakes", title:"Bananowy", price:22, desc:"", tag:"owocowe" },
+    { category:"shake", categoryLabel:"Shakes", title:"Czarna porzeczka", price:22, desc:"", tag:"owocowe" },
+    { category:"shake", categoryLabel:"Shakes", title:"Malinowy", price:22, desc:"", tag:"owocowe" },
+    { category:"shake", categoryLabel:"Shakes", title:"Mango", price:22, desc:"", tag:"owocowe" },
+    { category:"shake", categoryLabel:"Shakes", title:"Truskawkowy", price:22, desc:"", tag:"owocowe" },
+    { category:"shake", categoryLabel:"Shakes", title:"Jagodowy", price:22, desc:"", tag:"owocowe" },
+
+    // =========================
+    // SHAKE / PROTEINOWE
+    // =========================
+    { category:"shake", categoryLabel:"Shakes proteinowe", title:"Jagodowy muffin", price:32, desc:"", tag:"proteinowe" },
+    { category:"shake", categoryLabel:"Shakes proteinowe", title:"Słony karmel", price:28, desc:"", tag:"proteinowe" },
+    { category:"shake", categoryLabel:"Shakes proteinowe", title:"Truskawkowe love", price:28, desc:"", tag:"proteinowe" },
+
+    // =========================
+    // DESERY / LODY WŁOSKIE
+    // =========================
+    { category:"deser", categoryLabel:"Lody włoskie", title:"Lody włoskie śmietankowe (małe)", price:11, desc:"150 g", tag:"lody-wloskie" },
+    { category:"deser", categoryLabel:"Lody włoskie", title:"Lody włoskie śmietankowe (duże)", price:16, desc:"250 g", tag:"lody-wloskie" },
+
+    { category:"deser", categoryLabel:"Dodatki", title:"Mus owocowy lub polewa", price:6, desc:"", tag:"lody-wloskie" },
+    { category:"deser", categoryLabel:"Dodatki", title:"M&Ms", price:6, desc:"", tag:"lody-wloskie" },
+    { category:"deser", categoryLabel:"Dodatki", title:"Owoce", price:14, desc:"", tag:"lody-wloskie" },
+    { category:"deser", categoryLabel:"Dodatki", title:"Bita śmietana", price:6, desc:"", tag:"lody-wloskie" },
+
+    // =========================
+    // DESERY / DESERY LODOWE
+    // =========================
+    { category:"deser", categoryLabel:"Desery lodowe", title:"Troll", price:24, desc:"", tag:"desery-lodowe" },
+    { category:"deser", categoryLabel:"Desery lodowe", title:"Owocowa aleja", price:38, desc:"", tag:"desery-lodowe" },
+    { category:"deser", categoryLabel:"Desery lodowe", title:"Grzeszna truskawka", price:38, desc:"", tag:"desery-lodowe" },
+    { category:"deser", categoryLabel:"Desery lodowe", title:"Oreo Sundae", price:29, desc:"", tag:"desery-lodowe" },
+
+    // =========================
+    // DESERY / GOFRY AMERYKAŃSKIE
+    // =========================
+    { category:"deser", categoryLabel:"Gofry amerykańskie", title:"Z syropem klonowym, jajkiem sadzonym i bekonem", price:"28/44", desc:"pół / cały", tag:"gofry-amerykanskie" },
+    { category:"deser", categoryLabel:"Gofry amerykańskie", title:"American Pie z pieczonymi jabłkami, cynamonem, domową kruszonką i lodami", price:"27/49", desc:"pół / cały", tag:"gofry-amerykanskie" },
+    { category:"deser", categoryLabel:"Gofry amerykańskie", title:"Z dżemem z czarnej porzeczki i polewą Lotus Biscoff", price:"26/48", desc:"pół / cały", tag:"gofry-amerykanskie" },
+    { category:"deser", categoryLabel:"Gofry amerykańskie", title:"Dubajski z truskawkami", price:"32/54", desc:"pół / cały", tag:"gofry-amerykanskie" },
+    { category:"deser", categoryLabel:"Gofry amerykańskie", title:"Cheesecake z serkiem Philadelphia, masą ciasteczkową, kruszonką i truskawkami", price:"28/50", desc:"pół / cały", tag:"gofry-amerykanskie" },
+
+    // =========================
+    // DESERY / PANCAKES
+    // =========================
+    { category:"deser", categoryLabel:"Pancakes", title:"Z syropem klonowym i lodami", price:29, desc:"3 szt.", tag:"pancakes" },
+    { category:"deser", categoryLabel:"Pancakes", title:"Z owocami, musem truskawkowym i lodami", price:36, desc:"3 szt.", tag:"pancakes" },
+    { category:"deser", categoryLabel:"Pancakes", title:"Z Nutellą, truskawkami i lodami", price:36, desc:"3 szt.", tag:"pancakes" },
+    { category:"deser", categoryLabel:"Pancakes", title:"Z masą Kinder Bueno, malinami i lodami", price:39, desc:"3 szt.", tag:"pancakes" },
+    { category:"deser", categoryLabel:"Pancakes", title:"Z masą Raffaello, truskawkami i lodami", price:39, desc:"3 szt.", tag:"pancakes" },
+    { category:"deser", categoryLabel:"Pancakes", title:"Z dubajską pistacją i truskawkami", price:39, desc:"3 szt.", tag:"pancakes" },
+    { category:"deser", categoryLabel:"Pancakes", title:"Hello USA", price:39, desc:"syrop klonowy, bekon, 2 jaja sadzone", tag:"pancakes" },
+
+    // =========================
+    // TEX MEX / QUESADILLAS
+    // =========================
+    { category:"texmex", categoryLabel:"Quesadillas", title:"Pollo", price:45, desc:"", tag:"quesadillas" },
+    { category:"texmex", categoryLabel:"Quesadillas", title:"Torro", price:46, desc:"", tag:"quesadillas" },
+    { category:"texmex", categoryLabel:"Quesadillas", title:"Camaron", price:49, desc:"", tag:"quesadillas" },
+    { category:"texmex", categoryLabel:"Quesadillas", title:"Verduras", price:42, desc:"", tag:"quesadillas" },
+
+    // =========================
+    // TEX MEX / FAJITA
+    // =========================
+    { category:"texmex", categoryLabel:"Fajita", title:"Fajita z kurczakiem", price:59, desc:"", tag:"fajita" },
+    { category:"texmex", categoryLabel:"Fajita", title:"Fajita z krewetkami", price:69, desc:"", tag:"fajita" },
+    { category:"texmex", categoryLabel:"Fajita", title:"Fajita z polędwicą wołową", price:79, desc:"", tag:"fajita" },
+
+    // =========================
+    // TEX MEX / CHURROS
+    // =========================
+    { category:"texmex", categoryLabel:"Churros", title:"Churros (6 szt.) z sosem czekoladowym i truskawkami", price:33, desc:"", tag:"churros" },
+    { category:"texmex", categoryLabel:"Churros", title:"Churros (6 szt.) ze słonym karmelem i precelkami", price:32, desc:"", tag:"churros" },
+
+    // =========================
+    // TEX MEX / PASTA
+    // =========================
+    { category:"texmex", categoryLabel:"Pasta", title:"Tagiatelle z krewetkami", price:51, desc:"", tag:"pasta" },
+    { category:"texmex", categoryLabel:"Pasta", title:"Vege Pasta", price:44, desc:"", tag:"pasta" },
+
+    // =========================
+    // TEX MEX / STIR FRY
+    // =========================
+    { category:"texmex", categoryLabel:"NY Chinatown Stir Fry", title:"Vege (z nerkowcami)", price:39, desc:"", tag:"stir-fry" },
+    { category:"texmex", categoryLabel:"NY Chinatown Stir Fry", title:"Z kurczakiem 90g", price:47, desc:"", tag:"stir-fry" },
+    { category:"texmex", categoryLabel:"NY Chinatown Stir Fry", title:"Z wołowiną 90g", price:55, desc:"", tag:"stir-fry" },
+    { category:"texmex", categoryLabel:"NY Chinatown Stir Fry", title:"Z krewetkami (16/20) 7 szt.", price:51, desc:"", tag:"stir-fry" },
+    { category:"texmex", categoryLabel:"Dodatki", title:"Dodatkowe nerkowce 20g", price:8, desc:"", tag:"stir-fry" },
+
+    // =========================
+    // TEX MEX / SAŁATY
+    // =========================
+    { category:"texmex", categoryLabel:"Sałaty", title:"Cezar", price:49, desc:"", tag:"salaty" },
+    { category:"texmex", categoryLabel:"Sałaty", title:"Vege Cezar", price:42, desc:"", tag:"salaty" },
+    { category:"texmex", categoryLabel:"Sałaty", title:"Ale burak", price:44, desc:"", tag:"salaty" },
+    { category:"texmex", categoryLabel:"Sałaty", title:"Alabama", price:51, desc:"", tag:"salaty" },
+
+    // =========================
+    // KANAPKI / STARTERY
+    // =========================
+    { category:"kanapki", categoryLabel:"Startery", title:"Frytki", price:15, desc:"150 g", tag:"startery" },
+    { category:"kanapki", categoryLabel:"Startery", title:"Frytki z batatów", price:19, desc:"150 g", tag:"startery" },
+    { category:"kanapki", categoryLabel:"Startery", title:"Frytki z serem, bekonem i majonezem sriracha", price:30, desc:"", tag:"startery" },
+    { category:"kanapki", categoryLabel:"Startery", title:"Krążki cebulowe (5 szt.) z sosem sweet chili", price:18, desc:"", tag:"startery" },
+    { category:"kanapki", categoryLabel:"Startery", title:"Krewetki w tempurze (3 szt.) z sosem sweet chili", price:21, desc:"", tag:"startery" },
+    { category:"kanapki", categoryLabel:"Startery", title:"Krewetki w tempurze (6 szt.) z sosem sweet chili", price:39, desc:"", tag:"startery" },
+    { category:"kanapki", categoryLabel:"Startery", title:"Nachos z serem, guacamole, śmietaną, salsą i jalapeno", price:41, desc:"", tag:"startery" },
+    { category:"kanapki", categoryLabel:"Startery", title:"Nachos z chili con carne, serem, śmietaną, guacamole i jalapeno", price:49, desc:"", tag:"startery" },
+
+    // =========================
+    // KANAPKI / KANAPKI
+    // =========================
+    { category:"kanapki", categoryLabel:"Kanapki", title:"Rostbef", price:"42/58", desc:"60 g / 100 g", tag:"kanapki" },
+    { category:"kanapki", categoryLabel:"Kanapki", title:"Cotto", price:"37/49", desc:"70 g / 120 g", tag:"kanapki" },
+    { category:"kanapki", categoryLabel:"Kanapki", title:"Kura", price:46, desc:"", tag:"kanapki" },
+    { category:"kanapki", categoryLabel:"Kanapki", title:"Club sandwich", price:38, desc:"", tag:"kanapki" },
+    { category:"kanapki", categoryLabel:"Kanapki", title:"Cotto club", price:36, desc:"", tag:"kanapki" },
+    { category:"kanapki", categoryLabel:"Kanapki", title:"Vege club", price:36, desc:"", tag:"kanapki" },
+
+    // =========================
+    // KANAPKI / DANIA GŁÓWNE
+    // =========================
+    { category:"kanapki", categoryLabel:"Dania główne", title:"Tatar z polędwicy wołowej", price:51, desc:"100 g", tag:"dania-glowne" },
+    { category:"kanapki", categoryLabel:"Dania główne", title:"Żebro wieprzowe", price:75, desc:"450 g", tag:"dania-glowne" },
+    { category:"kanapki", categoryLabel:"Dania główne", title:"Stek", price:125, desc:"", tag:"dania-glowne" },
+    { category:"kanapki", categoryLabel:"Dania główne", title:"Kurczak supreme", price:65, desc:"", tag:"dania-glowne" },
+
+    // =========================
+    // KANAPKI / ZESTAWY
+    // =========================
+    { category:"kanapki", categoryLabel:"Zestawy", title:"Burger + frytki lub sałatka", price:"+12", desc:"oszczędzasz 5 PLN", tag:"zestawy" },
+    { category:"kanapki", categoryLabel:"Zestawy", title:"Burger + frytki/sałatka + lemoniada cytrusowa", price:"+22", desc:"oszczędzasz 10 PLN", tag:"zestawy" },
+    { category:"kanapki", categoryLabel:"Zestawy", title:"Zamień frytki na krążki cebulowe", price:15, desc:"", tag:"zestawy" },
+    { category:"kanapki", categoryLabel:"Zestawy", title:"Zamień frytki na mini nachos", price:18, desc:"", tag:"zestawy" },
+    { category:"kanapki", categoryLabel:"Zestawy", title:"Zamień frytki na bataty", price:14, desc:"", tag:"zestawy" },
+
+    // =========================
+    // BURGERY / WOŁOWE
+    // =========================
+    { category:"burger", categoryLabel:"Burgery wołowe Black Angus", title:"Prostak", price:"30/38/46", desc:"mały / średni / duży", tag:"wolowy" },
+    { category:"burger", categoryLabel:"Burgery wołowe Black Angus", title:"Sergio", price:"32/40/48", desc:"mały / średni / duży", tag:"wolowy" },
+    { category:"burger", categoryLabel:"Burgery wołowe Black Angus", title:"Boston", price:"34/42/50", desc:"mały / średni / duży", tag:"wolowy" },
+    { category:"burger", categoryLabel:"Burgery wołowe Black Angus", title:"Pleśniak", price:"38/46/54", desc:"mały / średni / duży", tag:"wolowy" },
+    { category:"burger", categoryLabel:"Burgery wołowe Black Angus", title:"Bajpas", price:"36/44/52", desc:"mały / średni / duży", tag:"wolowy" },
+    { category:"burger", categoryLabel:"Burgery wołowe Black Angus", title:"Burakoza", price:"38/46/54", desc:"mały / średni / duży", tag:"wolowy" },
+    { category:"burger", categoryLabel:"Burgery wołowe Black Angus", title:"New York", price:"38/46/54", desc:"mały / średni / duży", tag:"wolowy" },
+    { category:"burger", categoryLabel:"Burgery wołowe Black Angus", title:"Złodziej", price:"38/46/54", desc:"mały / średni / duży", tag:"wolowy" },
+    { category:"burger", categoryLabel:"Burgery wołowe Black Angus", title:"Missisipi", price:"38/46/54", desc:"mały / średni / duży", tag:"wolowy" },
+
+    // =========================
+    // BURGERY / KURCZAK
+    // =========================
+    { category:"burger", categoryLabel:"Burgery z kurczakiem", title:"Kura", price:43, desc:"", tag:"kurczak" },
+    { category:"burger", categoryLabel:"Burgery z kurczakiem", title:"Żółtodziób", price:43, desc:"", tag:"kurczak" },
+
+    // =========================
+    // ŚNIADANIA / NAPOJE I DODATKI
+    // =========================
+    { category:"sniadania", categoryLabel:"Napoje do śniadania", title:"Kawa filtrowana (z dolewką)", price:12, desc:"", tag:"sniadania" },
+    { category:"sniadania", categoryLabel:"Napoje do śniadania", title:"Herbata śniadaniowa (z dolewką)", price:9, desc:"", tag:"sniadania" },
+    { category:"sniadania", categoryLabel:"Napoje do śniadania", title:"Świeży sok", price:18, desc:"0,2 l", tag:"sniadania" },
+    { category:"sniadania", categoryLabel:"Napoje do śniadania", title:"Mimoza", price:31, desc:"", tag:"sniadania" },
+
+    // =========================
+    // ŚNIADANIA / ŚNIADANIA
+    // =========================
+    { category:"sniadania", categoryLabel:"Śniadania", title:"Granola", price:44, desc:"", tag:"sniadania" },
+    { category:"sniadania", categoryLabel:"Śniadania", title:"Tost francuski w panko", price:44, desc:"", tag:"sniadania" },
+    { category:"sniadania", categoryLabel:"Śniadania", title:"Jajito burrito", price:37, desc:"", tag:"sniadania" },
+    { category:"sniadania", categoryLabel:"Śniadania", title:"Czerwona szakszuka", price:39, desc:"", tag:"sniadania" },
+    { category:"sniadania", categoryLabel:"Śniadania", title:"Egg royal", price:45, desc:"", tag:"sniadania" },
+    { category:"sniadania", categoryLabel:"Śniadania", title:"Jajecznica", price:33, desc:"", tag:"sniadania" },
+    { category:"sniadania", categoryLabel:"Śniadania", title:"Omlet francuski", price:37, desc:"", tag:"sniadania" },
+
+    // =========================
+    // ŚNIADANIA / KANAPKI ŚNIADANIOWE
+    // =========================
+    { category:"sniadania", categoryLabel:"Kanapki śniadaniowe", title:"Rostbef", price:"42/58", desc:"60 g / 100 g", tag:"kanapki-sniadaniowe" },
+    { category:"sniadania", categoryLabel:"Kanapki śniadaniowe", title:"Cotto", price:"37/49", desc:"70 g / 120 g", tag:"kanapki-sniadaniowe" },
+    { category:"sniadania", categoryLabel:"Kanapki śniadaniowe", title:"Kura", price:46, desc:"", tag:"kanapki-sniadaniowe" },
+    { category:"sniadania", categoryLabel:"Kanapki śniadaniowe", title:"Club sandwich", price:38, desc:"", tag:"kanapki-sniadaniowe" },
+    { category:"sniadania", categoryLabel:"Kanapki śniadaniowe", title:"Cotto club", price:36, desc:"", tag:"kanapki-sniadaniowe" },
+    { category:"sniadania", categoryLabel:"Kanapki śniadaniowe", title:"Vege club", price:36, desc:"", tag:"kanapki-sniadaniowe" },
+
+    // =========================
+    // ŚNIADANIA / FULL MILKSHAKE BREAKFAST
+    // =========================
+    { category:"sniadania", categoryLabel:"Full milkshake breakfast", title:"Duży full milkshake breakfast", price:53, desc:"", tag:"zestaw-sniadaniowy" },
+    { category:"sniadania", categoryLabel:"Full milkshake breakfast", title:"Mały full milkshake breakfast", price:42, desc:"", tag:"zestaw-sniadaniowy" },
+
+    // =========================
+    // ŚNIADANIA / CHIQUITA
+    // =========================
+    { category:"sniadania", categoryLabel:"Chiquita", title:"Chiquita", price:41, desc:"", tag:"chiquita" },
+    { category:"sniadania", categoryLabel:"Chiquita", title:"Chiquita z chorizo", price:39, desc:"80 g", tag:"chiquita" },
+
+    // =========================
+    // ŚNIADANIA / KETO DODATKI
+    // =========================
+    { category:"sniadania", categoryLabel:"Śniadanie KETO – dodatki", title:"Frankfurterka", price:7, desc:"", tag:"sniadania-keto" },
+    { category:"sniadania", categoryLabel:"Śniadanie KETO – dodatki", title:"Chorizo", price:8, desc:"70 g", tag:"sniadania-keto" },
+    { category:"sniadania", categoryLabel:"Śniadanie KETO – dodatki", title:"½ awokado", price:9, desc:"", tag:"sniadania-keto" },
+    { category:"sniadania", categoryLabel:"Śniadanie KETO – dodatki", title:"Twarożek", price:7, desc:"80 g", tag:"sniadania-keto" },
+    { category:"sniadania", categoryLabel:"Śniadanie KETO – dodatki", title:"Ogórek zielony", price:5, desc:"7 plastrów", tag:"sniadania-keto" },
+    { category:"sniadania", categoryLabel:"Śniadanie KETO – dodatki", title:"Pomidorki koktajlowe", price:5, desc:"80 g", tag:"sniadania-keto" },
+    { category:"sniadania", categoryLabel:"Śniadanie KETO – dodatki", title:"Bekon", price:4, desc:"2 plastry", tag:"sniadania-keto" },
+    { category:"sniadania", categoryLabel:"Śniadanie KETO – dodatki", title:"Jajo", price:4, desc:"", tag:"sniadania-keto" },
+    { category:"sniadania", categoryLabel:"Śniadanie KETO – dodatki", title:"Masło", price:2, desc:"10 g", tag:"sniadania-keto" },
+    { category:"sniadania", categoryLabel:"Śniadanie KETO – dodatki", title:"Chleb maślany", price:6, desc:"80 g", tag:"sniadania-keto" },
+    { category:"sniadania", categoryLabel:"Śniadanie KETO – dodatki", title:"Gravlax", price:15, desc:"50 g", tag:"sniadania-keto" },
   ];
 
-  // Render po starcie
   renderMenuItems(products);
   applyFilters();
 });
@@ -943,4 +1223,3 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
-

@@ -1,4 +1,4 @@
-// server.js
+// server.js (BEZ ZMIAN)
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -65,7 +65,6 @@ function readDB() {
     const raw = fs.readFileSync(DB_FILE, 'utf8');
     const data = JSON.parse(raw);
 
-    // bezpieczeństwo pól
     data.reservations ||= [];
     data.products ||= [];
     data.happy ||= "";

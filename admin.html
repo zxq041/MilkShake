@@ -1,3 +1,4 @@
+<!-- admin.html (PANEL ADMINA BEZ PRODUKTÓW + UWAGI W TABELI + HAPPY HOUR) -->
 <!doctype html>
 <html lang="pl">
 <head>
@@ -163,7 +164,7 @@
       background: var(--panel);
       box-shadow: var(--shadow);
     }
-    table{width:100%; border-collapse:collapse; min-width:820px;}
+    table{width:100%; border-collapse:collapse; min-width:950px;}
     thead th{
       text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.8px;
       color:#B94D00; font-weight:900; padding:12px 14px; background: var(--panel-2);
@@ -171,6 +172,10 @@
     }
     tbody td{
       padding:12px 14px; border-top: var(--border); font-weight:700; font-size:14px;
+      vertical-align: top;
+      max-width: 260px;
+      word-wrap: break-word;
+      white-space: pre-wrap;
     }
     tbody tr:hover{ background: rgba(255,106,0,.05); }
 
@@ -184,52 +189,6 @@
 
     .actions{display:flex; gap:8px; flex-wrap:wrap;}
     .actions .btn{padding:7px 10px; font-size:12px; border-radius:10px;}
-
-    .product-grid{
-      margin-top:12px;
-      display:grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap:10px;
-    }
-    .product{
-      background: var(--panel); border: var(--border); border-radius:14px; overflow:hidden;
-      box-shadow: var(--shadow);
-      display:grid;
-      grid-template-rows: 140px auto;
-    }
-    .product img{ width:100%; height:140px; object-fit:cover; background:#f6f6f6;}
-    .product .meta{ padding:10px 12px; display:grid; gap:6px; }
-    .badge{
-      font-size:11px; font-weight:900; letter-spacing:.3px; text-transform:uppercase;
-      padding:4px 8px; border-radius:999px; background:rgba(255,106,0,.12); color:#B94D00;
-      display:inline-flex; width:max-content;
-    }
-    .line{font-size:12px;color:var(--muted);font-weight:800}
-
-    /* modal */
-    .modal-backdrop{
-      position:fixed; inset:0; background:rgba(0,0,0,.35);
-      display:none; align-items:center; justify-content:center; padding:18px; z-index:9998;
-    }
-    .modal{
-      width:min(560px,100%);
-      background:#fff; border:var(--border); border-radius:18px; padding:14px;
-      box-shadow: var(--shadow); display:grid; gap:10px;
-    }
-    .modal h3{ margin:0; }
-    .modal .row{ display:grid; gap:6px; }
-    .modal label{ font-weight:800; font-size:14px; }
-    .modal input, .modal textarea, .modal select{
-      width:100%; padding:10px 12px; border-radius:12px; border:var(--border);
-      background: #fff; font-weight:700; font-family:inherit;
-    }
-    .modal textarea{ min-height:90px; resize:vertical; }
-    .modal .actions-row{ display:flex; gap:8px; justify-content:flex-end; margin-top:4px; }
-
-    .preview{
-      display:flex; gap:10px; align-items:center;
-    }
-    .preview img{
-      width:84px;height:84px;border-radius:12px;object-fit:cover;border:var(--border);
-    }
 
     .toast{
       position:fixed; left:50%; transform:translateX(-50%);
@@ -267,7 +226,7 @@
       .layout{ grid-template-columns: 1fr; }
       .sidebar{ display:none; }
       .mobile-nav{ display:flex; }
-      table{ min-width:700px; }
+      table{ min-width:820px; }
     }
   </style>
 </head>
@@ -314,7 +273,6 @@
     <nav class="nav">
       <a class="active" data-tab="dashboard"><span class="dot"></span> Dashboard</a>
       <a data-tab="reservations"><span class="dot"></span> Rezerwacje</a>
-      <a data-tab="products"><span class="dot"></span> Produkty</a>
       <a data-tab="happy"><span class="dot"></span> Happy Hour</a>
     </nav>
   </aside>
@@ -364,21 +322,12 @@
           <thead>
             <tr>
               <th>Imię</th><th>Tel</th><th>Data</th><th>Godz.</th>
-              <th>Osób</th><th>Strefa</th><th>Status</th><th>Akcje</th>
+              <th>Osób</th><th>Strefa</th><th>Uwagi</th><th>Status</th><th>Akcje</th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
       </div>
-    </section>
-
-    <!-- PRODUCTS -->
-    <section id="tab-products" class="section">
-      <div class="card" style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
-        <h3 style="margin:0">Produkty (Menu)</h3>
-        <button id="addProductBtn" class="btn primary">Dodaj produkt</button>
-      </div>
-      <div id="productGrid" class="product-grid"></div>
     </section>
 
     <!-- HAPPY -->
@@ -403,64 +352,7 @@
 <div class="mobile-nav" id="mobileNav">
   <button data-tab="dashboard" class="active">🏠<span>Home</span></button>
   <button data-tab="reservations">📅<span>Rezerwacje</span></button>
-  <button data-tab="products">🍨<span>Produkty</span></button>
   <button data-tab="happy">⚡<span>Happy Hour</span></button>
-</div>
-
-<!-- MODAL PRODUCT -->
-<div class="modal-backdrop" id="productModal">
-  <div class="modal">
-    <h3 id="modalTitle">Nowy produkt</h3>
-
-    <div class="row">
-      <label>Nazwa *</label>
-      <input id="pTitle" placeholder="np. MilkShake Oreo Deluxe" />
-    </div>
-
-    <div class="row">
-      <label>Cena (PLN)</label>
-      <input id="pPrice" type="number" min="0" step="1" placeholder="np. 21" />
-    </div>
-
-    <div class="row">
-      <label>Opis</label>
-      <textarea id="pDesc" placeholder="Krótki opis produktu"></textarea>
-    </div>
-
-    <div class="row">
-      <label>Tag (np. best-of, klasyka, owocowe)</label>
-      <input id="pTag" placeholder="np. best-of" />
-    </div>
-
-    <div class="row">
-      <label>Kategoria *</label>
-      <select id="pCategory">
-        <option value="">— wybierz —</option>
-        <option value="sniadania">Śniadania</option>
-        <option value="shake">Shakes</option>
-        <option value="deser">Desery</option>
-        <option value="texmex">Tex Mex</option>
-        <option value="kanapki">Kanapki</option>
-        <option value="burger">Burgery</option>
-        <option value="kawa-herbata">Kawa i herbata</option>
-        <option value="napoje-soki">Napoje i świeże soki</option>
-      </select>
-    </div>
-
-    <div class="row">
-      <label>Zdjęcie (plik / aparat)</label>
-      <input id="pImageFile" type="file" accept="image/*" capture="environment">
-      <div class="preview" id="pPreview" style="display:none">
-        <img id="pPreviewImg" src="" alt="">
-        <div class="line" id="pPreviewLine">Podgląd zdjęcia</div>
-      </div>
-    </div>
-
-    <div class="actions-row">
-      <button class="btn" id="cancelProduct">Anuluj</button>
-      <button class="btn primary" id="saveProduct">Zapisz</button>
-    </div>
-  </div>
 </div>
 
 <!-- templates -->
@@ -472,6 +364,7 @@
     <td class="r-time"></td>
     <td class="r-guests"></td>
     <td class="r-room"></td>
+    <td class="r-notes"></td>
     <td class="r-status"></td>
     <td class="r-actions"></td>
   </tr>
@@ -508,7 +401,7 @@
   const qs = s=>document.querySelector(s);
   const qsa = s=>document.querySelectorAll(s);
 
-  let state = {reservations:[],products:[],happy:""};
+  let state = { reservations: [], happy: "" };
 
   // ---------------------------
   // Ding sound
@@ -664,6 +557,7 @@
       tr.querySelector(".r-time").textContent = r.time;
       tr.querySelector(".r-guests").textContent = r.guests;
       tr.querySelector(".r-room").textContent = r.room || "Sala główna";
+      tr.querySelector(".r-notes").textContent = r.notes || "—";
       tr.querySelector(".r-status").innerHTML = statusBadge(r.status);
 
       const actions = tr.querySelector(".r-actions");
@@ -694,7 +588,6 @@
   function refreshAll(){
     renderReservations();
     renderLatest();
-    renderProducts();
     refreshStats();
   }
 
@@ -702,14 +595,12 @@
     const r = state.reservations[index]; if(!r) return;
     r.status = status; r.updated = new Date().toISOString();
     toast("Status zaktualizowany");
-    syncToServer();
     refreshAll();
   }
   function deleteRes(index){
     if(!confirm("Usunąć tę rezerwację?")) return;
     state.reservations.splice(index,1);
     toast("Usunięto rezerwację");
-    syncToServer();
     refreshAll();
   }
 
@@ -720,151 +611,13 @@
     const time = prompt("Godzina (HH:MM)", "19:00"); if(!time) return;
     const guests = prompt("Ilość osób","2");
     const room = prompt("Strefa","Sala główna");
+    const notes = prompt("Uwagi (opcjonalnie)","") || "";
 
-    const obj = {name,phone,date,time,guests,room,status:"new",created:new Date().toISOString()};
+    const obj = {name,phone,date,time,guests,room,notes,status:"new",created:new Date().toISOString()};
     state.reservations.unshift(obj);
     toast("Dodano rezerwację");
-    syncToServer();
     refreshAll();
   }
-
-  // ---------------------------
-  // PRODUCTS
-  // ---------------------------
-  function renderProducts(){
-    const grid = qs("#productGrid");
-    grid.innerHTML = "";
-    (state.products||[]).forEach((p,idx)=>{
-      const div = document.createElement("div");
-      div.className = "product";
-      div.innerHTML = `
-        <img src="${p.image || 'https://i.imgur.com/kfE4j7j.jpeg'}" alt="">
-        <div class="meta">
-          <div class="badge">${p.category || 'brak kategorii'}</div>
-          <div style="font-weight:900">${p.title || 'Produkt'}</div>
-          ${p.desc ? `<div class="line">${p.desc}</div>` : ``}
-          ${p.tag ? `<div class="line">Tag: ${p.tag}</div>` : ``}
-          <div class="line">${(p.price||0)} PLN</div>
-          <div style="display:flex;gap:8px;margin-top:4px">
-            <button class="btn editP">Edytuj</button>
-            <button class="btn bad delP">Usuń</button>
-          </div>
-        </div>
-      `;
-      div.querySelector(".editP").onclick = ()=>openProductModal(p, idx);
-      div.querySelector(".delP").onclick = ()=>{
-        if(confirm("Usuń produkt?")){
-          state.products.splice(idx,1);
-          toast("Usunięto produkt");
-          syncToServer();
-          refreshAll();
-        }
-      };
-      grid.appendChild(div);
-    });
-  }
-
-  // modal open/close
-  const modal = qs("#productModal");
-  const pTitle = qs("#pTitle");
-  const pPrice = qs("#pPrice");
-  const pDesc = qs("#pDesc");
-  const pTag = qs("#pTag");
-  const pCategory = qs("#pCategory");
-  const pImageFile = qs("#pImageFile");
-  const pPreview = qs("#pPreview");
-  const pPreviewImg = qs("#pPreviewImg");
-  const modalTitle = qs("#modalTitle");
-
-  let editingIndex = null;
-  let editingImageUrl = "";
-
-  function openProductModal(product=null, idx=null){
-    editingIndex = idx;
-    editingImageUrl = product?.image || "";
-
-    modalTitle.textContent = idx===null ? "Nowy produkt" : "Edytuj produkt";
-    pTitle.value = product?.title || "";
-    pPrice.value = product?.price || "";
-    pDesc.value = product?.desc || "";
-    pTag.value = product?.tag || "";
-    pCategory.value = product?.category || "";
-    pImageFile.value = "";
-
-    if(editingImageUrl){
-      pPreview.style.display="flex";
-      pPreviewImg.src = editingImageUrl;
-    } else {
-      pPreview.style.display="none";
-    }
-
-    modal.style.display="flex";
-  }
-  function closeProductModal(){
-    modal.style.display="none";
-  }
-  qs("#cancelProduct").onclick = closeProductModal;
-  modal.addEventListener("click", (e)=>{ if(e.target===modal) closeProductModal(); });
-
-  // preview when selecting image
-  pImageFile.addEventListener("change", ()=>{
-    const file = pImageFile.files?.[0];
-    if(!file) return;
-    const url = URL.createObjectURL(file);
-    pPreview.style.display="flex";
-    pPreviewImg.src = url;
-  });
-
-  async function uploadImageIfNeeded(){
-    const file = pImageFile.files?.[0];
-    if(!file) return editingImageUrl; // keep old
-    const fd = new FormData();
-    fd.append("image", file);
-
-    const res = await fetch("/api/upload", { method:"POST", body: fd });
-    if(!res.ok) throw new Error("Upload nieudany");
-    const out = await res.json();
-    return out.url; // np. /uploads/xxx.jpg
-  }
-
-  qs("#saveProduct").onclick = async ()=>{
-    try{
-      const title = pTitle.value.trim();
-      const category = pCategory.value.trim();
-      if(!title) return toast("Podaj nazwę");
-      if(!category) return toast("Wybierz kategorię");
-
-      const imageUrl = await uploadImageIfNeeded();
-
-      const obj = {
-        id: editingIndex===null ? Date.now().toString() : state.products[editingIndex].id,
-        title,
-        price: pPrice.value ? Number(pPrice.value) : 0,
-        desc: pDesc.value.trim(),
-        tag: pTag.value.trim(),
-        category,
-        image: imageUrl || "https://i.imgur.com/kfE4j7j.jpeg",
-        updated: new Date().toISOString()
-      };
-
-      if(editingIndex===null){
-        state.products.push(obj);
-        toast("Dodano produkt");
-      } else {
-        state.products[editingIndex] = obj;
-        toast("Zapisano zmiany");
-      }
-
-      await syncToServer();
-      refreshAll();
-      closeProductModal();
-    }catch(e){
-      console.error(e);
-      toast("Błąd zapisu produktu");
-    }
-  };
-
-  qs("#addProductBtn").onclick = ()=>openProductModal(null,null);
 
   // ---------------------------
   // HAPPY HOUR
@@ -886,17 +639,8 @@
   qs("#clearHH").onclick = clearHappy;
 
   // ---------------------------
-  // SERVER SYNC
+  // SERVER SYNC (only happy)
   // ---------------------------
-  async function syncToServer(){
-    try{
-      await fetch("/api/products", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ products: state.products })
-      });
-    }catch(e){}
-  }
   async function syncHappyToServer(){
     try{
       await fetch("/api/happy", {
@@ -916,7 +660,6 @@
       if(!res.ok) throw new Error(res.status);
       const db = await res.json();
       state.reservations = db.reservations || [];
-      state.products = db.products || [];
       state.happy = db.happy || "";
       qs("#hhText").value = state.happy;
       qs("#topHappyPreview").textContent = state.happy || "Brak Happy Hour";
@@ -928,7 +671,6 @@
 
   socket.on("state:init", (db)=>{
     state.reservations = db.reservations || [];
-    state.products = db.products || [];
     state.happy = db.happy || "";
     qs("#hhText").value = state.happy;
     qs("#topHappyPreview").textContent = state.happy || "Brak Happy Hour";
@@ -946,7 +688,6 @@
 
   socket.on("state:update", (db)=>{
     state.reservations = db.reservations || [];
-    state.products = db.products || [];
     state.happy = db.happy || "";
     qs("#hhText").value = state.happy;
     qs("#topHappyPreview").textContent = state.happy || "Brak Happy Hour";

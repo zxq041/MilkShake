@@ -244,6 +244,96 @@
     }
     .toast.visible { opacity:1; transform: translateY(0); }
     .toast.error { background: var(--error-color); }
+
+    /* =========================
+       MOBILE / TABLET FIXES
+       ========================= */
+    @media (max-width: 768px) {
+      .container { padding: 0 14px; }
+
+      /* header */
+      .navbar{
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px;
+      }
+      .logo{
+        font-size: 1.1rem;
+      }
+      .logo img{
+        width: 36px; height: 36px;
+      }
+
+      .header-actions{
+        width: 100%;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 8px;
+      }
+      .header-actions .btn,
+      .header-actions .pill{
+        width: 100%;
+        justify-content: center;
+      }
+
+      /* tabs */
+      .tabs{
+        gap: 6px;
+      }
+      .tab-btn{
+        flex: 1 1 auto;
+        justify-content: center;
+        padding: 9px 12px;
+        font-size: 0.95rem;
+      }
+
+      /* grid */
+      .grid{
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .sidebar{
+        order: 2;
+      }
+
+      /* reservation cards */
+      .reservation-item{
+        grid-template-columns: 1fr;
+      }
+      .reservation-actions{
+        flex-direction: row;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+      }
+      .reservation-actions .btn{
+        flex: 1 1 0;
+        justify-content: center;
+        padding: 10px 12px;
+        font-size: 0.9rem;
+      }
+
+      /* tags smaller */
+      .tag{
+        font-size: 0.78rem;
+        padding: 5px 8px;
+      }
+    }
+
+    @media (max-width: 420px){
+      .content-header{
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .content-header h2{ font-size: 1.4rem; }
+
+      .code-input input{
+        width: 46px;
+        height: 54px;
+        font-size: 1.4rem;
+      }
+    }
   </style>
 </head>
 
@@ -286,9 +376,15 @@
             <i class="fa-solid fa-circle" id="liveDot" style="color:#16A34A"></i>
             <span id="liveText">LIVE</span>
           </div>
+
+          <button class="btn btn-ghost" id="enableSoundBtn">
+            <i class="fa-solid fa-volume-high"></i> Dźwięk
+          </button>
+
           <button class="btn btn-ghost" id="enableNotifBtn">
             <i class="fa-regular fa-bell"></i> Powiadomienia
           </button>
+
           <button class="btn btn-primary" id="refreshBtn">
             <i class="fa-solid fa-rotate"></i> Odśwież
           </button>
@@ -340,7 +436,8 @@
 
         <p class="small" style="margin-top:12px;line-height:1.5">
           Panel działa jako PWA (można dodać na ekran główny).  
-          Dźwięk i powiadomienia wymagają jednorazowej zgody w przeglądarce.
+          Dźwięk na telefonie wymaga jednorazowego kliknięcia „Dźwięk”.
+          W tle działa tylko powiadomienie push i wibracja.
         </p>
       </aside>
 
@@ -475,12 +572,38 @@
     }
 
     // =========================
-    //  Bell sound (5s)
+    //  Sound enable (MOBILE FIX)
     // =========================
     let audioCtx;
-    function playBellFor5s(){
+    let soundEnabled = localStorage.getItem("soundEnabled") === "1";
+
+    async function enableSound(){
       try{
         audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        if(audioCtx.state === "suspended") await audioCtx.resume();
+        soundEnabled = true;
+        localStorage.setItem("soundEnabled","1");
+        showToast("Dźwięk włączony 🔊");
+      }catch(e){
+        console.warn(e);
+        showToast("Nie udało się włączyć dźwięku", true);
+      }
+    }
+
+    document.getElementById("enableSoundBtn").addEventListener("click", enableSound);
+
+    // =========================
+    //  Bell sound (5s)
+    // =========================
+    function playBellFor5s(){
+      if(!soundEnabled) return; // ważne: mobile wymaga gestu usera
+
+      try{
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        if(audioCtx.state === "suspended"){
+          audioCtx.resume(); // best-effort
+        }
+
         const now = audioCtx.currentTime;
         const freqs = [880, 1320, 1760];
         const gain = audioCtx.createGain();
@@ -660,7 +783,7 @@
         const prevIds = new Set(reservations.map(r=>r.id));
         const newOnes = incoming.filter(r=>!prevIds.has(r.id));
 
-        reservations = incoming; // podmieniamy na stan z serwera
+        reservations = incoming;
         render();
 
         if(notifyNew && newOnes.length){
@@ -703,13 +826,12 @@
           document.getElementById("liveDot").style.color = "#DC2626";
         });
 
-        // ✅ obsługa obu eventów
         socket.on("reservation:new", onNewReservation);
         socket.on("new-reservation", onNewReservation);
       }
     }catch(e){}
 
-    // polling co 5s (bez duplikatów)
+    // polling co 5s
     setInterval(()=>fetchReservationsAndMerge({notifyNew:true}), 5000);
 
     // =========================

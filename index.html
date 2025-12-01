@@ -58,7 +58,7 @@
         }
         .container { max-width: 1280px; margin: 0 auto; padding: 0 25px; }
         h1, h2, h3 { font-weight: 700; }
-        
+
         h2.section-title {
             font-size: clamp(2.5rem, 5vw, 4rem);
             font-weight: 900;
@@ -227,6 +227,7 @@
         .map-container {
             width: 100%; height: 100%; min-height: 400px; border-radius: var(--border-radius);
             overflow: hidden; box-shadow: var(--shadow);
+            position: relative;
         }
         .map-container iframe {
             width: 100%; height: 100%; border: 0;
@@ -369,6 +370,44 @@
             grid-template-columns: 1fr; padding: 22px;
           }
           .booking-form .form-row { flex-direction: column; }
+        }
+
+        /* ---------- MAP SWITCH ARROWS ---------- */
+        .map-arrow {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 44px;
+          height: 44px;
+          border: none;
+          border-radius: 999px;
+          cursor: pointer;
+          z-index: 5;
+          background: rgba(255,255,255,0.95);
+          box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+          display: grid;
+          place-items: center;
+          transition: transform 0.2s ease, background 0.2s ease;
+        }
+        .map-arrow:hover {
+          transform: translateY(-50%) scale(1.06);
+          background: white;
+        }
+        .map-arrow.left { left: 12px; }
+        .map-arrow.right { right: 12px; }
+
+        .map-badge {
+          position: absolute;
+          bottom: 12px;
+          left: 12px;
+          z-index: 5;
+          background: rgba(0,0,0,0.65);
+          color: #fff;
+          font-weight: 700;
+          font-size: 0.9rem;
+          padding: 6px 10px;
+          border-radius: 999px;
+          letter-spacing: 0.2px;
         }
     </style>
 </head>
@@ -562,29 +601,60 @@
           </div>
         </section>
 
+        <!-- ---------- LOKALIZACJA (2 adresy + przełączanie mapy) ---------- -->
         <section id="location" class="section">
-            <div class="container fade-in">
-                <div class="location-contact-grid">
-                    <div class="location-details">
-                        <h3>Jesteśmy tutaj</h3>
-                        <div class="info-item">
-                            <i class="fas fa-map-marker-alt"></i>
-                            <span>Szczecińska 17<br>76-200 Słupsk</span>
-                        </div>
-                        <div class="info-item">
-                            <i class="fas fa-clock"></i>
-                            <span><b>Godziny otwarcia:</b><br>Pon-Sob: 12:00 - 22:00<br>Ndz: 12:00 - 21:00</span>
-                        </div>
-                        <div class="info-item">
-                           <i class="fas fa-phone"></i>
-                           <span>+48 733 033 100</span>
-                        </div>
-                    </div>
-                    <div class="map-container">
-                        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2331.002829241513!2d17.01509831582845!3d54.46736898022934!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46fe1e12a4d3148d%3A0xe5a1b37937a6b5a3!2sSzczeci%C5%84ska%2017%2C%2076-200%20S%C5%82upsk!5e0!3m2!1spl!2spl!4v1694080000000" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Mapa dojazdu do MilkShake Bar Słupsk"></iframe>
-                    </div>
+          <div class="container fade-in">
+            <div class="location-contact-grid">
+
+              <div class="location-details">
+                <h3>Jesteśmy tutaj</h3>
+
+                <!-- Adres główny (będzie aktualizowany JS-em przy przełączaniu) -->
+                <div class="info-item">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <span id="addressText">Szczecińska 17<br>76-200 Słupsk</span>
                 </div>
+
+                <!-- Drugi adres stały -->
+                <div class="info-item">
+                  <i class="fas fa-location-dot"></i>
+                  <span>Wydmowa 2<br>76-212 Rowy</span>
+                </div>
+
+                <div class="info-item">
+                  <i class="fas fa-clock"></i>
+                  <span><b>Godziny otwarcia:</b><br>Pon-Sob: 12:00 - 22:00<br>Ndz: 12:00 - 21:00</span>
+                </div>
+
+                <div class="info-item">
+                  <i class="fas fa-phone"></i>
+                  <span>+48 733 033 100</span>
+                </div>
+              </div>
+
+              <div class="map-container" id="mapContainer">
+                <button class="map-arrow left" type="button" aria-label="Poprzednia lokalizacja">
+                  <i class="fas fa-chevron-left"></i>
+                </button>
+
+                <iframe
+                  id="mapFrame"
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2331.002829241513!2d17.01509831582845!3d54.46736898022934!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46fe1e12a4d3148d%3A0xe5a1b37937a6b5a3!2sSzczeci%C5%84ska%2017%2C%2076-200%20S%C5%82upsk!5e0!3m2!1spl!2spl!4v1694080000000"
+                  allowfullscreen=""
+                  loading="lazy"
+                  referrerpolicy="no-referrer-when-downgrade"
+                  title="Mapa dojazdu do MilkShake Bar"
+                ></iframe>
+
+                <button class="map-arrow right" type="button" aria-label="Następna lokalizacja">
+                  <i class="fas fa-chevron-right"></i>
+                </button>
+
+                <div class="map-badge" id="mapBadge">Słupsk</div>
+              </div>
+
             </div>
+          </div>
         </section>
 
     </main>
@@ -832,6 +902,28 @@
                 `;
               }
 
+              // --- fallback jeśli baza pusta (3 produkty) ---
+              const fallbackProducts = [
+                {
+                  title: "Burger Żółtodziób",
+                  price: 29.90,
+                  desc: "Soczysty burger z chrupiącym kurczakiem, cheddarem i sosem firmowym.",
+                  image: "https://i.imgur.com/AlIo5bU.png"
+                },
+                {
+                  title: "Milkshake malinowy",
+                  price: 18.90,
+                  desc: "Kremowy milkshake malinowy z bitą śmietaną i owocami.",
+                  image: "https://i.imgur.com/dwsQzpr.png"
+                },
+                {
+                  title: "Milkshake czekoladowy",
+                  price: 18.90,
+                  desc: "Gęsty milkshake czekoladowy z polewą i wiórkami czekolady.",
+                  image: "https://i.imgur.com/T4tHYPu.png"
+                }
+              ];
+
               try{
                 const res = await fetch("/api/data", { cache:"no-store" });
                 if(!res.ok) throw new Error(res.status);
@@ -839,9 +931,8 @@
                 const products = (db.products || []).slice().reverse();
 
                 if(!products.length){
-                  grid.innerHTML = `<div class="muted" style="text-align:center">
-                    Brak produktów w menu — dodaj je w panelu admina.
-                  </div>`;
+                  grid.innerHTML = fallbackProducts.map(cardHTML).join("");
+                  grid.querySelectorAll(".fade-in").forEach(el => observer.observe(el));
                   return;
                 }
 
@@ -849,9 +940,9 @@
                 grid.querySelectorAll(".fade-in").forEach(el => observer.observe(el));
               }catch(e){
                 console.error(e);
-                grid.innerHTML = `<div class="muted" style="text-align:center;color:#b00000">
-                  Nie udało się wczytać menu.
-                </div>`;
+                // jakby API siadło, też pokaż fallback
+                grid.innerHTML = fallbackProducts.map(cardHTML).join("");
+                grid.querySelectorAll(".fade-in").forEach(el => observer.observe(el));
               }
             })();
 
@@ -880,6 +971,56 @@
               }catch(e){
                 console.error("Happy bar load failed", e);
               }
+            })();
+
+            // -----------------------------------
+            // MAP SWITCH: Słupsk <-> Rowy
+            // -----------------------------------
+            (function initMapSwitch(){
+              const frame = document.getElementById("mapFrame");
+              const badge = document.getElementById("mapBadge");
+              const addressText = document.getElementById("addressText");
+              const container = document.getElementById("mapContainer");
+              if(!frame || !badge || !container) return;
+
+              const leftBtn  = container.querySelector(".map-arrow.left");
+              const rightBtn = container.querySelector(".map-arrow.right");
+
+              const locations = [
+                {
+                  name: "Słupsk",
+                  addressHTML: "Szczecińska 17<br>76-200 Słupsk",
+                  src: "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2331.002829241513!2d17.01509831582845!3d54.46736898022934!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x46fe1e12a4d3148d%3A0xe5a1b37937a6b5a3!2sSzczeci%C5%84ska%2017%2C%2076-200%20S%C5%82upsk!5e0!3m2!1spl!2spl!4v1694080000000"
+                },
+                {
+                  name: "Rowy",
+                  addressHTML: "Wydmowa 2<br>76-212 Rowy",
+                  src: "https://www.google.com/maps?q=Wydmowa+2,+76-212+Rowy&output=embed"
+                }
+              ];
+
+              let idx = 0;
+
+              function render(){
+                const loc = locations[idx];
+                frame.src = loc.src;
+                badge.textContent = loc.name;
+                if(addressText) addressText.innerHTML = loc.addressHTML;
+              }
+
+              function next(){
+                idx = (idx + 1) % locations.length;
+                render();
+              }
+              function prev(){
+                idx = (idx - 1 + locations.length) % locations.length;
+                render();
+              }
+
+              rightBtn?.addEventListener("click", next);
+              leftBtn?.addEventListener("click", prev);
+
+              render();
             })();
 
         });

@@ -1,220 +1,285 @@
-// server.js (BEZ ZMIAN)
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
-const multer = require('multer');
+// server.js — MilkShake Bar backend (Express + Socket.IO + db.json)
 
-const PUBLIC_DIR = __dirname;
-const DB_FILE = path.join(__dirname, 'db.json');
-const UPLOADS_DIR = path.join(__dirname, 'uploads');
+const express = require("express");
+const http = require("http");
+const path = require("path");
+const fs = require("fs");
+const multer = require("multer");
+const { Server } = require("socket.io");
 
-if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR);
-
-// ---------------------------
-// Multer storage
-// ---------------------------
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, UPLOADS_DIR),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname || '.jpg');
-    const name = Date.now() + '-' + Math.round(Math.random() * 1e9) + ext;
-    cb(null, name);
-  }
-});
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 8 * 1024 * 1024 }, // 8MB
-});
-
-// ---------------------------
-// App + Socket
-// ---------------------------
 const app = express();
 const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" } });
 
-const io = new Server(server, {
-  cors: { origin: "*", methods: ["GET", "POST"] }
-});
+// ==========================
+//  BASIC CONFIG
+// ==========================
+const PORT = process.env.PORT || 3000;
+const PUBLIC_DIR = path.join(__dirname, "public");
+const DB_PATH = path.join(__dirname, "db.json");
 
-app.use(cors());
+// json + forms
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// static
+// static files
 app.use(express.static(PUBLIC_DIR));
-app.use('/uploads', express.static(UPLOADS_DIR));
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
-});
+// uploads folder
+const UPLOADS_DIR = path.join(PUBLIC_DIR, "uploads");
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+app.use("/uploads", express.static(UPLOADS_DIR));
 
-// ---------------------------
-// Simple file-backed DB
-// ---------------------------
-function readDB() {
+// ==========================
+//  DB (file-backed)
+// ==========================
+function loadDB() {
   try {
-    if (!fs.existsSync(DB_FILE)) {
-      const init = { reservations: [], products: [], happy: '' };
-      fs.writeFileSync(DB_FILE, JSON.stringify(init, null, 2));
+    if (!fs.existsSync(DB_PATH)) {
+      const init = { products: [], reservations: [], happy: "" };
+      fs.writeFileSync(DB_PATH, JSON.stringify(init, null, 2), "utf-8");
       return init;
     }
-    const raw = fs.readFileSync(DB_FILE, 'utf8');
-    const data = JSON.parse(raw);
-
-    data.reservations ||= [];
-    data.products ||= [];
-    data.happy ||= "";
-
-    return data;
-  } catch (err) {
-    console.error('Failed to read DB file:', err);
-    return { reservations: [], products: [], happy: '' };
-  }
-}
-
-function writeDB(data) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
-}
-
-// ---------------------------
-// API
-// ---------------------------
-
-// GET full data (admin + menu)
-app.get('/api/data', (req, res) => {
-  const db = readDB();
-  res.json(db);
-});
-
-// MENU PRODUCTS
-app.get('/api/products', (req, res) => {
-  const db = readDB();
-  res.json(db.products || []);
-});
-
-// add product (multipart/form-data)
-app.post('/api/products/add', upload.single('image'), (req, res) => {
-  try {
-    const db = readDB();
-    const body = req.body || {};
-
-    if (!body.title || !body.category) {
-      return res.status(400).json({ message: "Brakuje title albo category" });
-    }
-
-    const newProduct = {
-      id: Date.now().toString(),
-      title: String(body.title),
-      price: Number(body.price || 0),
-      description: String(body.description || ""),
-      tag: String(body.tag || ""),
-      category: String(body.category),
-      image: req.file ? `/uploads/${req.file.filename}` : (body.imageUrl || ""),
-      created: new Date().toISOString()
+    const raw = fs.readFileSync(DB_PATH, "utf-8");
+    const parsed = JSON.parse(raw || "{}");
+    return {
+      products: parsed.products || [],
+      reservations: parsed.reservations || [],
+      happy: parsed.happy || ""
     };
-
-    db.products.unshift(newProduct);
-    writeDB(db);
-
-    io.emit('state:update', db);
-    return res.status(201).json({ ok: true, product: newProduct });
   } catch (e) {
-    console.error(e);
-    res.status(500).json({ message: "Błąd serwera" });
+    console.error("DB load error:", e);
+    return { products: [], reservations: [], happy: "" };
   }
-});
+}
 
-// update whole products list (admin sync)
-app.post('/api/products', (req, res) => {
+let db = loadDB();
+
+function saveDB() {
   try {
-    const db = readDB();
-    db.products = req.body.products || [];
-    writeDB(db);
-    io.emit('state:update', db);
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ message: 'error' });
+    fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2), "utf-8");
+  } catch (e) {
+    console.error("DB save error:", e);
   }
-});
+}
 
-// Happy hour
-app.post('/api/happy', (req, res) => {
-  try {
-    const db = readDB();
-    db.happy = req.body.happy || '';
-    writeDB(db);
-    io.emit('state:update', db);
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ message: 'error' });
-  }
-});
+// helper id
+const makeId = () =>
+  Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
-// RESERVATIONS
-app.get('/api/rezerwacje', (req, res) => {
-  const db = readDB();
-  res.json(db.reservations || []);
-});
+// ==========================
+//  SOCKET.IO
+// ==========================
+io.on("connection", (socket) => {
+  // możesz logować jeśli chcesz:
+  // console.log("Socket connected:", socket.id);
 
-app.post('/api/rezerwacje', (req, res) => {
-  try {
-    const db = readDB();
-    const payload = req.body || {};
-
-    if (!payload.name || !payload.phone || !payload.date || !payload.time) {
-      return res.status(400).json({
-        message: 'Brakuje wymaganych pól: name, phone, date, time'
-      });
-    }
-
-    const newRes = {
-      id: Date.now().toString(),
-      name: String(payload.name),
-      phone: String(payload.phone),
-      date: String(payload.date),
-      time: String(payload.time),
-      guests: payload.guests || payload.persons || payload.people || 2,
-      room: payload.room || payload.zone || 'Sala główna',
-      notes: payload.notes || '',
-      status: 'new',
-      created: new Date().toISOString()
-    };
-
-    db.reservations.push(newRes);
-    writeDB(db);
-
-    io.emit('reservation:new', newRes);
-    io.emit('state:update', db);
-
-    return res.status(201).json({ ok: true, reservation: newRes });
-  } catch (err) {
-    console.error('Error saving reservation:', err);
-    return res.status(500).json({ message: 'Błąd serwera' });
-  }
-});
-
-// Socket.IO
-io.on('connection', (socket) => {
-  console.log('Socket connected:', socket.id);
-  const db = readDB();
-  socket.emit('state:init', db);
-
-  socket.on('disconnect', () => {
-    console.log('Socket disconnected:', socket.id);
+  socket.on("disconnect", () => {
+    // console.log("Socket disconnected:", socket.id);
   });
 });
 
-// Fallback SPA
-app.get('*', (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, 'index.html'));
+// ==========================
+//  MULTER (IMAGE UPLOAD)
+// ==========================
+const storage = multer.diskStorage({
+  destination: (_, __, cb) => cb(null, UPLOADS_DIR),
+  filename: (_, file, cb) => {
+    const safeName =
+      Date.now() + "-" + file.originalname.replace(/[^\w.-]/g, "_");
+    cb(null, safeName);
+  }
+});
+const upload = multer({ storage });
+
+// upload endpoint (dla produktów)
+app.post("/api/upload", upload.single("image"), (req, res) => {
+  if (!req.file) return res.status(400).json({ ok: false, message: "Brak pliku" });
+  res.json({ ok: true, url: `/uploads/${req.file.filename}` });
 });
 
-const PORT = process.env.PORT || 3000;
+// ==========================
+//  API: DATA (produkty + happy + rezerwacje)
+// ==========================
+
+// cały db (wykorzystuje index.html do menu i happy bar)
+app.get("/api/data", (req, res) => {
+  res.json(db);
+});
+
+// opcjonalny patch (fallback z admina)
+app.patch("/api/data", (req, res) => {
+  try {
+    const { products, happy } = req.body || {};
+    if (Array.isArray(products)) db.products = products;
+    if (typeof happy !== "undefined") db.happy = String(happy || "");
+    saveDB();
+
+    if (typeof happy !== "undefined") {
+      io.emit("happy-updated", db.happy);
+    }
+
+    res.json({ ok: true, db });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, message: "Błąd aktualizacji danych" });
+  }
+});
+
+// ==========================
+//  API: PRODUCTS
+// ==========================
+app.get("/api/produkty", (req, res) => {
+  res.json(db.products);
+});
+
+app.post("/api/produkty", (req, res) => {
+  try {
+    const p = req.body || {};
+    const product = {
+      id: makeId(),
+      title: p.title || p.name || "Produkt",
+      desc: p.desc || p.description || "",
+      price: p.price ?? "",
+      image: p.image || "",
+      createdAt: Date.now()
+    };
+    db.products.push(product);
+    saveDB();
+    io.emit("products-updated", db.products);
+    res.json({ ok: true, product });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, message: "Błąd dodawania produktu" });
+  }
+});
+
+app.put("/api/produkty/:id", (req, res) => {
+  try {
+    const id = req.params.id;
+    const idx = db.products.findIndex(p => p.id === id);
+    if (idx === -1) return res.status(404).json({ ok:false, message:"Nie znaleziono produktu" });
+
+    db.products[idx] = { ...db.products[idx], ...req.body };
+    saveDB();
+    io.emit("products-updated", db.products);
+    res.json({ ok:true, product: db.products[idx] });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok:false, message:"Błąd edycji produktu" });
+  }
+});
+
+app.delete("/api/produkty/:id", (req, res) => {
+  try {
+    const id = req.params.id;
+    db.products = db.products.filter(p => p.id !== id);
+    saveDB();
+    io.emit("products-updated", db.products);
+    res.json({ ok:true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok:false, message:"Błąd usuwania produktu" });
+  }
+});
+
+// ==========================
+//  API: RESERVATIONS
+// ==========================
+
+// lista rezerwacji (admin panel)
+app.get("/api/rezerwacje", (req, res) => {
+  res.json(db.reservations || []);
+});
+
+// dodawanie rezerwacji (formularz na stronie głównej)
+app.post("/api/rezerwacje", (req, res) => {
+  try {
+    const r = req.body || {};
+    if (!r.name || !r.phone || !r.date || !r.time || !r.guests || !r.room) {
+      return res.status(400).json({ ok:false, message:"Uzupełnij wszystkie wymagane pola." });
+    }
+
+    const reservation = {
+      id: makeId(),
+      name: String(r.name),
+      phone: String(r.phone),
+      date: String(r.date),
+      time: String(r.time),
+      guests: String(r.guests),
+      room: String(r.room),
+      notes: String(r.notes || ""),
+      createdAt: Date.now()
+    };
+
+    db.reservations.push(reservation);
+    saveDB();
+
+    // realtime do admina
+    io.emit("new-reservation", reservation);
+
+    res.json({ ok:true, reservation });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok:false, message:"Błąd zapisu rezerwacji" });
+  }
+});
+
+// opcjonalnie: usuwanie rezerwacji
+app.delete("/api/rezerwacje/:id", (req, res) => {
+  try {
+    const id = req.params.id;
+    db.reservations = db.reservations.filter(x => x.id !== id);
+    saveDB();
+    io.emit("reservations-updated", db.reservations);
+    res.json({ ok:true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok:false, message:"Błąd usuwania rezerwacji" });
+  }
+});
+
+// ==========================
+//  API: HAPPY BAR (PASEK INFORMACJI)
+// ==========================
+app.post("/api/happy", (req, res) => {
+  try {
+    const { happy } = req.body || {};
+    db.happy = String(happy || "");
+    saveDB();
+
+    // realtime na stronę główną
+    io.emit("happy-updated", db.happy);
+
+    res.json({ ok:true, happy: db.happy });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok:false, message:"Błąd zapisu paska informacji" });
+  }
+});
+
+// ==========================
+//  ROUTES: ADMIN WITHOUT .html
+// ==========================
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
+});
+
+// (opcjonalnie) krótki alias do menu pod /menu
+app.get("/menu", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "menu.html"));
+});
+
+// ==========================
+//  FALLBACK (SPA-ish)
+// ==========================
+app.get("*", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+});
+
+// ==========================
+//  START
+// ==========================
 server.listen(PORT, () => {
-  console.log(`Server started on http://localhost:${PORT}`);
-  console.log(`Serving static files from ${PUBLIC_DIR}`);
+  console.log("MilkShake Bar server running on port:", PORT);
 });

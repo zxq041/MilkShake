@@ -394,7 +394,7 @@
     <span id="toastText">Nowa rezerwacja!</span>
   </div>
 
-  <!-- socket.io (jeśli masz w backendzie) -->
+  <!-- socket.io -->
   <script src="/socket.io/socket.io.js"></script>
   <script>
     // =========================
@@ -442,7 +442,6 @@
         lockscreen.style.display = "none";
         showToast("Zalogowano pomyślnie 🙌");
         requestNotificationPermission();
-        // po zalogowaniu od razu pobierz pasek info
         fetchInfoBar();
       } else {
         lockError.textContent = "Niepoprawny kod.";
@@ -560,6 +559,18 @@
       return dateStr === today;
     }
 
+    function normalizeRes(r){
+      return {
+        id: r.id || r._id || (r.createdAt + "|" + r.phone + "|" + r.date + "|" + r.time),
+        createdAt: r.createdAt || r.created_at || r.created || Date.now(),
+        ...r
+      };
+    }
+
+    function getNotes(r){
+      return (r.notes || r.note || r.uwagi || r.message || "").trim();
+    }
+
     function render(){
       if(!reservations.length){
         listEl.innerHTML = `<div class="empty">Brak rezerwacji.</div>`;
@@ -581,6 +592,8 @@
         .slice().reverse()
         .map(r=>{
           const isNew = !seenIds.has(r.id);
+          const notes = getNotes(r);
+
           return `
             <article class="reservation-item ${isNew ? "new" : ""}" data-id="${r.id}">
               <div>
@@ -594,7 +607,7 @@
                   <span class="tag"><i class="fa-solid fa-door-open"></i> ${r.room || "—"}</span>
                   <span class="tag"><i class="fa-solid fa-phone"></i> ${r.phone || "—"}</span>
                 </div>
-                ${r.notes ? `<div class="reservation-notes"><b>Uwagi:</b> ${r.notes}</div>` : ""}
+                ${notes ? `<div class="reservation-notes"><b>Uwagi:</b> ${notes}</div>` : ""}
                 <div class="small" style="margin-top:6px">
                   ID: ${r.id || "—"} • dodano: ${r.createdAt ? new Date(r.createdAt).toLocaleString() : "—"}
                 </div>
@@ -621,6 +634,7 @@
           render();
         });
       });
+
       listEl.querySelectorAll(".call-btn").forEach(btn=>{
         btn.addEventListener("click", ()=>{
           const card = btn.closest(".reservation-item");
@@ -633,17 +647,29 @@
       lastSync.textContent = "Ostatnia synchronizacja: " + new Date().toLocaleString();
     }
 
-    async function fetchReservations(){
+    async function fetchReservationsRaw(){
+      const res = await fetch("/api/rezerwacje", { cache:"no-store" });
+      if(!res.ok) throw new Error(res.status);
+      const data = await res.json();
+      return (data || []).map(normalizeRes);
+    }
+
+    async function fetchReservationsAndMerge({notifyNew=false} = {}){
       try{
-        const res = await fetch("/api/rezerwacje", { cache:"no-store" });
-        if(!res.ok) throw new Error(res.status);
-        const data = await res.json();
-        reservations = (data || []).map(r => ({
-          id: r.id || r._id || (r.createdAt + "|" + r.phone + "|" + r.date + "|" + r.time),
-          createdAt: r.createdAt || r.created_at || Date.now(),
-          ...r
-        }));
+        const incoming = await fetchReservationsRaw();
+        const prevIds = new Set(reservations.map(r=>r.id));
+        const newOnes = incoming.filter(r=>!prevIds.has(r.id));
+
+        reservations = incoming; // podmieniamy na stan z serwera
         render();
+
+        if(notifyNew && newOnes.length){
+          newOnes.forEach(r=>{
+            playBellFor5s();
+            showToast("Nowa rezerwacja 🔔");
+            fireNotification(r);
+          });
+        }
       }catch(e){
         console.error(e);
         listEl.innerHTML = `<div class="empty" style="color:#b00000">Nie udało się pobrać rezerwacji.</div>`;
@@ -651,21 +677,18 @@
     }
 
     function onNewReservation(r){
-      const normalized = {
-        id: r.id || r._id || (r.createdAt + "|" + r.phone + "|" + r.date + "|" + r.time),
-        createdAt: r.createdAt || Date.now(),
-        ...r
-      };
+      const nr = normalizeRes(r);
+      if(reservations.some(x=>x.id===nr.id)) return;
 
-      reservations.push(normalized);
+      reservations.push(nr);
       playBellFor5s();
       showToast("Nowa rezerwacja 🔔");
-      fireNotification(normalized);
+      fireNotification(nr);
       render();
     }
 
-    document.getElementById("refreshBtn").addEventListener("click", fetchReservations);
-    fetchReservations();
+    document.getElementById("refreshBtn").addEventListener("click", ()=>fetchReservationsAndMerge());
+    fetchReservationsAndMerge();
 
     // realtime via Socket.IO
     try{
@@ -679,16 +702,15 @@
           document.getElementById("liveText").textContent = "OFFLINE";
           document.getElementById("liveDot").style.color = "#DC2626";
         });
-        socket.on("new-reservation", (r)=> onNewReservation(r));
+
+        // ✅ obsługa obu eventów
+        socket.on("reservation:new", onNewReservation);
+        socket.on("new-reservation", onNewReservation);
       }
     }catch(e){}
 
-    // fallback polling co 5s
-    setInterval(async ()=>{
-      const prevIds = new Set(reservations.map(r=>r.id));
-      await fetchReservations();
-      reservations.filter(r=>!prevIds.has(r.id)).forEach(onNewReservation);
-    }, 5000);
+    // polling co 5s (bez duplikatów)
+    setInterval(()=>fetchReservationsAndMerge({notifyNew:true}), 5000);
 
     // =========================
     //  INFO BAR (steruje db.happy)
@@ -713,28 +735,17 @@
     }
 
     async function saveInfoBar(text){
-      // 1) próbujemy /api/happy (jeśli masz w backendzie)
-      // 2) fallback: /api/data z body { happy: text }
       const payload = { happy: text };
       try{
-        let res = await fetch("/api/happy", {
+        const res = await fetch("/api/happy", {
           method: "POST",
           headers: {"Content-Type":"application/json"},
           body: JSON.stringify(payload)
         });
-        if(res.ok) return true;
-      }catch(e){}
-
-      try{
-        let res2 = await fetch("/api/data", {
-          method: "PATCH",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify(payload)
-        });
-        if(res2.ok) return true;
-      }catch(e){}
-
-      return false;
+        return res.ok;
+      }catch(e){
+        return false;
+      }
     }
 
     saveInfoBarBtn.addEventListener("click", async ()=>{

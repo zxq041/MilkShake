@@ -84,13 +84,37 @@
       box-shadow: var(--shadow);
     }
     .btn-ghost:hover { transform: translateY(-2px); }
+    .btn-danger {
+      background: #fff; color: var(--error-color);
+      box-shadow: var(--shadow);
+      border: 2px solid rgba(220,38,38,0.15);
+    }
+
+    /* Tabs */
+    .tabs {
+      display:flex; gap:8px; flex-wrap:wrap;
+      margin: 18px 0 8px;
+    }
+    .tab-btn{
+      padding: 10px 16px; border-radius:999px; font-weight:800;
+      background:#fff; box-shadow: var(--shadow); border:none; cursor:pointer;
+      display:inline-flex; align-items:center; gap:8px;
+      transition:.2s ease;
+    }
+    .tab-btn.active{
+      background: var(--gradient-bg); color:#fff;
+      box-shadow: 0 8px 22px rgba(255,106,0,0.45);
+      transform: translateY(-1px);
+    }
+    .tab-panel{ display:none; }
+    .tab-panel.active{ display:block; }
 
     /* Layout */
     .grid {
       display:grid;
       grid-template-columns: 320px 1fr;
       gap: 18px;
-      padding: 20px 0 40px;
+      padding: 10px 0 40px;
     }
     @media (max-width: 992px){
       .grid{ grid-template-columns: 1fr; }
@@ -151,6 +175,26 @@
       display:flex; flex-direction:column; gap:8px; align-items:flex-end;
     }
     .small { font-size:0.85rem; color: var(--muted); font-weight:600; }
+
+    /* Info bar editor */
+    .info-editor textarea{
+      width:100%; min-height:120px; resize: vertical;
+      padding: 14px; border:2px solid #eee; border-radius:14px;
+      font-family:'Poppins',sans-serif; font-size:1rem;
+      transition:.2s ease;
+      outline:none;
+    }
+    .info-editor textarea:focus{
+      border-color: var(--primary-color);
+      box-shadow: 0 6px 18px rgba(255,106,0,0.08);
+    }
+    .info-hint{
+      margin-top:8px; color: var(--muted); line-height:1.6;
+      font-weight:600; font-size:0.95rem;
+    }
+    .info-actions{
+      display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;
+    }
 
     /* Empty state */
     .empty {
@@ -225,9 +269,6 @@
       <button class="btn btn-primary" id="unlockBtn">
         Zaloguj <i class="fas fa-unlock"></i>
       </button>
-      <div style="margin-top:10px" class="small">
-        Kod domyślny: <b>0051</b>
-      </div>
     </div>
   </div>
 
@@ -253,6 +294,16 @@
           </button>
         </div>
       </nav>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="tab-res">
+          <i class="fa-regular fa-clipboard"></i> Rezerwacje
+        </button>
+        <button class="tab-btn" data-tab="tab-bar">
+          <i class="fa-solid fa-bullhorn"></i> Pasek informacji
+        </button>
+      </div>
     </div>
   </header>
 
@@ -287,19 +338,6 @@
           <div id="statToday">0</div>
         </div>
 
-        <hr style="border:none;border-top:1px dashed #eee;margin:16px 0">
-
-        <div class="section-title">Ustawienia</div>
-        <button class="btn btn-ghost" style="width:100%" id="soundTestBtn">
-          <i class="fa-solid fa-volume-high"></i> Test dzwonka
-        </button>
-
-        <div style="height:10px"></div>
-
-        <button class="btn btn-ghost" style="width:100%" id="clearNewMarksBtn">
-          <i class="fa-solid fa-check-double"></i> Oznacz wszystkie jako przeczytane
-        </button>
-
         <p class="small" style="margin-top:12px;line-height:1.5">
           Panel działa jako PWA (można dodać na ekran główny).  
           Dźwięk i powiadomienia wymagają jednorazowej zgody w przeglądarce.
@@ -308,14 +346,44 @@
 
       <!-- CONTENT -->
       <section>
-        <div class="content-header">
-          <h2>Rezerwacje</h2>
-          <div class="small" id="lastSync">Ostatnia synchronizacja: —</div>
+
+        <!-- TAB: RESERVATIONS -->
+        <div class="tab-panel active" id="tab-res">
+          <div class="content-header">
+            <h2>Rezerwacje</h2>
+            <div class="small" id="lastSync">Ostatnia synchronizacja: —</div>
+          </div>
+
+          <div class="reservations" id="reservationsList">
+            <div class="empty">Ładuję rezerwacje...</div>
+          </div>
         </div>
 
-        <div class="reservations" id="reservationsList">
-          <div class="empty">Ładuję rezerwacje...</div>
+        <!-- TAB: INFO BAR -->
+        <div class="tab-panel" id="tab-bar">
+          <div class="content-header">
+            <h2>Pasek informacji</h2>
+            <div class="small" id="barStatus">Status: —</div>
+          </div>
+
+          <div class="card info-editor">
+            <textarea id="infoBarText" placeholder="Np. Dziś -15% przy zakupach od 100 zł"></textarea>
+            <div class="info-hint">
+              Ten tekst wyświetli się jako cienki pasek na samej górze strony głównej.  
+              Zostaw puste i zapisz, aby pasek zniknął.
+            </div>
+
+            <div class="info-actions">
+              <button class="btn btn-primary" id="saveInfoBarBtn">
+                <i class="fa-solid fa-floppy-disk"></i> Zapisz
+              </button>
+              <button class="btn btn-danger" id="clearInfoBarBtn">
+                <i class="fa-solid fa-trash"></i> Usuń pasek
+              </button>
+            </div>
+          </div>
         </div>
+
       </section>
     </div>
   </main>
@@ -329,6 +397,20 @@
   <!-- socket.io (jeśli masz w backendzie) -->
   <script src="/socket.io/socket.io.js"></script>
   <script>
+    // =========================
+    //  Tabs
+    // =========================
+    const tabBtns = document.querySelectorAll(".tab-btn");
+    const tabPanels = document.querySelectorAll(".tab-panel");
+    tabBtns.forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        tabBtns.forEach(b=>b.classList.remove("active"));
+        tabPanels.forEach(p=>p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.tab).classList.add("active");
+      });
+    });
+
     // =========================
     //  PWA / Service Worker
     // =========================
@@ -359,8 +441,9 @@
       if(typed === PIN){
         lockscreen.style.display = "none";
         showToast("Zalogowano pomyślnie 🙌");
-        // po wejściu od razu prosimy o zgody
         requestNotificationPermission();
+        // po zalogowaniu od razu pobierz pasek info
+        fetchInfoBar();
       } else {
         lockError.textContent = "Niepoprawny kod.";
         clearPin();
@@ -368,7 +451,7 @@
     }
     unlockBtn.addEventListener("click", tryUnlock);
     codeBoxes.forEach((box, i) => {
-      box.addEventListener("input", (e)=>{
+      box.addEventListener("input", ()=>{
         lockError.textContent = "";
         box.value = box.value.replace(/\D/g,"").slice(0,1);
         if(box.value && codeBoxes[i+1]) codeBoxes[i+1].focus();
@@ -395,40 +478,31 @@
     // =========================
     //  Bell sound (5s)
     // =========================
-    // głośny dzwon w WebAudio (nie musisz mieć mp3)
     let audioCtx;
     function playBellFor5s(){
       try{
         audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
         const now = audioCtx.currentTime;
-
-        // 3 oscylatory dla "metalicznego" dzwonka
         const freqs = [880, 1320, 1760];
         const gain = audioCtx.createGain();
         gain.gain.setValueAtTime(0.001, now);
-        gain.gain.exponentialRampToValueAtTime(0.8, now + 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.15, now + 2.5);
+        gain.gain.exponentialRampToValueAtTime(0.9, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.2, now + 2.5);
         gain.gain.exponentialRampToValueAtTime(0.001, now + 5);
-
         gain.connect(audioCtx.destination);
 
-        const oscillators = freqs.map(f=>{
+        freqs.forEach(f=>{
           const o = audioCtx.createOscillator();
-          o.type = "sine";
+          o.type="sine";
           o.frequency.setValueAtTime(f, now);
           o.connect(gain);
           o.start(now);
           o.stop(now+5);
-          return o;
         });
       }catch(e){
         console.warn("Audio failed", e);
       }
     }
-    document.getElementById("soundTestBtn").addEventListener("click", ()=>{
-      playBellFor5s();
-      showToast("Test dzwonka 🔔");
-    });
 
     // =========================
     //  Notifications (PWA)
@@ -436,9 +510,7 @@
     async function requestNotificationPermission(){
       if(!("Notification" in window)) return;
       if(Notification.permission === "granted") return;
-      try{
-        await Notification.requestPermission();
-      }catch(e){}
+      try{ await Notification.requestPermission(); }catch(e){}
     }
 
     async function fireNotification(reservation){
@@ -456,7 +528,6 @@
         tag: "new-reservation"
       };
 
-      // prefer SW, żeby działało też w tle PWA
       const reg = await navigator.serviceWorker.getRegistration();
       if(reg) reg.showNotification(title, options);
       else new Notification(title, options);
@@ -485,7 +556,6 @@
     }
 
     function isToday(dateStr){
-      // dateStr z formularza = yyyy-mm-dd
       const today = new Date().toISOString().split("T")[0];
       return dateStr === today;
     }
@@ -542,7 +612,6 @@
           `;
         }).join("");
 
-      // actions
       listEl.querySelectorAll(".mark-read-btn").forEach(btn=>{
         btn.addEventListener("click", ()=>{
           const card = btn.closest(".reservation-item");
@@ -582,7 +651,6 @@
     }
 
     function onNewReservation(r){
-      // normalizacja
       const normalized = {
         id: r.id || r._id || (r.createdAt + "|" + r.phone + "|" + r.date + "|" + r.time),
         createdAt: r.createdAt || Date.now(),
@@ -590,27 +658,16 @@
       };
 
       reservations.push(normalized);
-
-      // dzwon + toast + notyfikacja
       playBellFor5s();
       showToast("Nowa rezerwacja 🔔");
       fireNotification(normalized);
-
       render();
     }
 
     document.getElementById("refreshBtn").addEventListener("click", fetchReservations);
-    document.getElementById("clearNewMarksBtn").addEventListener("click", ()=>{
-      reservations.forEach(r=>seenIds.add(r.id));
-      saveSeen();
-      render();
-      showToast("Oznaczono jako przeczytane ✅");
-    });
-
-    // first load
     fetchReservations();
 
-    // realtime via Socket.IO (jeśli backend wysyła event)
+    // realtime via Socket.IO
     try{
       if(window.io){
         const socket = io();
@@ -622,19 +679,87 @@
           document.getElementById("liveText").textContent = "OFFLINE";
           document.getElementById("liveDot").style.color = "#DC2626";
         });
-
         socket.on("new-reservation", (r)=> onNewReservation(r));
       }
     }catch(e){}
 
-    // fallback polling co 5s (gdyby socket był wyłączony)
+    // fallback polling co 5s
     setInterval(async ()=>{
       const prevIds = new Set(reservations.map(r=>r.id));
       await fetchReservations();
-      const nowIds = new Set(reservations.map(r=>r.id));
-      // znajdź nowe
       reservations.filter(r=>!prevIds.has(r.id)).forEach(onNewReservation);
     }, 5000);
+
+    // =========================
+    //  INFO BAR (steruje db.happy)
+    // =========================
+    const infoBarText = document.getElementById("infoBarText");
+    const barStatus = document.getElementById("barStatus");
+    const saveInfoBarBtn = document.getElementById("saveInfoBarBtn");
+    const clearInfoBarBtn = document.getElementById("clearInfoBarBtn");
+
+    async function fetchInfoBar(){
+      try{
+        const res = await fetch("/api/data", { cache:"no-store" });
+        if(!res.ok) throw new Error(res.status);
+        const db = await res.json();
+        const happy = (db.happy || "").trim();
+        infoBarText.value = happy;
+        barStatus.textContent = happy ? "Status: aktywny" : "Status: wyłączony";
+      }catch(e){
+        console.error(e);
+        barStatus.textContent = "Status: błąd pobierania";
+      }
+    }
+
+    async function saveInfoBar(text){
+      // 1) próbujemy /api/happy (jeśli masz w backendzie)
+      // 2) fallback: /api/data z body { happy: text }
+      const payload = { happy: text };
+      try{
+        let res = await fetch("/api/happy", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify(payload)
+        });
+        if(res.ok) return true;
+      }catch(e){}
+
+      try{
+        let res2 = await fetch("/api/data", {
+          method: "PATCH",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify(payload)
+        });
+        if(res2.ok) return true;
+      }catch(e){}
+
+      return false;
+    }
+
+    saveInfoBarBtn.addEventListener("click", async ()=>{
+      const text = infoBarText.value.trim();
+      const ok = await saveInfoBar(text);
+      if(ok){
+        showToast(text ? "Pasek zapisany ✅" : "Pasek wyłączony ✅");
+        barStatus.textContent = text ? "Status: aktywny" : "Status: wyłączony";
+      }else{
+        showToast("Nie udało się zapisać paska", true);
+        barStatus.textContent = "Status: błąd zapisu";
+      }
+    });
+
+    clearInfoBarBtn.addEventListener("click", async ()=>{
+      infoBarText.value = "";
+      const ok = await saveInfoBar("");
+      if(ok){
+        showToast("Pasek usunięty ✅");
+        barStatus.textContent = "Status: wyłączony";
+      }else{
+        showToast("Nie udało się usunąć paska", true);
+        barStatus.textContent = "Status: błąd zapisu";
+      }
+    });
   </script>
 </body>
 </html>

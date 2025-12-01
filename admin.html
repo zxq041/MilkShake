@@ -1,346 +1,311 @@
-<!-- admin.html (PANEL ADMINA BEZ PRODUKTÓW + UWAGI W TABELI + HAPPY HOUR) -->
 <!doctype html>
 <html lang="pl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>MilkShake Bar — Panel Administratora</title>
+
   <link rel="manifest" href="/manifest.json">
   <link rel="icon" href="/favicon.png">
   <link rel="apple-touch-icon" href="/favicon.png">
   <meta name="theme-color" content="#FF6A00">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="MilkShake Admin">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --primary: #FF6A00;
-      --primary-2: #FF9100;
-      --bg: #FFF6EC;
-      --bg-2: #FFFFFF;
-      --panel: #FFFFFF;
-      --panel-2: #FFF0E1;
-      --panel-3: #FFE2C4;
-      --text: #2B1300;
-      --muted: #7a6b64;
-      --good: #19b36b;
-      --bad: #e44d4d;
-      --warn: #f1a400;
-      --radius: 16px;
-      --shadow: 0 12px 40px rgba(43,19,0,.08);
-      --border: 1px solid rgba(255,106,0,.12);
+      --primary:#FF6A00; --primary-2:#FF9100;
+      --bg:#FFF6EC; --panel:#fff; --panel-2:#FFF0E1;
+      --text:#2B1300; --muted:#7a6b64;
+      --good:#19b36b; --bad:#e44d4d;
+      --radius:18px; --shadow:0 18px 50px rgba(43,19,0,.10);
+      --border:1px solid rgba(255,106,0,.12);
     }
     *{box-sizing:border-box}
     body{
-      margin:0;
-      font-family:Poppins,system-ui,Arial;
+      margin:0; font-family:Poppins,system-ui,Arial; color:var(--text);
       background:
-        radial-gradient(1100px 600px at 10% -20%, #FFE7D0 0%, transparent 60%),
-        radial-gradient(900px 600px at 110% 0%, #FFF1E6 0%, transparent 60%),
+        radial-gradient(1100px 700px at 0% -30%, #FFE7D0 0%, transparent 60%),
+        radial-gradient(1000px 700px at 120% 0%, #FFF1E6 0%, transparent 60%),
         var(--bg);
-      color:var(--text);
-    }
-    .layout{
-      display:grid;
-      grid-template-columns: 280px 1fr;
-      min-height:100vh;
-    }
-    .sidebar{
-      background: linear-gradient(180deg, #fff 0%, #fff7ef 100%);
-      border-right: var(--border);
-      padding:18px;
-      position:sticky; top:0; height:100vh;
-    }
-    .logo{
-      display:flex; align-items:center; gap:12px;
-      padding:10px 10px 18px;
-      border-bottom: var(--border);
-      margin-bottom:12px;
-    }
-    .logo img{
-      width:46px; height:46px; border-radius:12px; object-fit:cover;
-      box-shadow: 0 8px 20px rgba(255,106,0,.25);
-    }
-    .logo .title{
-      font-weight:900; letter-spacing:.3px;
-      display:flex; flex-direction:column;
-    }
-    .logo .title small{
-      color:var(--muted);
-      font-weight:700;
     }
 
-    .nav{display:flex; flex-direction:column; gap:6px; margin-top:10px;}
+    /* ===== LAYOUT ===== */
+    .app{
+      display:grid; grid-template-columns:280px 1fr; min-height:100vh;
+    }
+    aside{
+      position:sticky; top:0; height:100vh; padding:18px;
+      background:linear-gradient(180deg,#fff 0%,#fff7ef 100%);
+      border-right:var(--border);
+    }
+    main{ padding:16px 18px 90px; }
+
+    /* ===== LOGO ===== */
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      padding:12px; border-radius:16px; background:#fff; box-shadow:var(--shadow);
+      border:var(--border);
+    }
+    .brand img{ width:52px; height:52px; border-radius:14px; object-fit:cover; }
+    .brand .t{ font-weight:900; font-size:18px; line-height:1.1; }
+    .brand .t small{ display:block; color:var(--muted); font-weight:800; font-size:12px; }
+
+    /* ===== NAV ===== */
+    .nav{ margin-top:14px; display:flex; flex-direction:column; gap:8px; }
     .nav a{
-      text-decoration:none; color:var(--text);
-      padding:12px 14px; border-radius:12px;
       display:flex; align-items:center; gap:10px;
-      border:1px solid transparent;
-      font-weight:800; letter-spacing:.2px;
-      transition:.15s; cursor:pointer;
+      padding:12px 14px; border-radius:14px; font-weight:900;
+      cursor:pointer; border:1px solid transparent; transition:.18s;
+      background:transparent; color:var(--text); text-decoration:none;
     }
     .nav a:hover{
-      background: var(--panel-2);
-      border-color: rgba(255,106,0,.18);
-      transform: translateX(2px);
+      background:var(--panel-2); border-color:rgba(255,106,0,.18); transform:translateX(2px);
     }
     .nav a.active{
-      background: linear-gradient(90deg, var(--primary), var(--primary-2));
-      border-color: rgba(255,106,0,.4);
-      color:#fff;
-      box-shadow: 0 10px 25px rgba(255,106,0,.25);
+      background:linear-gradient(90deg,var(--primary),var(--primary-2));
+      color:#fff; box-shadow:0 10px 25px rgba(255,106,0,.32);
     }
-    .nav .dot{
-      width:8px; height:8px; border-radius:999px; background:var(--primary);
-      box-shadow:0 0 12px rgba(255,106,0,.9);
-    }
-    .nav a.active .dot{ background:#fff; box-shadow:none; }
 
-    .btn{
-      border:none; outline:none; cursor:pointer;
-      padding:11px 12px; border-radius:12px; font-weight:800;
-      background: var(--panel); color:var(--text);
-      border: var(--border); transition:.15s;
-      box-shadow: 0 6px 16px rgba(43,19,0,.04);
-    }
-    .btn:hover{ transform: translateY(-1px); background: #fff; }
-    .btn.primary{
-      background: linear-gradient(90deg, var(--primary), var(--primary-2));
-      color:#fff; border:none;
-      box-shadow: 0 10px 25px rgba(255,106,0,.35);
-    }
-    .btn.good{ background: rgba(25,179,107,.12); border:1px solid rgba(25,179,107,.35); color:#0E7A47; }
-    .btn.bad{ background: rgba(228,77,77,.12); border:1px solid rgba(228,77,77,.35); color:#A02A2A; }
-
-    .main{padding:14px 16px 90px;}
+    /* ===== TOPBAR ===== */
     .topbar{
-      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
-      background: #fff; border: var(--border);
-      padding:12px; border-radius:14px; box-shadow: var(--shadow);
-      position:sticky; top:12px; z-index:5;
+      background:#fff; border:var(--border); border-radius:16px;
+      padding:10px 12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+      box-shadow:var(--shadow); position:sticky; top:10px; z-index:10;
     }
     .chip{
-      padding:8px 10px; border-radius:999px; font-weight:800; font-size:12px;
-      background: rgba(255,106,0,.12); color:#B94D00; border:1px solid rgba(255,106,0,.3);
+      font-size:12px; font-weight:900; padding:7px 10px; border-radius:999px;
+      background:rgba(255,106,0,.12); color:#B94D00; border:1px solid rgba(255,106,0,.3);
       white-space:nowrap;
     }
-    .muted{ color:var(--muted); font-weight:700; }
+    .btn{
+      border:none; cursor:pointer; padding:10px 12px; border-radius:12px; font-weight:900;
+      background:#fff; border:var(--border); color:var(--text);
+      box-shadow:0 8px 18px rgba(43,19,0,.05); transition:.15s;
+    }
+    .btn:hover{ transform:translateY(-1px); }
+    .btn.primary{ background:linear-gradient(90deg,var(--primary),var(--primary-2)); color:#fff; border:none; }
+    .btn.good{ background:rgba(25,179,107,.12); border:1px solid rgba(25,179,107,.35); color:#0E7A47; }
+    .btn.bad{ background:rgba(228,77,77,.12); border:1px solid rgba(228,77,77,.35); color:#A02A2A; }
 
-    .grid{
-      display:grid; gap:12px; margin-top:12px;
-      grid-template-columns: repeat(4,1fr);
+    /* ===== STATS ===== */
+    .stats{
+      margin-top:12px; display:grid; gap:12px;
+      grid-template-columns:repeat(4,1fr);
     }
     .card{
-      background: var(--panel); border: var(--border);
-      border-radius: var(--radius); padding:14px;
-      box-shadow: var(--shadow);
+      background:#fff; border:var(--border); border-radius:var(--radius);
+      padding:14px; box-shadow:var(--shadow);
     }
-    .stat{display:flex; flex-direction:column; gap:4px;}
-    .stat .k{font-size:26px; font-weight:900; color:var(--primary);}
-    .stat .l{color:var(--muted); font-weight:800; font-size:13px;}
+    .stat-k{ font-size:28px; font-weight:900; color:var(--primary); }
+    .stat-l{ font-size:12px; color:var(--muted); font-weight:800; letter-spacing:.4px; text-transform:uppercase; }
 
-    .section{margin-top:12px; display:none;}
-    .section.active{display:block;}
+    @media (max-width:1100px){ .stats{grid-template-columns:repeat(2,1fr);} }
+    @media (max-width:900px){
+      .app{ grid-template-columns:1fr; }
+      aside{ display:none; }
+      main{ padding-bottom:110px; }
+    }
 
-    .latest{display:grid; gap:8px; max-height:320px; overflow:auto;}
+    /* ===== SECTIONS ===== */
+    section{ display:none; margin-top:12px; }
+    section.active{ display:block; }
+
+    /* ===== LATEST LIST ===== */
+    .latest{ display:grid; gap:8px; max-height:360px; overflow:auto; }
     .latest .item{
-      background: var(--panel-2);
-      border: var(--border);
-      padding:10px 12px;
-      border-radius:12px;
-      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      background:var(--panel-2); border:var(--border); border-radius:14px;
+      padding:10px 12px; display:flex; justify-content:space-between; gap:10px;
       font-weight:800;
     }
-    .latest .item small{color:var(--muted); font-weight:700;}
+    .latest small{ color:var(--muted); font-weight:700; }
 
+    /* ===== TABLE ===== */
     .table-wrap{
-      margin-top:12px; overflow:auto;
-      border-radius: var(--radius);
-      border: var(--border);
-      background: var(--panel);
-      box-shadow: var(--shadow);
+      margin-top:8px; overflow:auto; border-radius:var(--radius);
+      border:var(--border); background:#fff; box-shadow:var(--shadow);
     }
-    table{width:100%; border-collapse:collapse; min-width:950px;}
+    table{ width:100%; border-collapse:collapse; min-width:1050px; }
     thead th{
-      text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.8px;
-      color:#B94D00; font-weight:900; padding:12px 14px; background: var(--panel-2);
-      position:sticky; top:0;
+      position:sticky; top:0; z-index:2;
+      text-align:left; font-size:12px; font-weight:900; letter-spacing:.8px;
+      text-transform:uppercase; color:#B94D00; padding:12px 14px; background:var(--panel-2);
     }
     tbody td{
-      padding:12px 14px; border-top: var(--border); font-weight:700; font-size:14px;
-      vertical-align: top;
-      max-width: 260px;
-      word-wrap: break-word;
-      white-space: pre-wrap;
+      padding:12px 14px; border-top:var(--border); font-size:14px; font-weight:700;
+      vertical-align:top; max-width:260px; white-space:pre-wrap; word-break:break-word;
     }
-    tbody tr:hover{ background: rgba(255,106,0,.05); }
+    tbody tr:hover{ background:rgba(255,106,0,.05); }
 
     .status{
       padding:6px 8px; border-radius:999px; font-size:12px; font-weight:900;
-      display:inline-flex; align-items:center; gap:6px;
+      display:inline-flex; gap:6px; align-items:center;
     }
     .status.new{ background:rgba(255,145,0,.12); color:#A65C00; border:1px solid rgba(255,145,0,.35); }
     .status.accepted{ background:rgba(25,179,107,.12); color:#0E7A47; border:1px solid rgba(25,179,107,.35); }
     .status.cancelled{ background:rgba(228,77,77,.12); color:#A02A2A; border:1px solid rgba(228,77,77,.35); }
 
-    .actions{display:flex; gap:8px; flex-wrap:wrap;}
-    .actions .btn{padding:7px 10px; font-size:12px; border-radius:10px;}
+    .actions{ display:flex; gap:6px; flex-wrap:wrap; }
+    .actions .btn{ padding:7px 9px; font-size:12px; border-radius:10px; }
 
-    .toast{
-      position:fixed; left:50%; transform:translateX(-50%);
-      bottom:78px; z-index:9999;
-      background: #fff; border: var(--border);
-      color:var(--text); padding:12px 14px; border-radius:999px;
-      font-weight:900; box-shadow: var(--shadow);
-      opacity:0; transition:.2s;
-      max-width:92vw; text-align:center;
+    /* ===== HAPPY HOUR BOX ===== */
+    .happy-box{
+      display:grid; gap:10px; margin-top:8px;
     }
-    .toast.show{ opacity:1; }
+    .happy-input{
+      width:100%; padding:12px 14px; border-radius:12px; border:var(--border);
+      background:var(--panel-2); font-weight:800; outline:none;
+    }
 
+    /* ===== MOBILE NAV ===== */
     .mobile-nav{
-      display:none;
-      position:fixed; bottom:0; left:0; right:0; z-index:20;
+      display:none; position:fixed; left:0; right:0; bottom:0; z-index:20;
       background:#fff; border-top:var(--border);
       padding:8px 8px env(safe-area-inset-bottom);
       display:flex; justify-content:space-around; gap:6px;
-      box-shadow: 0 -10px 30px rgba(43,19,0,.08);
+      box-shadow:0 -10px 30px rgba(43,19,0,.08);
     }
     .mobile-nav button{
-      flex:1; border:none; background:transparent; padding:10px 6px;
-      border-radius:12px; font-weight:900; color:var(--text);
-      display:flex; flex-direction:column; align-items:center; gap:4px; font-size:12px;
+      flex:1; border:none; background:transparent; padding:10px 6px; border-radius:12px;
+      font-weight:900; color:var(--text); font-size:12px;
+      display:flex; flex-direction:column; align-items:center; gap:4px;
     }
-    .mobile-nav button.active{
-      background: var(--panel-2);
-      color: var(--primary);
-    }
+    .mobile-nav button.active{ background:var(--panel-2); color:var(--primary); }
+    @media (max-width:900px){ .mobile-nav{ display:flex; } }
 
-    @media (max-width: 1100px){
-      .grid{ grid-template-columns: repeat(2,1fr); }
+    /* ===== TOAST ===== */
+    .toast{
+      position:fixed; left:50%; transform:translateX(-50%);
+      bottom:92px; z-index:9999;
+      background:#fff; border:var(--border); border-radius:999px;
+      padding:12px 14px; font-weight:900; box-shadow:var(--shadow);
+      opacity:0; transition:.2s; max-width:92vw; text-align:center;
     }
-    @media (max-width: 900px){
-      .layout{ grid-template-columns: 1fr; }
-      .sidebar{ display:none; }
-      .mobile-nav{ display:flex; }
-      table{ min-width:820px; }
+    .toast.show{ opacity:1; }
+
+    /* ===== LOCKSCREEN ===== */
+    #lock{
+      position:fixed; inset:0; z-index:9999; background:rgba(255,246,236,.96);
+      display:flex; align-items:center; justify-content:center; padding:20px;
+    }
+    .lock-card{
+      width:min(420px,100%); background:#fff; border:var(--border);
+      border-radius:20px; padding:18px; text-align:center; box-shadow:var(--shadow);
+    }
+    .lock-card .title{ font-weight:900; font-size:20px; color:var(--primary); }
+    .lock-card .muted{ margin-top:6px; }
+    .lock-card input{
+      margin-top:12px; width:100%; font-size:22px; text-align:center; letter-spacing:8px;
+      padding:14px; border-radius:12px; border:var(--border); outline:none; font-weight:900;
     }
   </style>
 </head>
 <body>
 
 <!-- LOCKSCREEN -->
-<div id="lock" style="
-  position:fixed; inset:0; background:rgba(255,246,236,.96);
-  display:flex; align-items:center; justify-content:center; z-index:9999;
-  padding:20px;">
-  <div style="
-    width:min(420px,100%); background:#fff; border:var(--border); box-shadow:var(--shadow);
-    border-radius:20px; padding:18px; text-align:center;">
-    <div style="font-weight:900;font-size:20px;color:var(--primary)">Panel Administratora</div>
-    <div class="muted" style="margin-top:6px">Wpisz kod dostępu</div>
-
-    <input id="lockInput" type="password" inputmode="numeric" pattern="[0-9]*"
-      placeholder="••••" maxlength="4"
-      style="
-        margin-top:12px; width:100%; font-size:22px; text-align:center; letter-spacing:8px;
-        padding:14px; border-radius:12px; border:var(--border); outline:none; font-weight:900;" />
-
-    <button id="unlockBtn" class="btn primary" style="width:100%; margin-top:12px">
-      Otwórz panel
-    </button>
-    <div id="lockErr" style="margin-top:8px;color:#e44d4d;font-weight:800;display:none">
-      Zły kod
-    </div>
+<div id="lock">
+  <div class="lock-card">
+    <div class="title">Panel Administratora</div>
+    <div class="muted">Wpisz kod dostępu</div>
+    <input id="lockInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••">
+    <button id="unlockBtn" class="btn primary" style="width:100%;margin-top:12px">Otwórz panel</button>
+    <div id="lockErr" style="margin-top:8px;color:#e44d4d;font-weight:800;display:none">Zły kod</div>
   </div>
 </div>
 
-<div class="layout">
+<div class="app">
 
-  <!-- SIDEBAR DESKTOP -->
-  <aside class="sidebar">
-    <div class="logo">
+  <!-- SIDEBAR -->
+  <aside>
+    <div class="brand">
       <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="logo">
-      <div class="title">
+      <div class="t">
         MilkShake Bar
         <small>Panel Administratora</small>
       </div>
     </div>
 
     <nav class="nav">
-      <a class="active" data-tab="dashboard"><span class="dot"></span> Dashboard</a>
-      <a data-tab="reservations"><span class="dot"></span> Rezerwacje</a>
-      <a data-tab="happy"><span class="dot"></span> Happy Hour</a>
+      <a class="active" data-tab="dashboard">🏠 Dashboard</a>
+      <a data-tab="reservations">📅 Rezerwacje</a>
+      <a data-tab="happy">⚡ Happy Hour</a>
     </nav>
   </aside>
 
   <!-- MAIN -->
-  <main class="main">
+  <main>
 
     <div class="topbar">
       <div class="chip" id="topHappyPreview">Brak Happy Hour</div>
-      <div class="muted" style="font-size:12px">Aktualizacja: <span id="lastUpdate">-</span></div>
+      <div class="chip">Aktualizacja: <span id="lastUpdate">-</span></div>
       <div style="margin-left:auto">
         <button id="newResBtn" class="btn primary">Dodaj rezerwację ręcznie</button>
       </div>
     </div>
 
-    <div class="grid">
-      <div class="card stat">
-        <div class="k" id="stat-total">0</div>
-        <div class="l">Wszystkie rezerwacje</div>
+    <div class="stats">
+      <div class="card">
+        <div class="stat-k" id="stat-total">0</div>
+        <div class="stat-l">Wszystkie</div>
       </div>
-      <div class="card stat">
-        <div class="k" id="stat-today">0</div>
-        <div class="l">Dziś</div>
+      <div class="card">
+        <div class="stat-k" id="stat-today">0</div>
+        <div class="stat-l">Dziś</div>
       </div>
-      <div class="card stat">
-        <div class="k" id="stat-upcoming">0</div>
-        <div class="l">Nadchodzące</div>
+      <div class="card">
+        <div class="stat-k" id="stat-upcoming">0</div>
+        <div class="stat-l">Nadchodzące</div>
       </div>
-      <div class="card stat">
-        <div class="k" id="stat-new">0</div>
-        <div class="l">Nowe (nieodebrane)</div>
+      <div class="card">
+        <div class="stat-k" id="stat-new">0</div>
+        <div class="stat-l">Nowe</div>
       </div>
     </div>
 
     <!-- DASHBOARD -->
-    <section id="tab-dashboard" class="section active">
-      <div class="card" style="margin-top:12px">
+    <section id="tab-dashboard" class="active">
+      <div class="card">
         <h3 style="margin:0">Ostatnie rezerwacje</h3>
         <div id="latestList" class="latest" style="margin-top:10px"></div>
       </div>
     </section>
 
     <!-- RESERVATIONS -->
-    <section id="tab-reservations" class="section">
+    <section id="tab-reservations">
       <div class="table-wrap">
-        <table id="resTable">
+        <table>
           <thead>
             <tr>
-              <th>Imię</th><th>Tel</th><th>Data</th><th>Godz.</th>
-              <th>Osób</th><th>Strefa</th><th>Uwagi</th><th>Status</th><th>Akcje</th>
+              <th>Imię</th>
+              <th>Telefon</th>
+              <th>Data</th>
+              <th>Godz.</th>
+              <th>Osób</th>
+              <th>Strefa</th>
+              <th>Uwagi</th>
+              <th>Status</th>
+              <th>Akcje</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody id="resBody"></tbody>
         </table>
       </div>
     </section>
 
-    <!-- HAPPY -->
-    <section id="tab-happy" class="section">
-      <div class="card" style="margin-top:12px">
-        <h3 style="margin-top:0">Happy Hour</h3>
-        <div class="muted">Ta wiadomość pokaże się na stronie głównej.</div>
-        <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-          <input id="hhText" placeholder="np. Happy Hour 17:00–19:00 • -20% na milkshake'i"
-            style="flex:1;min-width:220px;background: var(--panel-2); border: var(--border); color:var(--text);
-            padding:12px;border-radius:12px;font-weight:800;outline:none;" />
-          <button id="saveHH" class="btn primary">Zapisz</button>
-          <button id="clearHH" class="btn">Wyczyść</button>
+    <!-- HAPPY HOUR -->
+    <section id="tab-happy">
+      <div class="card">
+        <h3 style="margin-top:0">Happy Hour (pasek na stronie)</h3>
+        <div class="muted">Wpisz treść paska. Pusty tekst = pasek znika.</div>
+
+        <div class="happy-box">
+          <input id="hhText" class="happy-input" placeholder="np. Dziś -15% z kodem Grudzień">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button id="saveHH" class="btn primary">Zapisz</button>
+            <button id="clearHH" class="btn">Wyczyść</button>
+          </div>
         </div>
       </div>
     </section>
@@ -352,154 +317,119 @@
 <div class="mobile-nav" id="mobileNav">
   <button data-tab="dashboard" class="active">🏠<span>Home</span></button>
   <button data-tab="reservations">📅<span>Rezerwacje</span></button>
-  <button data-tab="happy">⚡<span>Happy Hour</span></button>
+  <button data-tab="happy">⚡<span>Happy</span></button>
 </div>
-
-<!-- templates -->
-<template id="res-row-tpl">
-  <tr>
-    <td class="r-name"></td>
-    <td class="r-phone"></td>
-    <td class="r-date"></td>
-    <td class="r-time"></td>
-    <td class="r-guests"></td>
-    <td class="r-room"></td>
-    <td class="r-notes"></td>
-    <td class="r-status"></td>
-    <td class="r-actions"></td>
-  </tr>
-</template>
 
 <div id="toast" class="toast"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
-  // ---------------------------
-  // ACCESS CODE LOCK
-  // ---------------------------
   const ACCESS_CODE = "0051";
-  const lock = document.getElementById("lock");
-  const lockInput = document.getElementById("lockInput");
-  const unlockBtn = document.getElementById("unlockBtn");
-  const lockErr = document.getElementById("lockErr");
 
-  function tryUnlock(){
+  const qs = s => document.querySelector(s);
+  const qsa = s => document.querySelectorAll(s);
+  const toastEl = qs("#toast");
+  function toast(msg){
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    setTimeout(()=>toastEl.classList.remove("show"), 2200);
+  }
+
+  // LOCK
+  const lock = qs("#lock");
+  const lockInput = qs("#lockInput");
+  const lockErr = qs("#lockErr");
+  qs("#unlockBtn").onclick = () => {
     if(lockInput.value === ACCESS_CODE){
-      lock.style.display = "none";
+      lock.style.display="none";
       lockErr.style.display="none";
       unlockAudioOnce();
       requestNotifPermission();
-    } else {
+    }else{
       lockErr.style.display="block";
       lockInput.value="";
-      lockInput.focus();
     }
-  }
-  unlockBtn.addEventListener("click", tryUnlock);
-  lockInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") tryUnlock(); });
+  };
+  lockInput.addEventListener("keydown", e => { if(e.key==="Enter") qs("#unlockBtn").click(); });
 
-  const qs = s=>document.querySelector(s);
-  const qsa = s=>document.querySelectorAll(s);
-
-  let state = { reservations: [], happy: "" };
-
-  // ---------------------------
-  // Ding sound
-  // ---------------------------
-  let audioCtx = null;
-  let audioUnlocked = false;
-
-  function unlockAudioOnce() {
-    if (audioUnlocked) return;
-    try {
-      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      audioCtx.resume().then(() => {
-        audioUnlocked = true;
-        playDing(true);
-      }).catch(()=>{});
-    } catch (e) {}
+  // AUDIO DING (identyczny jak stary)
+  let audioCtx=null, audioUnlocked=false;
+  function unlockAudioOnce(){
+    if(audioUnlocked) return;
+    try{
+      audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+      audioCtx.resume().then(()=>{ audioUnlocked=true; playDing(true); }).catch(()=>{});
+    }catch(e){}
   }
   ["click","touchstart","keydown"].forEach(evt=>{
     window.addEventListener(evt, unlockAudioOnce, { once:true, passive:true });
   });
-
   function playDing(silentTest=false){
     try{
-      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === "suspended") audioCtx.resume().catch(()=>{});
-      const now = audioCtx.currentTime;
-      const TAIL = 5.0;
+      audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+      if(audioCtx.state==="suspended") audioCtx.resume().catch(()=>{});
+      const now = audioCtx.currentTime, TAIL=5.0;
       function tone(freq, start, dur, peakGain){
-        const o = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        o.type = "sine";
-        o.frequency.value = freq;
+        const o=audioCtx.createOscillator(), g=audioCtx.createGain();
+        o.type="sine"; o.frequency.value=freq;
         const realGain = silentTest ? 0.0001 : peakGain;
-        g.gain.setValueAtTime(0.0001, start);
-        g.gain.exponentialRampToValueAtTime(realGain, start + 0.03);
-        g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+        g.gain.setValueAtTime(0.0001,start);
+        g.gain.exponentialRampToValueAtTime(realGain,start+0.03);
+        g.gain.exponentialRampToValueAtTime(0.0001,start+dur);
         o.connect(g).connect(audioCtx.destination);
-        o.start(start);
-        o.stop(start + dur);
+        o.start(start); o.stop(start+dur);
       }
-      tone(880,  now,        TAIL, 0.60);
-      tone(1180, now + 0.22, TAIL, 0.65);
-      tone(1760, now + 0.02, TAIL, 0.20);
-      tone(2360, now + 0.24, TAIL, 0.22);
+      tone(880,now,TAIL,0.60);
+      tone(1180,now+0.22,TAIL,0.65);
+      tone(1760,now+0.02,TAIL,0.20);
+      tone(2360,now+0.24,TAIL,0.22);
     }catch(e){}
   }
 
-  // ---------------------------
   // Notifications
-  // ---------------------------
   function requestNotifPermission(){
     if(!("Notification" in window)) return;
-    if(Notification.permission === "default"){
+    if(Notification.permission==="default"){
       Notification.requestPermission().catch(()=>{});
     }
   }
   function showReservationNotification(resv){
     if(!("Notification" in window)) return;
-    if(Notification.permission !== "granted") return;
-    const title = "Nowa rezerwacja";
-    const body = `${resv.name} • ${resv.date} ${resv.time} • ${resv.guests} os.`;
+    if(Notification.permission!=="granted") return;
     try{
-      new Notification(title, {
-        body,
-        icon: "/icon-192.png",
-        badge: "/icon-192.png",
-        tag: "msb-new-reservation",
-        renotify: true,
-        vibrate: [200,100,200]
+      new Notification("Nowa rezerwacja",{
+        body:`${resv.name} • ${resv.date} ${resv.time} • ${resv.guests} os.`,
+        icon:"/icon-192.png", badge:"/icon-192.png",
+        tag:"msb-new-reservation", renotify:true, vibrate:[200,100,200]
       });
     }catch(e){}
   }
 
-  // ---------------------------
-  // UI utils
-  // ---------------------------
-  function toast(msg){
-    const t = qs("#toast");
-    t.textContent = msg;
-    t.classList.add("show");
-    setTimeout(()=>t.classList.remove("show"), 2200);
-  }
+  // STATE
+  let state = { reservations: [], happy:"" };
 
-  function setActiveTab(tab){
-    qsa(".nav a").forEach(x=>x.classList.toggle("active", x.dataset.tab===tab));
-    qsa(".section").forEach(s=>s.classList.toggle("active", s.id==="tab-"+tab));
+  // NAV / TABS
+  function setTab(tab){
+    qsa(".nav a").forEach(a=>a.classList.toggle("active", a.dataset.tab===tab));
+    qsa("section").forEach(s=>s.classList.toggle("active", s.id==="tab-"+tab));
     qsa("#mobileNav button").forEach(b=>b.classList.toggle("active", b.dataset.tab===tab));
   }
-  qsa(".nav a").forEach(a=> a.addEventListener("click", ()=>setActiveTab(a.dataset.tab)));
-  qsa("#mobileNav button").forEach(b=> b.addEventListener("click", ()=>setActiveTab(b.dataset.tab)));
+  qsa(".nav a").forEach(a=>a.onclick=()=>setTab(a.dataset.tab));
+  qsa("#mobileNav button").forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+
+  // UI RENDER
+  function statusBadge(s){
+    s = s || "new";
+    const labels={new:"Nowa",accepted:"Odebrana",cancelled:"Anulowana"};
+    return `<span class="status ${s}">${labels[s]||s}</span>`;
+  }
 
   function refreshStats(){
     const now = new Date();
     const all = state.reservations.length;
-    const today = state.reservations.filter(r=> r.date === now.toISOString().split("T")[0]).length;
-    const upcoming = state.reservations.filter(r=> new Date(r.date+"T"+r.time) > now).length;
-    const newCount = state.reservations.filter(r=> (r.status||"new")==="new").length;
-
+    const today = state.reservations.filter(r=>r.date===now.toISOString().split("T")[0]).length;
+    const upcoming = state.reservations.filter(r=>new Date(r.date+"T"+r.time) > now).length;
+    const newCount = state.reservations.filter(r=>(r.status||"new")==="new").length;
     qs("#stat-total").textContent = all;
     qs("#stat-today").textContent = today;
     qs("#stat-upcoming").textContent = upcoming;
@@ -509,20 +439,16 @@
 
   function renderLatest(){
     const box = qs("#latestList");
-    box.innerHTML = "";
-    const last = state.reservations
-      .slice()
-      .sort((a,b)=> new Date(b.created||0)-new Date(a.created||0))
-      .slice(0,8);
-
+    box.innerHTML="";
+    const last = state.reservations.slice().sort((a,b)=>new Date(b.created||0)-new Date(a.created||0)).slice(0,8);
     if(!last.length){
-      box.innerHTML = `<div class="muted">Brak rezerwacji</div>`;
+      box.innerHTML=`<div class="muted">Brak rezerwacji</div>`;
       return;
     }
     last.forEach(r=>{
-      const div = document.createElement("div");
-      div.className = "item";
-      div.innerHTML = `
+      const div=document.createElement("div");
+      div.className="item";
+      div.innerHTML=`
         <div>
           <div style="font-weight:900">${r.name}</div>
           <small>${r.phone} • ${r.room || "Sala główna"}</small>
@@ -536,52 +462,39 @@
     });
   }
 
-  function statusBadge(status){
-    const s = (status||"new");
-    const labels = { new:"Nowa", accepted:"Odebrana", cancelled:"Anulowana" };
-    return `<span class="status ${s}">${labels[s]||s}</span>`;
-  }
-
   function renderReservations(){
-    const tbody = qs("#resTable tbody");
-    tbody.innerHTML = "";
-    const rows = state.reservations
-      .slice()
-      .sort((a,b)=> new Date(a.date+"T"+a.time) - new Date(b.date+"T"+b.time));
+    const body = qs("#resBody");
+    body.innerHTML="";
+    const rows = state.reservations.slice()
+      .sort((a,b)=>new Date(a.date+"T"+a.time)-new Date(b.date+"T"+b.time));
 
-    rows.forEach((r, idx)=>{
-      const tr = document.importNode(qs("#res-row-tpl").content,true).children[0];
-      tr.querySelector(".r-name").textContent = r.name;
-      tr.querySelector(".r-phone").textContent = r.phone;
-      tr.querySelector(".r-date").textContent = r.date;
-      tr.querySelector(".r-time").textContent = r.time;
-      tr.querySelector(".r-guests").textContent = r.guests;
-      tr.querySelector(".r-room").textContent = r.room || "Sala główna";
-      tr.querySelector(".r-notes").textContent = r.notes || "—";
-      tr.querySelector(".r-status").innerHTML = statusBadge(r.status);
+    rows.forEach(r=>{
+      const tr=document.createElement("tr");
+      const notes = (r.notes || r.note || r.notesText || "").trim();
+      tr.innerHTML=`
+        <td>${r.name}</td>
+        <td>${r.phone}</td>
+        <td>${r.date}</td>
+        <td>${r.time}</td>
+        <td>${r.guests}</td>
+        <td>${r.room || "Sala główna"}</td>
+        <td>${notes || "—"}</td>
+        <td>${statusBadge(r.status)}</td>
+        <td>
+          <div class="actions">
+            <button class="btn good">Odbierz</button>
+            <button class="btn">Anuluj</button>
+            <button class="btn bad">Usuń</button>
+          </div>
+        </td>
+      `;
+      const [acceptBtn,cancelBtn,delBtn]=tr.querySelectorAll("button");
 
-      const actions = tr.querySelector(".r-actions");
-      actions.className = "actions";
+      acceptBtn.onclick=()=>updateResStatus(r.id,"accepted");
+      cancelBtn.onclick=()=>updateResStatus(r.id,"cancelled");
+      delBtn.onclick=()=>deleteRes(r.id);
 
-      const accept = document.createElement("button");
-      accept.className = "btn good";
-      accept.textContent = "Odbierz";
-      accept.onclick = ()=>updateResStatus(idx,"accepted");
-
-      const cancel = document.createElement("button");
-      cancel.className = "btn";
-      cancel.textContent = "Anuluj";
-      cancel.onclick = ()=>updateResStatus(idx,"cancelled");
-
-      const del = document.createElement("button");
-      del.className = "btn bad";
-      del.textContent = "Usuń";
-      del.onclick = ()=>deleteRes(idx);
-
-      actions.appendChild(accept);
-      actions.appendChild(cancel);
-      actions.appendChild(del);
-      tbody.appendChild(tr);
+      body.appendChild(tr);
     });
   }
 
@@ -589,118 +502,125 @@
     renderReservations();
     renderLatest();
     refreshStats();
+    qs("#topHappyPreview").textContent = state.happy || "Brak Happy Hour";
   }
 
-  function updateResStatus(index, status){
-    const r = state.reservations[index]; if(!r) return;
-    r.status = status; r.updated = new Date().toISOString();
-    toast("Status zaktualizowany");
-    refreshAll();
-  }
-  function deleteRes(index){
-    if(!confirm("Usunąć tę rezerwację?")) return;
-    state.reservations.splice(index,1);
-    toast("Usunięto rezerwację");
-    refreshAll();
-  }
-
-  function addReservationInteractive(){
-    const name = prompt("Imię i nazwisko"); if(!name) return;
-    const phone = prompt("Telefon", "+48 "); if(!phone) return;
-    const date = prompt("Data (YYYY-MM-DD)", new Date().toISOString().split("T")[0]); if(!date) return;
-    const time = prompt("Godzina (HH:MM)", "19:00"); if(!time) return;
-    const guests = prompt("Ilość osób","2");
-    const room = prompt("Strefa","Sala główna");
-    const notes = prompt("Uwagi (opcjonalnie)","") || "";
-
-    const obj = {name,phone,date,time,guests,room,notes,status:"new",created:new Date().toISOString()};
-    state.reservations.unshift(obj);
-    toast("Dodano rezerwację");
-    refreshAll();
-  }
-
-  // ---------------------------
-  // HAPPY HOUR
-  // ---------------------------
-  function saveHappy(){
-    state.happy = qs("#hhText").value.trim();
-    toast("Zapisano Happy Hour");
-    syncHappyToServer();
-    refreshAll();
-  }
-  function clearHappy(){
-    state.happy="";
-    qs("#hhText").value="";
-    toast("Wyczyszczono Happy Hour");
-    syncHappyToServer();
-    refreshAll();
-  }
-  qs("#saveHH").onclick = saveHappy;
-  qs("#clearHH").onclick = clearHappy;
-
-  // ---------------------------
-  // SERVER SYNC (only happy)
-  // ---------------------------
-  async function syncHappyToServer(){
+  // SERVER ACTIONS
+  async function updateResStatus(id,status){
     try{
-      await fetch("/api/happy", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ happy: state.happy })
+      const res = await fetch(`/api/rezerwacje/${id}/status`,{
+        method:"PATCH",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({status})
       });
-    }catch(e){}
+      if(!res.ok) throw new Error();
+      toast("Status zaktualizowany");
+    }catch(e){
+      toast("Błąd zapisu statusu");
+    }
   }
 
-  // ---------------------------
-  // Load from server + realtime
-  // ---------------------------
+  async function deleteRes(id){
+    if(!confirm("Usunąć tę rezerwację?")) return;
+    try{
+      const res = await fetch(`/api/rezerwacje/${id}`,{ method:"DELETE" });
+      if(!res.ok) throw new Error();
+      toast("Usunięto rezerwację");
+    }catch(e){
+      toast("Błąd usuwania");
+    }
+  }
+
+  // Manual add
+  qs("#newResBtn").onclick=async()=>{
+    const name=prompt("Imię i nazwisko"); if(!name) return;
+    const phone=prompt("Telefon","+48 "); if(!phone) return;
+    const date=prompt("Data (YYYY-MM-DD)",new Date().toISOString().split("T")[0]); if(!date) return;
+    const time=prompt("Godzina (HH:MM)","19:00"); if(!time) return;
+    const guests=prompt("Ilość osób","2")||"2";
+    const room=prompt("Strefa","Sala główna")||"Sala główna";
+    const notes=prompt("Uwagi (opcjonalnie)","")||"";
+
+    try{
+      const res=await fetch("/api/rezerwacje",{
+        method:"POST", headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({name,phone,date,time,guests,room,notes})
+      });
+      if(!res.ok) throw new Error();
+      toast("Dodano rezerwację");
+    }catch(e){
+      toast("Błąd dodawania");
+    }
+  };
+
+  // HAPPY HOUR
+  qs("#saveHH").onclick=async()=>{
+    state.happy = qs("#hhText").value.trim();
+    try{
+      await fetch("/api/happy",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({happy:state.happy})
+      });
+      toast("Zapisano Happy Hour");
+    }catch(e){
+      toast("Błąd zapisu Happy");
+    }
+  };
+  qs("#clearHH").onclick=async()=>{
+    qs("#hhText").value="";
+    state.happy="";
+    try{
+      await fetch("/api/happy",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({happy:""})
+      });
+      toast("Wyczyszczono Happy Hour");
+    }catch(e){
+      toast("Błąd zapisu Happy");
+    }
+  };
+
+  // LOAD
   async function loadFromServer(){
     try{
-      const res = await fetch("/api/data", {cache:"no-store"});
-      if(!res.ok) throw new Error(res.status);
-      const db = await res.json();
-      state.reservations = db.reservations || [];
-      state.happy = db.happy || "";
-      qs("#hhText").value = state.happy;
-      qs("#topHappyPreview").textContent = state.happy || "Brak Happy Hour";
+      const res=await fetch("/api/data",{cache:"no-store"});
+      const db=await res.json();
+      state.reservations=db.reservations||[];
+      state.happy=db.happy||"";
+      qs("#hhText").value=state.happy;
       refreshAll();
     }catch(e){}
   }
 
-  const socket = io({transports:["websocket"], upgrade:false});
+  // SOCKET
+  const socket=io({transports:["websocket"], upgrade:false});
 
-  socket.on("state:init", (db)=>{
-    state.reservations = db.reservations || [];
-    state.happy = db.happy || "";
-    qs("#hhText").value = state.happy;
-    qs("#topHappyPreview").textContent = state.happy || "Brak Happy Hour";
+  socket.on("state:init",(db)=>{
+    state.reservations=db.reservations||[];
+    state.happy=db.happy||"";
+    qs("#hhText").value=state.happy;
     refreshAll();
   });
 
-  socket.on("reservation:new", (resv)=>{
+  socket.on("reservation:new",(resv)=>{
     state.reservations.unshift(resv);
     refreshAll();
     playDing();
-    toast("Nowa rezerwacja: " + resv.name);
+    toast("Nowa rezerwacja: "+resv.name);
     if(navigator.vibrate) navigator.vibrate([200,100,200]);
     showReservationNotification(resv);
   });
 
-  socket.on("state:update", (db)=>{
-    state.reservations = db.reservations || [];
-    state.happy = db.happy || "";
-    qs("#hhText").value = state.happy;
-    qs("#topHappyPreview").textContent = state.happy || "Brak Happy Hour";
+  socket.on("state:update",(db)=>{
+    state.reservations=db.reservations||[];
+    state.happy=db.happy||"";
+    qs("#hhText").value=state.happy;
     refreshAll();
   });
 
-  qs("#newResBtn").onclick = addReservationInteractive;
-
   loadFromServer();
-
-  if("serviceWorker" in navigator){
-    navigator.serviceWorker.register("/sw.js").catch(()=>{});
-  }
 </script>
 </body>
 </html>

@@ -167,38 +167,7 @@
         .about-text h3 { font-size: 2.2rem; margin-bottom: 20px; }
         .about-text p { line-height: 1.8; margin-bottom: 20px; }
 
-        .menu-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 40px;
-        }
-        .see-more-button-container { text-align: center; margin-top: 50px; }
-
-        .menu-card {
-            background: #fff; border-radius: var(--border-radius);
-            box-shadow: var(--shadow); overflow: hidden;
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
-            position: relative;
-        }
-        .menu-card:hover {
-            transform: translateY(-15px);
-            box-shadow: 0px 20px 40px rgba(0, 0, 0, 0.15);
-        }
-        .menu-card-image { height: 250px; overflow: hidden; }
-        .menu-card-image img {
-            width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease;
-        }
-        .menu-card:hover .menu-card-image img { transform: scale(1.1); }
-        .menu-card-content { padding: 30px; }
-        .menu-card h3 { font-size: 1.8rem; margin-bottom: 10px; }
-        .menu-card p {
-            font-size: 1rem; line-height: 1.6; margin-bottom: 20px;
-            min-height: 3.2em;
-        }
-        .menu-card .price {
-            font-size: 2rem; font-weight: 900; background: var(--gradient-bg);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
+        .see-more-button-container { text-align: center; margin-top: 10px; }
 
         #gallery { background-color: #fff; }
         .gallery-grid { columns: 3 250px; column-gap: 1.5rem; }
@@ -484,18 +453,14 @@
             </div>
         </section>
 
-        <!-- MENU HOME — dynamiczne z admina -->
+        <!-- MENU HOME — tylko button do menu.html -->
         <section id="menu" class="section">
           <div class="container">
             <h2 class="section-title fade-in">Odkryj swoje ulubione</h2>
 
-            <div class="menu-grid" id="homeMenuGrid">
-              <div class="muted">Ładuję menu...</div>
-            </div>
-
             <div class="see-more-button-container fade-in">
               <a href="menu.html" class="btn btn-primary">
-                Pełne menu MilkShake Bar w Słupsku <i class="fas fa-arrow-right"></i>
+                Zobacz pełne menu <i class="fas fa-arrow-right"></i>
               </a>
             </div>
           </div>
@@ -609,13 +574,11 @@
               <div class="location-details">
                 <h3>Jesteśmy tutaj</h3>
 
-                <!-- Adres główny (będzie aktualizowany JS-em przy przełączaniu) -->
                 <div class="info-item">
                   <i class="fas fa-map-marker-alt"></i>
                   <span id="addressText">Szczecińska 17<br>76-200 Słupsk</span>
                 </div>
 
-                <!-- Drugi adres stały -->
                 <div class="info-item">
                   <i class="fas fa-location-dot"></i>
                   <span>Wydmowa 2<br>76-212 Rowy</span>
@@ -877,76 +840,6 @@
             })();
 
             // -----------------------------------
-            // HOME MENU z admina
-            // -----------------------------------
-            (async function loadHomeMenu(){
-              const grid = document.getElementById("homeMenuGrid");
-              if(!grid) return;
-
-              function cardHTML(p){
-                const title = p.title || p.name || "Produkt";
-                const price = (p.price ?? "");
-                const desc  = p.desc || p.description || "";
-
-                return `
-                  <div class="menu-card fade-in">
-                    <div class="menu-card-image">
-                      <img src="${p.image || 'https://i.imgur.com/kfE4j7j.jpeg'}" alt="${title}">
-                    </div>
-                    <div class="menu-card-content">
-                      <h3>${title}</h3>
-                      <p>${desc || "Brak opisu produktu."}</p>
-                      ${price !== "" ? `<div class="price">${price} PLN</div>` : ""}
-                    </div>
-                  </div>
-                `;
-              }
-
-              // --- fallback jeśli baza pusta (3 produkty) ---
-              const fallbackProducts = [
-                {
-                  title: "Burger Żółtodziób",
-                  price: 43 PLN,
-                  desc: "Soczysty burger z chrupiącym kurczakiem, ogórek ,sałata i sos tatarski .",
-                  image: "https://imgur.com/HiU4xFi"
-                },
-                {
-                  title: "Milkshake malinowy",
-                  price: 18.90,
-                  desc: "Kremowy milkshake malinowy z bitą śmietaną i owocami.",
-                  image: "https://i.imgur.com/dwsQzpr.png"
-                },
-                {
-                  title: "Milkshake czekoladowy",
-                  price: 18.90,
-                  desc: "Gęsty milkshake czekoladowy z polewą i wiórkami czekolady.",
-                  image: "https://i.imgur.com/T4tHYPu.png"
-                }
-              ];
-
-              try{
-                const res = await fetch("/api/data", { cache:"no-store" });
-                if(!res.ok) throw new Error(res.status);
-                const db = await res.json();
-                const products = (db.products || []).slice().reverse();
-
-                if(!products.length){
-                  grid.innerHTML = fallbackProducts.map(cardHTML).join("");
-                  grid.querySelectorAll(".fade-in").forEach(el => observer.observe(el));
-                  return;
-                }
-
-                grid.innerHTML = products.slice(0,3).map(cardHTML).join("");
-                grid.querySelectorAll(".fade-in").forEach(el => observer.observe(el));
-              }catch(e){
-                console.error(e);
-                // jakby API siadło, też pokaż fallback
-                grid.innerHTML = fallbackProducts.map(cardHTML).join("");
-                grid.querySelectorAll(".fade-in").forEach(el => observer.observe(el));
-              }
-            })();
-
-            // -----------------------------------
             // HAPPY HOUR BAR from admin (db.happy)
             // -----------------------------------
             (async function loadHappyBar(){
@@ -1050,5 +943,3 @@
     </script>
 </body>
 </html>
-
-

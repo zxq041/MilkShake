@@ -334,6 +334,41 @@
         font-size: 1.4rem;
       }
     }
+
+    /* =========================
+       MODAL (DODAJ REZERWACJĘ)
+       ========================= */
+    .modal-backdrop{
+      position: fixed; inset:0; z-index: 1000;
+      background: rgba(0,0,0,0.35);
+      display:none; align-items:center; justify-content:center;
+      padding: 18px;
+    }
+    .modal-backdrop.show{ display:flex; }
+
+    .modal-card{
+      width:min(560px, 100%);
+      animation: modalIn .18s ease;
+    }
+    @keyframes modalIn{
+      from{ transform: translateY(8px); opacity:0; }
+      to{ transform: translateY(0); opacity:1; }
+    }
+
+    .input{
+      width:100%;
+      padding: 12px 14px;
+      border:2px solid #eee;
+      border-radius:12px;
+      font-family:'Poppins',sans-serif;
+      font-size:1rem;
+      outline:none;
+      transition:.2s ease;
+    }
+    .input:focus{
+      border-color: var(--primary-color);
+      box-shadow: 0 6px 18px rgba(255,106,0,0.08);
+    }
   </style>
 </head>
 
@@ -448,7 +483,13 @@
         <div class="tab-panel active" id="tab-res">
           <div class="content-header">
             <h2>Rezerwacje</h2>
-            <div class="small" id="lastSync">Ostatnia synchronizacja: —</div>
+
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <button class="btn btn-primary" id="addReservationBtn">
+                <i class="fa-solid fa-plus"></i> Dodaj rezerwację
+              </button>
+              <div class="small" id="lastSync">Ostatnia synchronizacja: —</div>
+            </div>
           </div>
 
           <div class="reservations" id="reservationsList">
@@ -489,6 +530,68 @@
   <div class="toast" id="toast">
     <i class="fa-solid fa-bell"></i>
     <span id="toastText">Nowa rezerwacja!</span>
+  </div>
+
+  <!-- MODAL: ręczne dodanie rezerwacji -->
+  <div id="addReservationModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-card card">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <h3 style="font-size:1.4rem; font-weight:900;">Dodaj rezerwację</h3>
+        <button class="btn btn-ghost" id="closeAddReservationModal" aria-label="Zamknij">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="addReservationForm" style="margin-top:12px; display:grid; gap:10px;">
+        <label>
+          <div class="small" style="margin-bottom:4px;">Imię i nazwisko</div>
+          <input required name="name" class="input" placeholder="Np. Jan Kowalski">
+        </label>
+
+        <label>
+          <div class="small" style="margin-bottom:4px;">Telefon</div>
+          <input required name="phone" class="input" placeholder="Np. 500600700">
+        </label>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label>
+            <div class="small" style="margin-bottom:4px;">Data</div>
+            <input required name="date" type="date" class="input">
+          </label>
+
+          <label>
+            <div class="small" style="margin-bottom:4px;">Godzina</div>
+            <input required name="time" type="time" class="input">
+          </label>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label>
+            <div class="small" style="margin-bottom:4px;">Liczba osób</div>
+            <input required name="guests" type="number" min="1" class="input" placeholder="Np. 4">
+          </label>
+
+          <label>
+            <div class="small" style="margin-bottom:4px;">Sala / strefa</div>
+            <input required name="room" class="input" placeholder="Np. Sala główna / VIP">
+          </label>
+        </div>
+
+        <label>
+          <div class="small" style="margin-bottom:4px;">Uwagi (opcjonalnie)</div>
+          <textarea name="notes" class="input" style="min-height:80px; resize:vertical;" placeholder="Np. tort urodzinowy"></textarea>
+        </label>
+
+        <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:6px;">
+          <button type="button" class="btn btn-danger" id="cancelAddReservation">
+            Anuluj
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Zapisz rezerwację
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- socket.io -->
@@ -891,6 +994,76 @@
       }else{
         showToast("Nie udało się usunąć paska", true);
         barStatus.textContent = "Status: błąd zapisu";
+      }
+    });
+
+    // =========================
+    //  MANUAL ADD RESERVATION
+    // =========================
+    const addReservationBtn = document.getElementById("addReservationBtn");
+    const addReservationModal = document.getElementById("addReservationModal");
+    const closeAddReservationModal = document.getElementById("closeAddReservationModal");
+    const cancelAddReservation = document.getElementById("cancelAddReservation");
+    const addReservationForm = document.getElementById("addReservationForm");
+
+    function openAddReservationModal(){
+      addReservationModal.classList.add("show");
+      addReservationModal.setAttribute("aria-hidden","false");
+      const dateInput = addReservationForm.querySelector('[name="date"]');
+      if(!dateInput.value){
+        dateInput.value = new Date().toISOString().split("T")[0];
+      }
+    }
+
+    function closeAddReservation(){
+      addReservationModal.classList.remove("show");
+      addReservationModal.setAttribute("aria-hidden","true");
+      addReservationForm.reset();
+    }
+
+    addReservationBtn?.addEventListener("click", openAddReservationModal);
+    closeAddReservationModal?.addEventListener("click", closeAddReservation);
+    cancelAddReservation?.addEventListener("click", closeAddReservation);
+
+    addReservationModal?.addEventListener("click", (e)=>{
+      if(e.target === addReservationModal) closeAddReservation();
+    });
+
+    addReservationForm?.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+
+      const fd = new FormData(addReservationForm);
+      const payload = {
+        name: fd.get("name"),
+        phone: fd.get("phone"),
+        date: fd.get("date"),
+        time: fd.get("time"),
+        guests: String(fd.get("guests")),
+        room: fd.get("room"),
+        notes: fd.get("notes") || ""
+      };
+
+      try{
+        const res = await fetch("/api/rezerwacje", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json().catch(()=> ({}));
+
+        if(!res.ok){
+          showToast(data?.message || "Nie udało się dodać rezerwacji", true);
+          return;
+        }
+
+        showToast("Rezerwacja dodana ✅");
+        closeAddReservation();
+        await fetchReservationsAndMerge();
+
+      }catch(err){
+        console.error(err);
+        showToast("Błąd sieci przy dodawaniu rezerwacji", true);
       }
     });
   </script>

@@ -428,9 +428,14 @@
 
       <!-- Tabs -->
       <div class="tabs">
-        <button class="tab-btn active" data-tab="tab-res">
-          <i class="fa-regular fa-clipboard"></i> Rezerwacje
+        <button class="tab-btn active" data-tab="tab-res-new">
+          <i class="fa-regular fa-clipboard"></i> Nowe rezerwacje
         </button>
+
+        <button class="tab-btn" data-tab="tab-res-all">
+          <i class="fa-solid fa-layer-group"></i> Wszystkie rezerwacje
+        </button>
+
         <button class="tab-btn" data-tab="tab-bar">
           <i class="fa-solid fa-bullhorn"></i> Pasek informacji
         </button>
@@ -479,10 +484,10 @@
       <!-- CONTENT -->
       <section>
 
-        <!-- TAB: RESERVATIONS -->
-        <div class="tab-panel active" id="tab-res">
+        <!-- TAB: NOWE REZERWACJE -->
+        <div class="tab-panel active" id="tab-res-new">
           <div class="content-header">
-            <h2>Rezerwacje</h2>
+            <h2>Nowe rezerwacje</h2>
 
             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
               <button class="btn btn-primary" id="addReservationBtn">
@@ -492,7 +497,19 @@
             </div>
           </div>
 
-          <div class="reservations" id="reservationsList">
+          <div class="reservations" id="newReservationsList">
+            <div class="empty">Ładuję rezerwacje...</div>
+          </div>
+        </div>
+
+        <!-- TAB: WSZYSTKIE REZERWACJE -->
+        <div class="tab-panel" id="tab-res-all">
+          <div class="content-header">
+            <h2>Wszystkie rezerwacje</h2>
+            <div class="small">Tutaj są również przeczytane.</div>
+          </div>
+
+          <div class="reservations" id="allReservationsList">
             <div class="empty">Ładuję rezerwacje...</div>
           </div>
         </div>
@@ -692,19 +709,18 @@
         showToast("Nie udało się włączyć dźwięku", true);
       }
     }
-
     document.getElementById("enableSoundBtn").addEventListener("click", enableSound);
 
     // =========================
     //  Bell sound (5s)
     // =========================
     function playBellFor5s(){
-      if(!soundEnabled) return; // ważne: mobile wymaga gestu usera
+      if(!soundEnabled) return;
 
       try{
         audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
         if(audioCtx.state === "suspended"){
-          audioCtx.resume(); // best-effort
+          audioCtx.resume();
         }
 
         const now = audioCtx.currentTime;
@@ -767,7 +783,8 @@
     // =========================
     //  Reservations logic
     // =========================
-    const listEl = document.getElementById("reservationsList");
+    const newListEl = document.getElementById("newReservationsList");
+    const allListEl = document.getElementById("allReservationsList");
     const statTotal = document.getElementById("statTotal");
     const statNew = document.getElementById("statNew");
     const statToday = document.getElementById("statToday");
@@ -797,71 +814,61 @@
       return (r.notes || r.note || r.uwagi || r.message || "").trim();
     }
 
-    function render(){
-      if(!reservations.length){
-        listEl.innerHTML = `<div class="empty">Brak rezerwacji.</div>`;
-        statTotal.textContent = "0";
-        statNew.textContent = "0";
-        statToday.textContent = "0";
-        return;
-      }
+    function sortByNewest(arr){
+      return arr.slice().sort((a,b)=>{
+        const ta = new Date(a.createdAt || 0).getTime();
+        const tb = new Date(b.createdAt || 0).getTime();
+        return tb - ta; // najnowsze na górze
+      });
+    }
 
-      const total = reservations.length;
-      const newCount = reservations.filter(r => !seenIds.has(r.id)).length;
-      const todayCount = reservations.filter(r => isToday(r.date)).length;
+    function reservationCardHTML(r, highlightNew){
+      const isNew = !seenIds.has(r.id);
+      const notes = getNotes(r);
 
-      statTotal.textContent = total;
-      statNew.textContent = newCount;
-      statToday.textContent = todayCount;
+      return `
+        <article class="reservation-item ${highlightNew && isNew ? "new" : ""}" data-id="${r.id}">
+          <div>
+            <div style="font-size:1.15rem;font-weight:900;margin-bottom:6px">
+              ${r.name || "—"}
+            </div>
+            <div class="reservation-meta">
+              <span class="tag"><i class="fa-regular fa-calendar"></i> ${r.date || "—"}</span>
+              <span class="tag"><i class="fa-regular fa-clock"></i> ${r.time || "—"}</span>
+              <span class="tag"><i class="fa-solid fa-user-group"></i> ${r.guests || "—"} os.</span>
+              <span class="tag"><i class="fa-solid fa-door-open"></i> ${r.room || "—"}</span>
+              <span class="tag"><i class="fa-solid fa-phone"></i> ${r.phone || "—"}</span>
+            </div>
+            ${notes ? `<div class="reservation-notes"><b>Uwagi:</b> ${notes}</div>` : ""}
+            <div class="small" style="margin-top:6px">
+              ID: ${r.id || "—"} • dodano: ${r.createdAt ? new Date(r.createdAt).toLocaleString() : "—"}
+            </div>
+          </div>
 
-      listEl.innerHTML = reservations
-        .slice().reverse()
-        .map(r=>{
-          const isNew = !seenIds.has(r.id);
-          const notes = getNotes(r);
+          <div class="reservation-actions">
+            <button class="btn btn-ghost mark-read-btn">
+              <i class="fa-solid fa-check"></i> Przeczytane
+            </button>
+            <button class="btn btn-primary call-btn">
+              <i class="fa-solid fa-phone"></i> Zadzwoń
+            </button>
+          </div>
+        </article>
+      `;
+    }
 
-          return `
-            <article class="reservation-item ${isNew ? "new" : ""}" data-id="${r.id}">
-              <div>
-                <div style="font-size:1.15rem;font-weight:900;margin-bottom:6px">
-                  ${r.name || "—"}
-                </div>
-                <div class="reservation-meta">
-                  <span class="tag"><i class="fa-regular fa-calendar"></i> ${r.date || "—"}</span>
-                  <span class="tag"><i class="fa-regular fa-clock"></i> ${r.time || "—"}</span>
-                  <span class="tag"><i class="fa-solid fa-user-group"></i> ${r.guests || "—"} os.</span>
-                  <span class="tag"><i class="fa-solid fa-door-open"></i> ${r.room || "—"}</span>
-                  <span class="tag"><i class="fa-solid fa-phone"></i> ${r.phone || "—"}</span>
-                </div>
-                ${notes ? `<div class="reservation-notes"><b>Uwagi:</b> ${notes}</div>` : ""}
-                <div class="small" style="margin-top:6px">
-                  ID: ${r.id || "—"} • dodano: ${r.createdAt ? new Date(r.createdAt).toLocaleString() : "—"}
-                </div>
-              </div>
-
-              <div class="reservation-actions">
-                <button class="btn btn-ghost mark-read-btn">
-                  <i class="fa-solid fa-check"></i> Przeczytane
-                </button>
-                <button class="btn btn-primary call-btn">
-                  <i class="fa-solid fa-phone"></i> Zadzwoń
-                </button>
-              </div>
-            </article>
-          `;
-        }).join("");
-
-      listEl.querySelectorAll(".mark-read-btn").forEach(btn=>{
+    function bindReservationActions(root){
+      root.querySelectorAll(".mark-read-btn").forEach(btn=>{
         btn.addEventListener("click", ()=>{
           const card = btn.closest(".reservation-item");
           const id = card.dataset.id;
           seenIds.add(id);
           saveSeen();
-          render();
+          render(); // znika z "Nowych", zostaje w "Wszystkich"
         });
       });
 
-      listEl.querySelectorAll(".call-btn").forEach(btn=>{
+      root.querySelectorAll(".call-btn").forEach(btn=>{
         btn.addEventListener("click", ()=>{
           const card = btn.closest(".reservation-item");
           const id = card.dataset.id;
@@ -869,6 +876,36 @@
           if(r?.phone) window.location.href = `tel:${r.phone}`;
         });
       });
+    }
+
+    function render(){
+      const sorted = sortByNewest(reservations);
+
+      const total = sorted.length;
+      const newCount = sorted.filter(r => !seenIds.has(r.id)).length;
+      const todayCount = sorted.filter(r => isToday(r.date)).length;
+
+      statTotal.textContent = total;
+      statNew.textContent = newCount;
+      statToday.textContent = todayCount;
+
+      // Nowe (nieprzeczytane)
+      const onlyNew = sorted.filter(r => !seenIds.has(r.id));
+      if(!onlyNew.length){
+        newListEl.innerHTML = `<div class="empty">Brak nowych rezerwacji ✅</div>`;
+      } else {
+        newListEl.innerHTML = onlyNew.map(r => reservationCardHTML(r, true)).join("");
+      }
+
+      // Wszystkie
+      if(!sorted.length){
+        allListEl.innerHTML = `<div class="empty">Brak rezerwacji.</div>`;
+      } else {
+        allListEl.innerHTML = sorted.map(r => reservationCardHTML(r, false)).join("");
+      }
+
+      bindReservationActions(newListEl);
+      bindReservationActions(allListEl);
 
       lastSync.textContent = "Ostatnia synchronizacja: " + new Date().toLocaleString();
     }
@@ -898,7 +935,8 @@
         }
       }catch(e){
         console.error(e);
-        listEl.innerHTML = `<div class="empty" style="color:#b00000">Nie udało się pobrać rezerwacji.</div>`;
+        newListEl.innerHTML = `<div class="empty" style="color:#b00000">Nie udało się pobrać rezerwacji.</div>`;
+        allListEl.innerHTML = `<div class="empty" style="color:#b00000">Nie udało się pobrać rezerwacji.</div>`;
       }
     }
 

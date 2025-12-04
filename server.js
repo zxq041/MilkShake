@@ -241,6 +241,10 @@ app.get("/menu", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "menu.html"));
 });
 
+app.get("/favicon.ico", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "favicon.ico"));
+});
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
@@ -251,3 +255,4 @@ app.get("*", (req, res) => {
 server.listen(PORT, () => {
   console.log("MilkShake Bar server running on port:", PORT);
 });
+

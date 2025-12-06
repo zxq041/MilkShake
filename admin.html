@@ -41,7 +41,7 @@
     }
     .container { max-width: 1280px; margin: 0 auto; padding: 0 25px; }
 
-    /* owner/manager-only pre-login hide */
+    /* elevated-only pre-login hide */
     .owner-only { display: none; }
 
     /* Header */
@@ -253,89 +253,26 @@
        ========================= */
     @media (max-width: 768px) {
       .container { padding: 0 14px; }
-
-      /* header */
-      .navbar{
-        flex-wrap: wrap;
-        align-items: center;
-        gap: 10px;
-      }
-      .logo{
-        font-size: 1.1rem;
-      }
-      .logo img{
-        width: 36px; height: 36px;
-      }
-
-      .header-actions{
-        width: 100%;
-        flex-wrap: wrap;
-        justify-content: flex-start;
-        gap: 8px;
-      }
+      .navbar{ flex-wrap: wrap; align-items: center; gap: 10px; }
+      .logo{ font-size: 1.1rem; }
+      .logo img{ width: 36px; height: 36px; }
+      .header-actions{ width: 100%; flex-wrap: wrap; justify-content: flex-start; gap: 8px; }
       .header-actions .btn,
-      .header-actions .pill{
-        width: 100%;
-        justify-content: center;
-      }
-
-      /* tabs */
-      .tabs{
-        gap: 6px;
-      }
-      .tab-btn{
-        flex: 1 1 auto;
-        justify-content: center;
-        padding: 9px 12px;
-        font-size: 0.95rem;
-      }
-
-      /* grid */
-      .grid{
-        grid-template-columns: 1fr;
-        gap: 12px;
-      }
-      .sidebar{
-        order: 2;
-      }
-
-      /* reservation cards */
-      .reservation-item{
-        grid-template-columns: 1fr;
-      }
-      .reservation-actions{
-        flex-direction: row;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 8px;
-        margin-top: 8px;
-      }
-      .reservation-actions .btn{
-        flex: 1 1 0;
-        justify-content: center;
-        padding: 10px 12px;
-        font-size: 0.9rem;
-      }
-
-      /* tags smaller */
-      .tag{
-        font-size: 0.78rem;
-        padding: 5px 8px;
-      }
+      .header-actions .pill{ width: 100%; justify-content: center; }
+      .tabs{ gap: 6px; }
+      .tab-btn{ flex: 1 1 auto; justify-content: center; padding: 9px 12px; font-size: 0.95rem; }
+      .grid{ grid-template-columns: 1fr; gap: 12px; }
+      .sidebar{ order: 2; }
+      .reservation-item{ grid-template-columns: 1fr; }
+      .reservation-actions{ flex-direction: row; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 8px; }
+      .reservation-actions .btn{ flex: 1 1 0; justify-content: center; padding: 10px 12px; font-size: 0.9rem; }
+      .tag{ font-size: 0.78rem; padding: 5px 8px; }
     }
 
     @media (max-width: 420px){
-      .content-header{
-        flex-direction: column;
-        align-items: flex-start;
-      }
+      .content-header{ flex-direction: column; align-items: flex-start; }
       .content-header h2{ font-size: 1.4rem; }
-
-      .code-input input{
-        width: 46px;
-        height: 54px;
-        font-size: 1.4rem;
-      }
+      .code-input input{ width: 46px; height: 54px; font-size: 1.4rem; }
     }
 
     /* =========================
@@ -585,7 +522,7 @@
             <div>
               <div class="small" style="margin-bottom:8px;">Lista kont</div>
               <div class="reservations" id="employeesList">
-                <div class="empty">Brak pracowników</div>
+                <div class="empty">Ładuję konta...</div>
               </div>
             </div>
           </div>
@@ -690,9 +627,8 @@
     }
 
     // =========================
-    //  Lock screen (Owner / Manager / Employee)
+    //  Lock screen (API login)
     // =========================
-    const OWNER_PIN = "0051";
     const lockscreen = document.getElementById("lockscreen");
     const lockError = document.getElementById("lockError");
     const unlockBtn = document.getElementById("unlockBtn");
@@ -700,13 +636,6 @@
 
     let currentRole = null; // "owner" | "manager" | "employee"
     let currentEmployee = null;
-
-    function getEmployees(){
-      return JSON.parse(localStorage.getItem("employees") || "[]");
-    }
-    function saveEmployees(list){
-      localStorage.setItem("employees", JSON.stringify(list));
-    }
 
     function getTypedPin(){
       return codeBoxes.map(b => b.value.trim()).join("");
@@ -718,57 +647,53 @@
 
     function applyRoleVisibility(){
       const elevated = (currentRole === "owner" || currentRole === "manager");
-      const ownerEls = document.querySelectorAll(".owner-only");
+      const elevatedEls = document.querySelectorAll(".owner-only");
       const staffTabBtn = document.getElementById("staffTabBtn");
       const staffPanel = document.getElementById("tab-staff");
 
       if(elevated){
-        ownerEls.forEach(el => el.style.display = "");
-        if(staffTabBtn) staffTabBtn.style.display = "";
-        if(staffPanel) staffPanel.style.display = "";
+        elevatedEls.forEach(el => el.style.display = "");
+        staffTabBtn && (staffTabBtn.style.display = "");
+        staffPanel && (staffPanel.style.display = "");
       } else {
-        ownerEls.forEach(el => el.style.display = "none");
-        if(staffTabBtn) staffTabBtn.style.display = "none";
-        if(staffPanel) staffPanel.style.display = "none";
+        elevatedEls.forEach(el => el.style.display = "none");
+        staffTabBtn && (staffTabBtn.style.display = "none");
+        staffPanel && (staffPanel.style.display = "none");
         document.querySelector('[data-tab="tab-res-new"]')?.click();
       }
     }
 
-    function tryUnlock(){
+    async function tryUnlock(){
       const typed = getTypedPin();
-      const employees = getEmployees();
+      if(typed.length !== 4) return;
 
-      // Właściciel
-      if(typed === OWNER_PIN){
-        currentRole = "owner";
-        currentEmployee = null;
+      try{
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ pin: typed })
+        });
+        const data = await res.json().catch(()=> ({}));
+        if(!res.ok || !data.ok){
+          lockError.textContent = data.message || "Niepoprawny kod.";
+          clearPin();
+          return;
+        }
 
-        lockscreen.style.display = "none";
-        showToast("Zalogowano jako właściciel 🙌");
-        requestNotificationPermission();
-        fetchInfoBar();
-        applyRoleVisibility();
-        renderEmployees();
-        return;
-      }
-
-      // Manager / Employee z listy
-      const emp = employees.find(e => e.pin === typed);
-      if(emp){
-        currentRole = emp.role || "employee";
-        currentEmployee = emp;
+        currentRole = data.role; // owner/manager/employee
+        currentEmployee = data.user || null;
 
         lockscreen.style.display = "none";
-        showToast(`Zalogowano: ${emp.name} ✅`);
+        showToast(`Zalogowano: ${currentEmployee?.name || "OK"} ✅`);
         requestNotificationPermission();
         fetchInfoBar();
         applyRoleVisibility();
         if(currentRole !== "employee") renderEmployees();
-        return;
+      }catch(e){
+        console.error(e);
+        lockError.textContent = "Błąd logowania (sieć).";
+        clearPin();
       }
-
-      lockError.textContent = "Niepoprawny kod.";
-      clearPin();
     }
 
     unlockBtn.addEventListener("click", tryUnlock);
@@ -1208,70 +1133,87 @@
     });
 
     // =========================
-    //  STAFF / EMPLOYEES (owner & manager)
+    //  STAFF / EMPLOYEES (API)
     // =========================
     const addEmployeeForm = document.getElementById("addEmployeeForm");
     const employeesListEl = document.getElementById("employeesList");
     const empHint = document.getElementById("empHint");
-
-    function normalizePin(pin){
-      return String(pin).replace(/\D/g,"").padStart(4,"0").slice(0,4);
-    }
-
-    function safeUUID(){
-      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
-      return "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
-    }
 
     function roleLabel(role){
       if(role === "manager") return "Właściciel / Menager";
       return "Pracownik";
     }
 
-    function renderEmployees(){
-      if(!employeesListEl) return;
-      const employees = getEmployees();
-
-      if(!employees.length){
-        employeesListEl.innerHTML = `<div class="empty">Brak kont</div>`;
-        return;
-      }
-
-      employeesListEl.innerHTML = employees.map(e => `
-        <article class="reservation-item" data-id="${e.id}">
-          <div>
-            <div style="font-size:1.05rem;font-weight:900;margin-bottom:6px">
-              ${e.name}
-            </div>
-            <div class="reservation-meta">
-              <span class="tag"><i class="fa-solid fa-key"></i> Login: ${e.pin}</span>
-              <span class="tag"><i class="fa-solid fa-user-tag"></i> ${roleLabel(e.role)}</span>
-              <span class="tag"><i class="fa-regular fa-clock"></i> Dodano: ${new Date(e.createdAt).toLocaleString()}</span>
-            </div>
-          </div>
-
-          <div class="reservation-actions">
-            <button class="btn btn-danger remove-emp-btn">
-              <i class="fa-solid fa-trash"></i> Usuń
-            </button>
-          </div>
-        </article>
-      `).join("");
-
-      employeesListEl.querySelectorAll(".remove-emp-btn").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          const card = btn.closest(".reservation-item");
-          const id = card.dataset.id;
-
-          const list = getEmployees().filter(x=>x.id!==id);
-          saveEmployees(list);
-          showToast("Usunięto konto ✅");
-          renderEmployees();
-        });
-      });
+    async function fetchEmployees(){
+      const res = await fetch("/api/pracownicy", { cache:"no-store" });
+      if(!res.ok) throw new Error(res.status);
+      return await res.json();
     }
 
-    addEmployeeForm?.addEventListener("submit", (e)=>{
+    async function renderEmployees(){
+      if(!employeesListEl) return;
+      employeesListEl.innerHTML = `<div class="empty">Ładuję konta...</div>`;
+
+      try{
+        const employees = await fetchEmployees();
+
+        if(!employees.length){
+          employeesListEl.innerHTML = `<div class="empty">Brak kont</div>`;
+          return;
+        }
+
+        employeesListEl.innerHTML = employees.map(e => `
+          <article class="reservation-item" data-id="${e._id}">
+            <div>
+              <div style="font-size:1.05rem;font-weight:900;margin-bottom:6px">
+                ${e.name}
+              </div>
+              <div class="reservation-meta">
+                <span class="tag"><i class="fa-solid fa-key"></i> Login: ${e.pin}</span>
+                <span class="tag"><i class="fa-solid fa-user-tag"></i> ${roleLabel(e.role)}</span>
+                <span class="tag"><i class="fa-regular fa-clock"></i> Dodano: ${new Date(e.createdAt).toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div class="reservation-actions">
+              <button class="btn btn-danger remove-emp-btn">
+                <i class="fa-solid fa-trash"></i> Usuń
+              </button>
+            </div>
+          </article>
+        `).join("");
+
+        employeesListEl.querySelectorAll(".remove-emp-btn").forEach(btn=>{
+          btn.addEventListener("click", async ()=>{
+            const card = btn.closest(".reservation-item");
+            const id = card.dataset.id;
+
+            try{
+              const res = await fetch(`/api/pracownicy/${id}`, { method:"DELETE" });
+              const data = await res.json().catch(()=> ({}));
+              if(!res.ok || !data.ok){
+                showToast(data.message || "Nie udało się usunąć konta", true);
+                return;
+              }
+              showToast("Usunięto konto ✅");
+              renderEmployees();
+            }catch(e){
+              showToast("Błąd sieci przy usuwaniu", true);
+            }
+          });
+        });
+
+      }catch(e){
+        console.error(e);
+        employeesListEl.innerHTML = `<div class="empty" style="color:#b00000">Nie udało się pobrać kont.</div>`;
+      }
+    }
+
+    function normalizePin(pin){
+      return String(pin).replace(/\D/g,"").padStart(4,"0").slice(0,4);
+    }
+
+    addEmployeeForm?.addEventListener("submit", async (e)=>{
       e.preventDefault();
       const elevated = (currentRole === "owner" || currentRole === "manager");
       if(!elevated){
@@ -1284,40 +1226,32 @@
       let pin = normalizePin(fd.get("empPin"));
       const role = String(fd.get("empRole") || "employee");
 
-      const employees = getEmployees();
-
-      if(pin === OWNER_PIN){
-        empHint.textContent = "Ten PIN jest zarezerwowany dla właściciela.";
-        showToast("Nie możesz użyć PIN właściciela", true);
-        return;
-      }
-      if(employees.some(e => e.pin === pin)){
-        empHint.textContent = "Ten PIN już istnieje.";
-        showToast("PIN jest zajęty", true);
-        return;
-      }
-      if(pin.length !== 4){
-        empHint.textContent = "PIN musi mieć 4 cyfry.";
-        showToast("Podaj poprawny PIN", true);
-        return;
-      }
-
-      employees.push({
-        id: safeUUID(),
-        name,
-        pin,
-        role,          // manager / employee
-        createdAt: Date.now()
-      });
-
-      saveEmployees(employees);
-      addEmployeeForm.reset();
       empHint.textContent = "";
-      showToast("Dodano konto ✅");
-      renderEmployees();
+
+      try{
+        const res = await fetch("/api/pracownicy", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ name, pin, role })
+        });
+        const data = await res.json().catch(()=> ({}));
+
+        if(!res.ok || !data.ok){
+          empHint.textContent = data.message || "Błąd dodawania konta.";
+          showToast(data.message || "Nie udało się dodać konta", true);
+          return;
+        }
+
+        showToast("Dodano konto ✅");
+        addEmployeeForm.reset();
+        renderEmployees();
+      }catch(err){
+        console.error(err);
+        showToast("Błąd sieci przy dodawaniu", true);
+      }
     });
 
-    // pokaż/ukryj owner-only od razu
+    // na starcie: ukryj elevated-only
     applyRoleVisibility();
   </script>
 </body>

@@ -57,9 +57,18 @@ const HappySchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
+// NOWE: Pracownicy
+const EmployeeSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  pin: { type: String, required: true, unique: true }, // 4 cyfry
+  role: { type: String, enum: ["manager", "employee"], default: "employee" },
+  createdAt: { type: Date, default: Date.now }
+});
+
 const Product = mongoose.model("Product", ProductSchema);
 const Reservation = mongoose.model("Reservation", ReservationSchema);
 const HappyBar = mongoose.model("HappyBar", HappySchema);
+const Employee = mongoose.model("Employee", EmployeeSchema);
 
 // ==========================
 //  BASIC EXPRESS CONFIG
@@ -93,6 +102,104 @@ app.post("/api/upload", upload.single("image"), (req, res) => {
 // ==========================
 io.on("connection", (socket) => {
   socket.on("disconnect", () => {});
+});
+
+// ==========================
+//  API: LOGIN BY PIN
+// ==========================
+app.post("/api/login", async (req, res) => {
+  try {
+    const { pin } = req.body || {};
+    const fixedPin = String(pin || "").replace(/\D/g,"").padStart(4,"0").slice(0,4);
+
+    // właściciel
+    if (fixedPin === "0051") {
+      return res.json({
+        ok: true,
+        role: "owner",
+        user: { name: "Właściciel", pin: fixedPin }
+      });
+    }
+
+    // manager / employee
+    const emp = await Employee.findOne({ pin: fixedPin });
+    if (!emp) {
+      return res.status(401).json({ ok:false, message:"Niepoprawny kod" });
+    }
+
+    res.json({
+      ok:true,
+      role: emp.role,
+      user: { id: emp._id, name: emp.name, pin: emp.pin }
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok:false, message:"Błąd logowania" });
+  }
+});
+
+// ==========================
+//  API: EMPLOYEES
+// ==========================
+
+// lista kont
+app.get("/api/pracownicy", async (req, res) => {
+  try {
+    const list = await Employee.find().sort({ createdAt: -1 });
+    res.json(list);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok:false, message:"Błąd pobierania pracowników" });
+  }
+});
+
+// dodaj konto (owner/manager)
+app.post("/api/pracownicy", async (req, res) => {
+  try {
+    const { name, pin, role } = req.body || {};
+
+    const fixedPin = String(pin || "").replace(/\D/g,"").padStart(4,"0").slice(0,4);
+    const fixedRole = (role === "manager") ? "manager" : "employee";
+
+    if (!name || fixedPin.length !== 4) {
+      return res.status(400).json({ ok:false, message:"Podaj imię i PIN (4 cyfry)" });
+    }
+
+    if (fixedPin === "0051") {
+      return res.status(400).json({ ok:false, message:"Ten PIN jest zarezerwowany dla właściciela" });
+    }
+
+    const exists = await Employee.findOne({ pin: fixedPin });
+    if (exists) {
+      return res.status(400).json({ ok:false, message:"Ten PIN już istnieje" });
+    }
+
+    const emp = await Employee.create({
+      name: String(name).trim(),
+      pin: fixedPin,
+      role: fixedRole
+    });
+
+    res.json({ ok:true, employee: emp });
+  } catch (e) {
+    console.error(e);
+    // jeśli unikalność PIN wywaliła w Mongo
+    if (String(e).includes("E11000")) {
+      return res.status(400).json({ ok:false, message:"Ten PIN już istnieje" });
+    }
+    res.status(500).json({ ok:false, message:"Błąd dodawania pracownika" });
+  }
+});
+
+// usuń konto
+app.delete("/api/pracownicy/:id", async (req, res) => {
+  try {
+    await Employee.findByIdAndDelete(req.params.id);
+    res.json({ ok:true });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok:false, message:"Błąd usuwania pracownika" });
+  }
 });
 
 // ==========================
@@ -255,4 +362,3 @@ app.get("*", (req, res) => {
 server.listen(PORT, () => {
   console.log("MilkShake Bar server running on port:", PORT);
 });
-

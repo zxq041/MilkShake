@@ -41,6 +41,9 @@
     }
     .container { max-width: 1280px; margin: 0 auto; padding: 0 25px; }
 
+    /* owner/manager-only pre-login hide */
+    .owner-only { display: none; }
+
     /* Header */
     .header {
       position: sticky; top: 0; z-index: 10;
@@ -439,6 +442,11 @@
         <button class="tab-btn" data-tab="tab-bar">
           <i class="fa-solid fa-bullhorn"></i> Pasek informacji
         </button>
+
+        <!-- owner/manager only -->
+        <button class="tab-btn owner-only" data-tab="tab-staff" id="staffTabBtn">
+          <i class="fa-solid fa-users"></i> Pracownicy
+        </button>
       </div>
     </div>
   </header>
@@ -535,6 +543,50 @@
               <button class="btn btn-danger" id="clearInfoBarBtn">
                 <i class="fa-solid fa-trash"></i> Usuń pasek
               </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: PRACOWNICY (owner/manager only) -->
+        <div class="tab-panel owner-only" id="tab-staff">
+          <div class="content-header">
+            <h2>Pracownicy</h2>
+            <div class="small">Dostępne tylko dla Właściciela / Menagera</div>
+          </div>
+
+          <div class="card" style="display:grid; gap:12px;">
+            <form id="addEmployeeForm" style="display:grid; gap:10px;">
+              <label>
+                <div class="small" style="margin-bottom:4px;">Imię i nazwisko</div>
+                <input required name="empName" class="input" placeholder="Np. Anna Nowak">
+              </label>
+
+              <label>
+                <div class="small" style="margin-bottom:4px;">Login (4 cyfry)</div>
+                <input required name="empPin" class="input" inputmode="numeric" maxlength="4" placeholder="Np. 0043">
+              </label>
+
+              <label>
+                <div class="small" style="margin-bottom:4px;">Stanowisko</div>
+                <select required name="empRole" class="input">
+                  <option value="manager">Właściciel / Menager</option>
+                  <option value="employee" selected>Pracownik</option>
+                </select>
+              </label>
+
+              <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
+                <button type="submit" class="btn btn-primary">
+                  <i class="fa-solid fa-user-plus"></i> Dodaj konto
+                </button>
+              </div>
+              <div class="small" id="empHint" style="color:var(--muted); font-weight:700;"></div>
+            </form>
+
+            <div>
+              <div class="small" style="margin-bottom:8px;">Lista kont</div>
+              <div class="reservations" id="employeesList">
+                <div class="empty">Brak pracowników</div>
+              </div>
             </div>
           </div>
         </div>
@@ -638,13 +690,23 @@
     }
 
     // =========================
-    //  Lock screen (PIN 0051)
+    //  Lock screen (Owner / Manager / Employee)
     // =========================
-    const PIN = "0051";
+    const OWNER_PIN = "0051";
     const lockscreen = document.getElementById("lockscreen");
     const lockError = document.getElementById("lockError");
     const unlockBtn = document.getElementById("unlockBtn");
     const codeBoxes = [...document.querySelectorAll("#codeInput input")];
+
+    let currentRole = null; // "owner" | "manager" | "employee"
+    let currentEmployee = null;
+
+    function getEmployees(){
+      return JSON.parse(localStorage.getItem("employees") || "[]");
+    }
+    function saveEmployees(list){
+      localStorage.setItem("employees", JSON.stringify(list));
+    }
 
     function getTypedPin(){
       return codeBoxes.map(b => b.value.trim()).join("");
@@ -653,18 +715,62 @@
       codeBoxes.forEach(b => b.value="");
       codeBoxes[0].focus();
     }
-    function tryUnlock(){
-      const typed = getTypedPin();
-      if(typed === PIN){
-        lockscreen.style.display = "none";
-        showToast("Zalogowano pomyślnie 🙌");
-        requestNotificationPermission();
-        fetchInfoBar();
+
+    function applyRoleVisibility(){
+      const elevated = (currentRole === "owner" || currentRole === "manager");
+      const ownerEls = document.querySelectorAll(".owner-only");
+      const staffTabBtn = document.getElementById("staffTabBtn");
+      const staffPanel = document.getElementById("tab-staff");
+
+      if(elevated){
+        ownerEls.forEach(el => el.style.display = "");
+        if(staffTabBtn) staffTabBtn.style.display = "";
+        if(staffPanel) staffPanel.style.display = "";
       } else {
-        lockError.textContent = "Niepoprawny kod.";
-        clearPin();
+        ownerEls.forEach(el => el.style.display = "none");
+        if(staffTabBtn) staffTabBtn.style.display = "none";
+        if(staffPanel) staffPanel.style.display = "none";
+        document.querySelector('[data-tab="tab-res-new"]')?.click();
       }
     }
+
+    function tryUnlock(){
+      const typed = getTypedPin();
+      const employees = getEmployees();
+
+      // Właściciel
+      if(typed === OWNER_PIN){
+        currentRole = "owner";
+        currentEmployee = null;
+
+        lockscreen.style.display = "none";
+        showToast("Zalogowano jako właściciel 🙌");
+        requestNotificationPermission();
+        fetchInfoBar();
+        applyRoleVisibility();
+        renderEmployees();
+        return;
+      }
+
+      // Manager / Employee z listy
+      const emp = employees.find(e => e.pin === typed);
+      if(emp){
+        currentRole = emp.role || "employee";
+        currentEmployee = emp;
+
+        lockscreen.style.display = "none";
+        showToast(`Zalogowano: ${emp.name} ✅`);
+        requestNotificationPermission();
+        fetchInfoBar();
+        applyRoleVisibility();
+        if(currentRole !== "employee") renderEmployees();
+        return;
+      }
+
+      lockError.textContent = "Niepoprawny kod.";
+      clearPin();
+    }
+
     unlockBtn.addEventListener("click", tryUnlock);
     codeBoxes.forEach((box, i) => {
       box.addEventListener("input", ()=>{
@@ -818,7 +924,7 @@
       return arr.slice().sort((a,b)=>{
         const ta = new Date(a.createdAt || 0).getTime();
         const tb = new Date(b.createdAt || 0).getTime();
-        return tb - ta; // najnowsze na górze
+        return tb - ta;
       });
     }
 
@@ -864,7 +970,7 @@
           const id = card.dataset.id;
           seenIds.add(id);
           saveSeen();
-          render(); // znika z "Nowych", zostaje w "Wszystkich"
+          render();
         });
       });
 
@@ -889,7 +995,6 @@
       statNew.textContent = newCount;
       statToday.textContent = todayCount;
 
-      // Nowe (nieprzeczytane)
       const onlyNew = sorted.filter(r => !seenIds.has(r.id));
       if(!onlyNew.length){
         newListEl.innerHTML = `<div class="empty">Brak nowych rezerwacji ✅</div>`;
@@ -897,7 +1002,6 @@
         newListEl.innerHTML = onlyNew.map(r => reservationCardHTML(r, true)).join("");
       }
 
-      // Wszystkie
       if(!sorted.length){
         allListEl.innerHTML = `<div class="empty">Brak rezerwacji.</div>`;
       } else {
@@ -954,7 +1058,6 @@
     document.getElementById("refreshBtn").addEventListener("click", ()=>fetchReservationsAndMerge());
     fetchReservationsAndMerge();
 
-    // realtime via Socket.IO
     try{
       if(window.io){
         const socket = io();
@@ -972,11 +1075,10 @@
       }
     }catch(e){}
 
-    // polling co 5s
     setInterval(()=>fetchReservationsAndMerge({notifyNew:true}), 5000);
 
     // =========================
-    //  INFO BAR (steruje db.happy)
+    //  INFO BAR
     // =========================
     const infoBarText = document.getElementById("infoBarText");
     const barStatus = document.getElementById("barStatus");
@@ -1104,6 +1206,119 @@
         showToast("Błąd sieci przy dodawaniu rezerwacji", true);
       }
     });
+
+    // =========================
+    //  STAFF / EMPLOYEES (owner & manager)
+    // =========================
+    const addEmployeeForm = document.getElementById("addEmployeeForm");
+    const employeesListEl = document.getElementById("employeesList");
+    const empHint = document.getElementById("empHint");
+
+    function normalizePin(pin){
+      return String(pin).replace(/\D/g,"").padStart(4,"0").slice(0,4);
+    }
+
+    function safeUUID(){
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+    }
+
+    function roleLabel(role){
+      if(role === "manager") return "Właściciel / Menager";
+      return "Pracownik";
+    }
+
+    function renderEmployees(){
+      if(!employeesListEl) return;
+      const employees = getEmployees();
+
+      if(!employees.length){
+        employeesListEl.innerHTML = `<div class="empty">Brak kont</div>`;
+        return;
+      }
+
+      employeesListEl.innerHTML = employees.map(e => `
+        <article class="reservation-item" data-id="${e.id}">
+          <div>
+            <div style="font-size:1.05rem;font-weight:900;margin-bottom:6px">
+              ${e.name}
+            </div>
+            <div class="reservation-meta">
+              <span class="tag"><i class="fa-solid fa-key"></i> Login: ${e.pin}</span>
+              <span class="tag"><i class="fa-solid fa-user-tag"></i> ${roleLabel(e.role)}</span>
+              <span class="tag"><i class="fa-regular fa-clock"></i> Dodano: ${new Date(e.createdAt).toLocaleString()}</span>
+            </div>
+          </div>
+
+          <div class="reservation-actions">
+            <button class="btn btn-danger remove-emp-btn">
+              <i class="fa-solid fa-trash"></i> Usuń
+            </button>
+          </div>
+        </article>
+      `).join("");
+
+      employeesListEl.querySelectorAll(".remove-emp-btn").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const card = btn.closest(".reservation-item");
+          const id = card.dataset.id;
+
+          const list = getEmployees().filter(x=>x.id!==id);
+          saveEmployees(list);
+          showToast("Usunięto konto ✅");
+          renderEmployees();
+        });
+      });
+    }
+
+    addEmployeeForm?.addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const elevated = (currentRole === "owner" || currentRole === "manager");
+      if(!elevated){
+        showToast("Brak dostępu", true);
+        return;
+      }
+
+      const fd = new FormData(addEmployeeForm);
+      const name = String(fd.get("empName") || "").trim();
+      let pin = normalizePin(fd.get("empPin"));
+      const role = String(fd.get("empRole") || "employee");
+
+      const employees = getEmployees();
+
+      if(pin === OWNER_PIN){
+        empHint.textContent = "Ten PIN jest zarezerwowany dla właściciela.";
+        showToast("Nie możesz użyć PIN właściciela", true);
+        return;
+      }
+      if(employees.some(e => e.pin === pin)){
+        empHint.textContent = "Ten PIN już istnieje.";
+        showToast("PIN jest zajęty", true);
+        return;
+      }
+      if(pin.length !== 4){
+        empHint.textContent = "PIN musi mieć 4 cyfry.";
+        showToast("Podaj poprawny PIN", true);
+        return;
+      }
+
+      employees.push({
+        id: safeUUID(),
+        name,
+        pin,
+        role,          // manager / employee
+        createdAt: Date.now()
+      });
+
+      saveEmployees(employees);
+      addEmployeeForm.reset();
+      empHint.textContent = "";
+      showToast("Dodano konto ✅");
+      renderEmployees();
+    });
+
+    // pokaż/ukryj owner-only od razu
+    applyRoleVisibility();
   </script>
 </body>
 </html>

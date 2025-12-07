@@ -309,6 +309,68 @@
       border-color: var(--primary-color);
       box-shadow: 0 6px 18px rgba(255,106,0,0.08);
     }
+
+    /* =========================
+       FULLSCREEN ALERT
+       ========================= */
+    .new-res-overlay{
+      position: fixed; inset:0; z-index: 10000;
+      display:none; align-items:center; justify-content:center;
+      padding: 20px;
+      animation: flashBg .8s infinite alternate;
+    }
+    .new-res-overlay.show{ display:flex; }
+
+    @keyframes flashBg{
+      0%   { background: #fff; }
+      100% { background: #FF6A00; }
+    }
+
+    .new-res-card{
+      width: min(720px, 100%);
+      background: rgba(255,255,255,0.95);
+      border-radius: 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+      padding: 30px 24px;
+      text-align:center;
+      animation: popIn .2s ease;
+    }
+    @keyframes popIn{
+      from{ transform: scale(.96); opacity:0; }
+      to{ transform: scale(1); opacity:1; }
+    }
+
+    .new-res-title{
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: #FF6A00;
+      text-shadow: 0 3px 0 rgba(0,0,0,0.05);
+    }
+    .new-res-name{
+      margin-top: 8px;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 900;
+      color: #22110A;
+    }
+    .new-res-meta{
+      margin-top: 10px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #4a2b15;
+      display:flex; flex-wrap:wrap; gap:8px; justify-content:center;
+    }
+    .new-res-meta .pillish{
+      background:#fff6ec;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:800;
+    }
+    .new-res-accept{
+      margin-top: 16px;
+      font-size: 1.1rem;
+      padding: 14px 22px;
+    }
   </style>
 </head>
 
@@ -531,6 +593,19 @@
       </section>
     </div>
   </main>
+
+  <!-- FULLSCREEN ALERT: NOWA REZERWACJA -->
+  <div id="newResOverlay" class="new-res-overlay" aria-hidden="true">
+    <div class="new-res-card">
+      <div class="new-res-title">NOWA REZERWACJA</div>
+      <div class="new-res-name" id="newResName">—</div>
+      <div class="new-res-meta" id="newResMeta">—</div>
+
+      <button class="btn btn-primary new-res-accept" id="acceptNewResBtn">
+        Akceptuj <i class="fa-solid fa-check"></i>
+      </button>
+    </div>
+  </div>
 
   <!-- toast -->
   <div class="toast" id="toast">
@@ -812,6 +887,65 @@
     });
 
     // =========================
+    //  FULLSCREEN ALERT logic
+    // =========================
+    const newResOverlay = document.getElementById("newResOverlay");
+    const newResName = document.getElementById("newResName");
+    const newResMeta = document.getElementById("newResMeta");
+    const acceptNewResBtn = document.getElementById("acceptNewResBtn");
+
+    let overlayQueue = [];
+    let overlayActive = false;
+
+    function formatOverlayMeta(r){
+      const parts = [
+        r.date ? `📅 ${r.date}` : null,
+        r.time ? `⏰ ${r.time}` : null,
+        r.guests ? `👥 ${r.guests} os.` : null,
+        r.room ? `🚪 ${r.room}` : null,
+        r.phone ? `☎️ ${r.phone}` : null
+      ].filter(Boolean);
+
+      return parts.map(p => `<span class="pillish">${p}</span>`).join("");
+    }
+
+    function showNewReservationOverlay(r){
+      overlayQueue.push(r);
+      if(overlayActive) return;
+
+      overlayActive = true;
+      const next = overlayQueue.shift();
+      if(!next){
+        overlayActive = false;
+        return;
+      }
+
+      newResName.textContent = next.name || "—";
+      newResMeta.innerHTML = formatOverlayMeta(next);
+
+      newResOverlay.classList.add("show");
+      newResOverlay.setAttribute("aria-hidden","false");
+
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function hideNewReservationOverlay(){
+      newResOverlay.classList.remove("show");
+      newResOverlay.setAttribute("aria-hidden","true");
+
+      overlayActive = false;
+      if(overlayQueue.length){
+        showNewReservationOverlay(overlayQueue.shift());
+      }
+    }
+
+    acceptNewResBtn?.addEventListener("click", hideNewReservationOverlay);
+
+    newResOverlay?.addEventListener("click", (e)=>{
+      if(e.target === newResOverlay) hideNewReservationOverlay();
+    });
+
+    // =========================
     //  Reservations logic
     // =========================
     const newListEl = document.getElementById("newReservationsList");
@@ -960,6 +1094,9 @@
             playBellFor5s();
             showToast("Nowa rezerwacja 🔔");
             fireNotification(r);
+
+            // NEW: fullscreen overlay
+            showNewReservationOverlay(r);
           });
         }
       }catch(e){
@@ -977,6 +1114,10 @@
       playBellFor5s();
       showToast("Nowa rezerwacja 🔔");
       fireNotification(nr);
+
+      // NEW: fullscreen overlay
+      showNewReservationOverlay(nr);
+
       render();
     }
 

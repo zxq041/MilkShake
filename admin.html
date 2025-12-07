@@ -161,6 +161,7 @@
       background:#fff; box-shadow: var(--shadow);
       display:grid; grid-template-columns: 1fr auto; gap: 10px;
       border-left: 6px solid transparent;
+      touch-action: pan-y;
     }
     .reservation-item.new { border-left-color: var(--primary-color); }
     .reservation-meta{
@@ -276,7 +277,7 @@
     }
 
     /* =========================
-       MODAL (DODAJ REZERWACJĘ)
+       MODAL (DODAJ / EDYTUJ)
        ========================= */
     .modal-backdrop{
       position: fixed; inset:0; z-index: 1000;
@@ -352,10 +353,7 @@
       justify-content:center;
       gap:12px;
     }
-    .new-res-title i{
-      color:#FF6A00;
-      font-size: 1.9rem;
-    }
+    .new-res-title i{ color:#FF6A00; font-size: 1.9rem; }
 
     .new-res-name{
       margin-top: 8px;
@@ -384,16 +382,26 @@
       box-shadow: 0 6px 16px rgba(0,0,0,0.06);
       color: #2B1300;
     }
-    .new-res-meta .pillish i{
-      color: #FF6A00;
-      font-size: 1rem;
-    }
+    .new-res-meta .pillish i{ color: #FF6A00; font-size: 1rem; }
 
     .new-res-accept{
       margin-top: 18px;
       font-size: 1.1rem;
       padding: 14px 24px;
       letter-spacing:.2px;
+    }
+
+    /* ===== Swipe -> pokaż "Edytuj" ===== */
+    .reservation-actions .edit-btn { display:none; }
+
+    .reservation-item.swiped .mark-read-btn{ display:none; }
+    .reservation-item.swiped .edit-btn{ display:inline-flex; }
+
+    .reservation-item.swiped{
+      border-left-color: #11182710;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.14);
+      transform: translateX(-6px);
+      transition: transform .15s ease;
     }
   </style>
 </head>
@@ -702,6 +710,70 @@
     </div>
   </div>
 
+  <!-- MODAL: edycja rezerwacji -->
+  <div id="editReservationModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-card card">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <h3 style="font-size:1.4rem; font-weight:900;">Edytuj rezerwację</h3>
+        <button class="btn btn-ghost" id="closeEditReservationModal" aria-label="Zamknij">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="editReservationForm" style="margin-top:12px; display:grid; gap:10px;">
+        <input type="hidden" name="id">
+
+        <label>
+          <div class="small" style="margin-bottom:4px;">Imię i nazwisko</div>
+          <input required name="name" class="input" placeholder="Np. Jan Kowalski">
+        </label>
+
+        <label>
+          <div class="small" style="margin-bottom:4px;">Telefon</div>
+          <input required name="phone" class="input" placeholder="Np. 500600700">
+        </label>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label>
+            <div class="small" style="margin-bottom:4px;">Data</div>
+            <input required name="date" type="date" class="input">
+          </label>
+
+          <label>
+            <div class="small" style="margin-bottom:4px;">Godzina</div>
+            <input required name="time" type="time" class="input">
+          </label>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label>
+            <div class="small" style="margin-bottom:4px;">Liczba osób</div>
+            <input required name="guests" type="number" min="1" class="input" placeholder="Np. 4">
+          </label>
+
+          <label>
+            <div class="small" style="margin-bottom:4px;">Sala / strefa</div>
+            <input required name="room" class="input" placeholder="Np. Sala główna / VIP">
+          </label>
+        </div>
+
+        <label>
+          <div class="small" style="margin-bottom:4px;">Uwagi (opcjonalnie)</div>
+          <textarea name="notes" class="input" style="min-height:80px; resize:vertical;" placeholder="Np. tort urodzinowy"></textarea>
+        </label>
+
+        <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:6px;">
+          <button type="button" class="btn btn-danger" id="cancelEditReservation">
+            Anuluj
+          </button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Zapisz zmiany
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- socket.io -->
   <script src="/socket.io/socket.io.js"></script>
   <script>
@@ -964,7 +1036,6 @@
 
       overlayActive = false;
 
-      // pokaż następny z kolejki (naprawione)
       if(overlayQueue.length){
         showNewReservationOverlay(overlayQueue[0]);
         overlayQueue.shift();
@@ -1045,6 +1116,11 @@
             <button class="btn btn-ghost mark-read-btn">
               <i class="fa-solid fa-check"></i> Przeczytane
             </button>
+
+            <button class="btn btn-ghost edit-btn">
+              <i class="fa-solid fa-pen-to-square"></i> Edytuj
+            </button>
+
             <button class="btn btn-primary call-btn">
               <i class="fa-solid fa-phone"></i> Zadzwoń
             </button>
@@ -1054,6 +1130,7 @@
     }
 
     function bindReservationActions(root){
+      // mark as read
       root.querySelectorAll(".mark-read-btn").forEach(btn=>{
         btn.addEventListener("click", ()=>{
           const card = btn.closest(".reservation-item");
@@ -1064,6 +1141,7 @@
         });
       });
 
+      // call
       root.querySelectorAll(".call-btn").forEach(btn=>{
         btn.addEventListener("click", ()=>{
           const card = btn.closest(".reservation-item");
@@ -1071,6 +1149,70 @@
           const r = reservations.find(x=>x.id===id);
           if(r?.phone) window.location.href = `tel:${r.phone}`;
         });
+      });
+
+      // edit
+      root.querySelectorAll(".edit-btn").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const card = btn.closest(".reservation-item");
+          const id = card.dataset.id;
+          const r = reservations.find(x=>x.id===id);
+          if(r) openEditReservationModal(r);
+        });
+      });
+
+      // ===== SWIPE/DRAG LEFT to reveal edit =====
+      root.querySelectorAll(".reservation-item").forEach(card=>{
+        let startX = 0;
+        let startY = 0;
+        let dragging = false;
+        let moved = false;
+
+        const onDown = (e)=>{
+          if(e.target.closest("button")) return;
+          dragging = true;
+          moved = false;
+          const p = e.touches ? e.touches[0] : e;
+          startX = p.clientX;
+          startY = p.clientY;
+        };
+
+        const onMove = (e)=>{
+          if(!dragging) return;
+          const p = e.touches ? e.touches[0] : e;
+          const dx = p.clientX - startX;
+          const dy = p.clientY - startY;
+
+          if(Math.abs(dy) > 18 && Math.abs(dy) > Math.abs(dx)){
+            dragging = false;
+            return;
+          }
+
+          if(dx < -60){
+            card.classList.add("swiped");
+            moved = true;
+            dragging = false;
+          }
+
+          if(dx > 40){
+            card.classList.remove("swiped");
+            moved = true;
+            dragging = false;
+          }
+
+          if(moved) e.preventDefault?.();
+        };
+
+        const onUp = ()=>{ dragging = false; };
+
+        card.addEventListener("touchstart", onDown, {passive:true});
+        card.addEventListener("touchmove", onMove, {passive:false});
+        card.addEventListener("touchend", onUp);
+
+        card.addEventListener("pointerdown", onDown);
+        card.addEventListener("pointermove", onMove);
+        card.addEventListener("pointerup", onUp);
+        card.addEventListener("pointercancel", onUp);
       });
     }
 
@@ -1135,7 +1277,6 @@
       }
     }
 
-    // overlay zawsze na evencie socket
     function onNewReservation(r){
       const nr = normalizeRes(r);
 
@@ -1300,6 +1441,80 @@
       }catch(err){
         console.error(err);
         showToast("Błąd sieci przy dodawaniu rezerwacji", true);
+      }
+    });
+
+    // =========================
+    //  EDIT RESERVATION MODAL
+    // =========================
+    const editReservationModal = document.getElementById("editReservationModal");
+    const closeEditReservationModal = document.getElementById("closeEditReservationModal");
+    const cancelEditReservation = document.getElementById("cancelEditReservation");
+    const editReservationForm = document.getElementById("editReservationForm");
+
+    function openEditReservationModal(r){
+      editReservationModal.classList.add("show");
+      editReservationModal.setAttribute("aria-hidden","false");
+
+      editReservationForm.elements.id.value = r.id;
+      editReservationForm.elements.name.value = r.name || "";
+      editReservationForm.elements.phone.value = r.phone || "";
+      editReservationForm.elements.date.value = r.date || new Date().toISOString().split("T")[0];
+      editReservationForm.elements.time.value = r.time || "19:30";
+      editReservationForm.elements.guests.value = r.guests || 1;
+      editReservationForm.elements.room.value = r.room || "";
+      editReservationForm.elements.notes.value = getNotes(r) || "";
+    }
+
+    function closeEditReservation(){
+      editReservationModal.classList.remove("show");
+      editReservationModal.setAttribute("aria-hidden","true");
+      editReservationForm.reset();
+    }
+
+    closeEditReservationModal?.addEventListener("click", closeEditReservation);
+    cancelEditReservation?.addEventListener("click", closeEditReservation);
+
+    editReservationModal?.addEventListener("click", (e)=>{
+      if(e.target === editReservationModal) closeEditReservation();
+    });
+
+    editReservationForm?.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+
+      const fd = new FormData(editReservationForm);
+      const id = fd.get("id");
+      const payload = {
+        name: fd.get("name"),
+        phone: fd.get("phone"),
+        date: fd.get("date"),
+        time: fd.get("time"),
+        guests: String(fd.get("guests")),
+        room: fd.get("room"),
+        notes: fd.get("notes") || ""
+      };
+
+      try{
+        const res = await fetch(`/api/rezerwacje/${id}`, {
+          method: "PUT",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json().catch(()=> ({}));
+
+        if(!res.ok || data?.ok === false){
+          showToast(data?.message || "Nie udało się zapisać zmian", true);
+          return;
+        }
+
+        await fetchReservationsAndMerge();
+        showToast("Zapisano zmiany ✅");
+        closeEditReservation();
+
+      }catch(err){
+        console.error(err);
+        showToast("Błąd sieci przy edycji", true);
       }
     });
 

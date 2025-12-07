@@ -311,7 +311,7 @@
     }
 
     /* =========================
-       FULLSCREEN ALERT
+       FULLSCREEN ALERT (PRO)
        ========================= */
     .new-res-overlay{
       position: fixed; inset:0; z-index: 10000;
@@ -327,13 +327,14 @@
     }
 
     .new-res-card{
-      width: min(720px, 100%);
-      background: rgba(255,255,255,0.95);
+      width: min(760px, 100%);
+      background: rgba(255,255,255,0.97);
       border-radius: 28px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.35);
-      padding: 30px 24px;
+      padding: 32px 26px;
       text-align:center;
       animation: popIn .2s ease;
+      border: 3px solid rgba(255,106,0,0.15);
     }
     @keyframes popIn{
       from{ transform: scale(.96); opacity:0; }
@@ -346,30 +347,53 @@
       letter-spacing: 1px;
       color: #FF6A00;
       text-shadow: 0 3px 0 rgba(0,0,0,0.05);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
     }
+    .new-res-title i{
+      color:#FF6A00;
+      font-size: 1.9rem;
+    }
+
     .new-res-name{
       margin-top: 8px;
       font-size: clamp(1.6rem, 4vw, 2.4rem);
       font-weight: 900;
       color: #22110A;
     }
+
     .new-res-meta{
-      margin-top: 10px;
+      margin-top: 12px;
       font-size: 1.05rem;
       font-weight: 700;
       color: #4a2b15;
-      display:flex; flex-wrap:wrap; gap:8px; justify-content:center;
+      display:flex; flex-wrap:wrap; gap:10px; justify-content:center;
     }
+
     .new-res-meta .pillish{
-      background:#fff6ec;
-      padding:6px 10px;
-      border-radius:999px;
-      font-weight:800;
+      background: #fff;
+      border: 2px solid rgba(255,106,0,0.15);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+      color: #2B1300;
     }
+    .new-res-meta .pillish i{
+      color: #FF6A00;
+      font-size: 1rem;
+    }
+
     .new-res-accept{
-      margin-top: 16px;
+      margin-top: 18px;
       font-size: 1.1rem;
-      padding: 14px 22px;
+      padding: 14px 24px;
+      letter-spacing:.2px;
     }
   </style>
 </head>
@@ -597,7 +621,10 @@
   <!-- FULLSCREEN ALERT: NOWA REZERWACJA -->
   <div id="newResOverlay" class="new-res-overlay" aria-hidden="true">
     <div class="new-res-card">
-      <div class="new-res-title">NOWA REZERWACJA</div>
+      <div class="new-res-title">
+        <i class="fa-solid fa-bell"></i>
+        NOWA REZERWACJA
+      </div>
       <div class="new-res-name" id="newResName">—</div>
       <div class="new-res-meta" id="newResMeta">—</div>
 
@@ -818,9 +845,9 @@
     document.getElementById("enableSoundBtn").addEventListener("click", enableSound);
 
     // =========================
-    //  Bell sound (5s)
+    //  Bell sound (10s — 2x longer)
     // =========================
-    function playBellFor5s(){
+    function playBellFor10s(){
       if(!soundEnabled) return;
 
       try{
@@ -830,12 +857,14 @@
         }
 
         const now = audioCtx.currentTime;
+        const duration = 10;
         const freqs = [880, 1320, 1760];
+
         const gain = audioCtx.createGain();
         gain.gain.setValueAtTime(0.001, now);
         gain.gain.exponentialRampToValueAtTime(0.9, now + 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.2, now + 2.5);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 5);
+        gain.gain.exponentialRampToValueAtTime(0.25, now + duration * 0.6);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
         gain.connect(audioCtx.destination);
 
         freqs.forEach(f=>{
@@ -844,7 +873,7 @@
           o.frequency.setValueAtTime(f, now);
           o.connect(gain);
           o.start(now);
-          o.stop(now+5);
+          o.stop(now + duration);
         });
       }catch(e){
         console.warn("Audio failed", e);
@@ -899,14 +928,14 @@
 
     function formatOverlayMeta(r){
       const parts = [
-        r.date ? `📅 ${r.date}` : null,
-        r.time ? `⏰ ${r.time}` : null,
-        r.guests ? `👥 ${r.guests} os.` : null,
-        r.room ? `🚪 ${r.room}` : null,
-        r.phone ? `☎️ ${r.phone}` : null
+        r.date ? `<span class="pillish"><i class="fa-regular fa-calendar"></i> ${r.date}</span>` : "",
+        r.time ? `<span class="pillish"><i class="fa-regular fa-clock"></i> ${r.time}</span>` : "",
+        r.guests ? `<span class="pillish"><i class="fa-solid fa-user-group"></i> ${r.guests} os.</span>` : "",
+        r.room ? `<span class="pillish"><i class="fa-solid fa-door-open"></i> ${r.room}</span>` : "",
+        r.phone ? `<span class="pillish"><i class="fa-solid fa-phone"></i> ${r.phone}</span>` : ""
       ].filter(Boolean);
 
-      return parts.map(p => `<span class="pillish">${p}</span>`).join("");
+      return parts.join("");
     }
 
     function showNewReservationOverlay(r){
@@ -1093,7 +1122,7 @@
 
         if(notifyNew && newOnes.length){
           newOnes.forEach(r=>{
-            playBellFor5s();
+            playBellFor10s();
             showToast("Nowa rezerwacja 🔔");
             fireNotification(r);
             showNewReservationOverlay(r);
@@ -1106,7 +1135,7 @@
       }
     }
 
-    // POPRAWIONE: overlay pokazuje się zawsze na evencie socket
+    // overlay zawsze na evencie socket
     function onNewReservation(r){
       const nr = normalizeRes(r);
 
@@ -1116,7 +1145,7 @@
         render();
       }
 
-      playBellFor5s();
+      playBellFor10s();
       showToast("Nowa rezerwacja 🔔");
       fireNotification(nr);
       showNewReservationOverlay(nr);

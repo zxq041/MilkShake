@@ -43,6 +43,7 @@
 
     /* elevated-only pre-login hide */
     .owner-only { display: none; }
+    .milk-only { display: none; }
 
     /* Header */
     .header {
@@ -130,6 +131,12 @@
       padding: 18px;
     }
     .sidebar .section-title {
+      font-size: 1.2rem; font-weight: 900;
+      margin-bottom: 12px;
+      background: var(--gradient-bg);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .section-title {
       font-size: 1.2rem; font-weight: 900;
       margin-bottom: 12px;
       background: var(--gradient-bg);
@@ -312,7 +319,7 @@
     }
 
     /* =========================
-       FULLSCREEN ALERT (PRO)
+       FULLSCREEN ALERT (NOWA REZ.)
        ========================= */
     .new-res-overlay{
       position: fixed; inset:0; z-index: 10000;
@@ -393,16 +400,27 @@
 
     /* ===== Swipe -> pokaż "Edytuj" ===== */
     .reservation-actions .edit-btn { display:none; }
-
     .reservation-item.swiped .mark-read-btn{ display:none; }
     .reservation-item.swiped .edit-btn{ display:inline-flex; }
-
     .reservation-item.swiped{
       border-left-color: #11182710;
       box-shadow: 0 12px 30px rgba(0,0,0,0.14);
       transform: translateX(-6px);
       transition: transform .15s ease;
     }
+
+    /* ===== Aplikacja Milk ===== */
+    .milk-panel{ display:none; }
+    .milk-panel.active{ display:block; }
+    .milk-subtabs .tab-btn{ font-size:0.95rem; }
+
+    .milk-list-item{
+      border-radius: 16px; padding: 14px;
+      background:#fff; box-shadow: var(--shadow);
+      display:grid; grid-template-columns: 1fr auto; gap: 10px;
+    }
+    .milk-list-actions{ display:flex; gap:8px; align-items:center; }
+    .milk-muted{ color: var(--muted); font-weight:700; }
   </style>
 </head>
 
@@ -477,6 +495,11 @@
         <!-- owner/manager only -->
         <button class="tab-btn owner-only" data-tab="tab-staff" id="staffTabBtn">
           <i class="fa-solid fa-users"></i> Pracownicy
+        </button>
+
+        <!-- milk app only for pin 0051 -->
+        <button class="tab-btn milk-only" data-tab="tab-milk-app" id="milkTabBtn" style="display:none;">
+          <i class="fa-solid fa-mobile-screen"></i> Aplikacja Milk
         </button>
       </div>
     </div>
@@ -622,9 +645,176 @@
           </div>
         </div>
 
+        <!-- TAB: APLIKACJA MILK (tylko pin 0051) -->
+        <div class="tab-panel milk-only" id="tab-milk-app" style="display:none;">
+          <div class="content-header">
+            <h2>Aplikacja Milk</h2>
+            <div class="small" id="milkStatus">Status: —</div>
+          </div>
+
+          <!-- Subtabs -->
+          <div class="tabs milk-subtabs" style="margin-top:0">
+            <button class="tab-btn active" data-milk-tab="milk-home">
+              <i class="fa-solid fa-house"></i> Strona główna
+            </button>
+            <button class="tab-btn" data-milk-tab="milk-points">
+              <i class="fa-solid fa-coins"></i> Punkty (Milkosy)
+            </button>
+            <button class="tab-btn" data-milk-tab="milk-rewards">
+              <i class="fa-solid fa-gift"></i> Nagrody
+            </button>
+            <button class="tab-btn" data-milk-tab="milk-users">
+              <i class="fa-solid fa-users"></i> Użytkownicy
+            </button>
+            <button class="tab-btn" data-milk-tab="milk-pickup">
+              <i class="fa-solid fa-ticket"></i> Odbiór nagrody
+            </button>
+          </div>
+
+          <!-- Subpanel: HOME -->
+          <div class="milk-panel active" id="milk-home">
+            <div class="grid" style="grid-template-columns: 1fr 1fr; padding-top:0;">
+              <div class="card">
+                <div class="section-title">Statystyki aplikacji</div>
+                <div class="stat"><div>Użytkownicy zarejestrowani</div><div id="milkStatUsers">0</div></div>
+                <div class="stat"><div>Łącznie Milkosów</div><div id="milkStatPoints">0</div></div>
+                <div class="stat"><div>Wymiany nagród</div><div id="milkStatRedeems">0</div></div>
+                <button class="btn btn-primary" id="milkRefreshStats" style="margin-top:8px;">
+                  <i class="fa-solid fa-rotate"></i> Odśwież statystyki
+                </button>
+              </div>
+
+              <div class="card">
+                <div class="section-title">Szybkie akcje</div>
+                <p class="small" style="line-height:1.6; margin-bottom:10px;">
+                  Milkosy: 10 zł = 1 Milkos.  
+                  Punkty dodajesz po identyfikatorze użytkownika.
+                </p>
+                <button class="btn btn-ghost" id="milkOpenAddPoints">
+                  <i class="fa-solid fa-plus"></i> Dodaj Milkosy
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subpanel: POINTS -->
+          <div class="milk-panel" id="milk-points">
+            <div class="card" style="display:grid; gap:10px;">
+              <div class="section-title">Dodaj Milkosy</div>
+
+              <form id="milkAddPointsForm" style="display:grid; gap:10px;">
+                <label>
+                  <div class="small" style="margin-bottom:4px;">Identyfikator użytkownika</div>
+                  <input required name="userId" class="input" placeholder="Np. 2f8a-91ab...">
+                </label>
+
+                <label>
+                  <div class="small" style="margin-bottom:4px;">Kwota wydana (zł)</div>
+                  <input required name="amount" class="input" type="number" min="0" step="0.01" placeholder="Np. 50">
+                </label>
+
+                <div class="small" id="milkPointsPreview">Milkosy do dodania: —</div>
+
+                <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-coins"></i> Dodaj punkty
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Subpanel: REWARDS -->
+          <div class="milk-panel" id="milk-rewards">
+            <div class="grid" style="grid-template-columns: 360px 1fr; padding-top:0;">
+              <div class="card">
+                <div class="section-title">Dodaj nagrodę</div>
+
+                <form id="milkAddRewardForm" style="display:grid; gap:10px;">
+                  <label>
+                    <div class="small" style="margin-bottom:4px;">Nazwa nagrody</div>
+                    <input required name="title" class="input" placeholder="Np. Voucher 100 zł">
+                  </label>
+
+                  <label>
+                    <div class="small" style="margin-bottom:4px;">Koszt (Milkosy)</div>
+                    <input required name="cost" class="input" type="number" min="1" step="1" placeholder="Np. 10">
+                  </label>
+
+                  <label>
+                    <div class="small" style="margin-bottom:4px;">Opis (opcjonalnie)</div>
+                    <textarea name="desc" class="input" style="min-height:80px; resize:vertical;" placeholder="Opis nagrody"></textarea>
+                  </label>
+
+                  <button class="btn btn-primary" type="submit">
+                    <i class="fa-solid fa-gift"></i> Dodaj nagrodę
+                  </button>
+                  <div class="small" id="milkRewardHint"></div>
+                </form>
+              </div>
+
+              <div class="card">
+                <div class="section-title">Lista nagród</div>
+                <div class="reservations" id="milkRewardsList">
+                  <div class="empty">Ładuję nagrody...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subpanel: USERS -->
+          <div class="milk-panel" id="milk-users">
+            <div class="card">
+              <div class="section-title">Użytkownicy</div>
+              <div class="small" style="margin-bottom:8px;">Kliknij użytkownika, aby zobaczyć ostatnie wymiany nagród.</div>
+              <div class="reservations" id="milkUsersList">
+                <div class="empty">Ładuję użytkowników...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Subpanel: PICKUP -->
+          <div class="milk-panel" id="milk-pickup">
+            <div class="card" style="display:grid; gap:10px;">
+              <div class="section-title">Odbiór nagrody po kodzie</div>
+
+              <form id="milkPickupForm" style="display:grid; gap:10px;">
+                <label>
+                  <div class="small" style="margin-bottom:4px;">Kod nagrody</div>
+                  <input required name="code" class="input" placeholder="Np. ABCD-100">
+                </label>
+
+                <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
+                  <button class="btn btn-primary" type="submit">
+                    <i class="fa-solid fa-check"></i> Sprawdź / Odbierz
+                  </button>
+                </div>
+
+                <div class="small" id="milkPickupResult"></div>
+              </form>
+            </div>
+          </div>
+        </div>
+
       </section>
     </div>
   </main>
+
+  <!-- MODAL: szczegóły użytkownika -->
+  <div id="milkUserModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal-card card">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <h3 style="font-size:1.4rem; font-weight:900;">Użytkownik</h3>
+        <button class="btn btn-ghost" id="milkCloseUserModal" aria-label="Zamknij">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="milkUserModalBody" style="margin-top:10px; display:grid; gap:10px;">
+        <!-- wypełnia JS -->
+      </div>
+    </div>
+  </div>
 
   <!-- FULLSCREEN ALERT: NOWA REZERWACJA -->
   <div id="newResOverlay" class="new-res-overlay" aria-hidden="true">
@@ -725,12 +915,12 @@
 
         <label>
           <div class="small" style="margin-bottom:4px;">Imię i nazwisko</div>
-          <input required name="name" class="input" placeholder="Np. Jan Kowalski">
+          <input required name="name" class="input">
         </label>
 
         <label>
           <div class="small" style="margin-bottom:4px;">Telefon</div>
-          <input required name="phone" class="input" placeholder="Np. 500600700">
+          <input required name="phone" class="input">
         </label>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
@@ -748,18 +938,18 @@
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
           <label>
             <div class="small" style="margin-bottom:4px;">Liczba osób</div>
-            <input required name="guests" type="number" min="1" class="input" placeholder="Np. 4">
+            <input required name="guests" type="number" min="1" class="input">
           </label>
 
           <label>
             <div class="small" style="margin-bottom:4px;">Sala / strefa</div>
-            <input required name="room" class="input" placeholder="Np. Sala główna / VIP">
+            <input required name="room" class="input">
           </label>
         </div>
 
         <label>
           <div class="small" style="margin-bottom:4px;">Uwagi (opcjonalnie)</div>
-          <textarea name="notes" class="input" style="min-height:80px; resize:vertical;" placeholder="Np. tort urodzinowy"></textarea>
+          <textarea name="notes" class="input" style="min-height:80px; resize:vertical;"></textarea>
         </label>
 
         <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:6px;">
@@ -780,7 +970,7 @@
     // =========================
     //  Tabs
     // =========================
-    const tabBtns = document.querySelectorAll(".tab-btn");
+    const tabBtns = document.querySelectorAll(".tab-btn[data-tab]");
     const tabPanels = document.querySelectorAll(".tab-panel");
     tabBtns.forEach(btn=>{
       btn.addEventListener("click", ()=>{
@@ -834,6 +1024,17 @@
         staffTabBtn && (staffTabBtn.style.display = "none");
         staffPanel && (staffPanel.style.display = "none");
         document.querySelector('[data-tab="tab-res-new"]')?.click();
+      }
+
+      // ===== Milk App access: tylko PIN 0051 =====
+      const milkAccess = String(currentEmployee?.pin || "") === "0051";
+      document.querySelectorAll(".milk-only").forEach(el=>{
+        el.style.display = milkAccess ? "" : "none";
+      });
+      if(!milkAccess){
+        if(document.getElementById("tab-milk-app")?.classList.contains("active")){
+          document.querySelector('[data-tab="tab-res-new"]')?.click();
+        }
       }
     }
 
@@ -917,7 +1118,7 @@
     document.getElementById("enableSoundBtn").addEventListener("click", enableSound);
 
     // =========================
-    //  Bell sound (10s — 2x longer)
+    //  Bell sound (10s)
     // =========================
     function playBellFor10s(){
       if(!soundEnabled) return;
@@ -1006,13 +1207,11 @@
         r.room ? `<span class="pillish"><i class="fa-solid fa-door-open"></i> ${r.room}</span>` : "",
         r.phone ? `<span class="pillish"><i class="fa-solid fa-phone"></i> ${r.phone}</span>` : ""
       ].filter(Boolean);
-
       return parts.join("");
     }
 
     function showNewReservationOverlay(r){
       overlayQueue.push(r);
-
       if(overlayActive) return;
       overlayActive = true;
 
@@ -1033,7 +1232,6 @@
     function hideNewReservationOverlay(){
       newResOverlay.classList.remove("show");
       newResOverlay.setAttribute("aria-hidden","true");
-
       overlayActive = false;
 
       if(overlayQueue.length){
@@ -1242,7 +1440,6 @@
 
       bindReservationActions(newListEl);
       bindReservationActions(allListEl);
-
       lastSync.textContent = "Ostatnia synchronizacja: " + new Date().toLocaleString();
     }
 
@@ -1279,13 +1476,11 @@
 
     function onNewReservation(r){
       const nr = normalizeRes(r);
-
       const exists = reservations.some(x=>x.id === nr.id);
       if(!exists){
         reservations.push(nr);
         render();
       }
-
       playBellFor10s();
       showToast("Nowa rezerwacja 🔔");
       fireNotification(nr);
@@ -1637,8 +1832,310 @@
       }
     });
 
-    // na starcie: ukryj elevated-only
+    // na starcie: ukryj elevated-only/milk-only
     applyRoleVisibility();
+
+    // =========================
+    //  MILK APP (pin 0051 only)
+    // =========================
+    const milkStatus = document.getElementById("milkStatus");
+
+    // milk subtabs switch
+    const milkSubtabBtns = document.querySelectorAll("[data-milk-tab]");
+    const milkPanels = document.querySelectorAll(".milk-panel");
+    milkSubtabBtns.forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        milkSubtabBtns.forEach(b=>b.classList.remove("active"));
+        milkPanels.forEach(p=>p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.milkTab).classList.add("active");
+      });
+    });
+
+    async function milkFetch(url, opts={}){
+      const res = await fetch(url, { cache:"no-store", ...opts });
+      const data = await res.json().catch(()=> ({}));
+      if(!res.ok) throw new Error(data?.message || res.status);
+      return data;
+    }
+
+    // ---------- STATS ----------
+    const milkStatUsers = document.getElementById("milkStatUsers");
+    const milkStatPoints = document.getElementById("milkStatPoints");
+    const milkStatRedeems = document.getElementById("milkStatRedeems");
+
+    async function milkLoadStats(){
+      try{
+        milkStatus.textContent = "Status: ładowanie...";
+        const stats = await milkFetch("/api/milk/stats");
+        milkStatUsers.textContent = stats.users ?? 0;
+        milkStatPoints.textContent = stats.pointsTotal ?? 0;
+        milkStatRedeems.textContent = stats.redeems ?? 0;
+        milkStatus.textContent = "Status: OK";
+      }catch(e){
+        console.error(e);
+        milkStatus.textContent = "Status: błąd stats";
+      }
+    }
+    document.getElementById("milkRefreshStats")?.addEventListener("click", milkLoadStats);
+
+    // ---------- ADD POINTS (10 zł = 1 Milkos) ----------
+    const milkAddPointsForm = document.getElementById("milkAddPointsForm");
+    const milkOpenAddPoints = document.getElementById("milkOpenAddPoints");
+    const milkPointsPreview = document.getElementById("milkPointsPreview");
+
+    milkOpenAddPoints?.addEventListener("click", ()=>{
+      document.querySelector('[data-milk-tab="milk-points"]')?.click();
+      milkAddPointsForm?.elements.userId?.focus();
+    });
+
+    milkAddPointsForm?.elements.amount?.addEventListener("input", ()=>{
+      const amount = parseFloat(milkAddPointsForm.elements.amount.value || "0");
+      const milkosy = Math.floor(amount / 10);
+      milkPointsPreview.textContent = `Milkosy do dodania: ${milkosy}`;
+    });
+
+    milkAddPointsForm?.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const fd = new FormData(milkAddPointsForm);
+      const userId = String(fd.get("userId")||"").trim();
+      const amount = parseFloat(fd.get("amount")||"0");
+      const milkosy = Math.floor(amount / 10);
+
+      if(!milkosy){
+        showToast("Kwota za mała na Milkosy", true);
+        return;
+      }
+
+      try{
+        await milkFetch("/api/milk/points/add", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ userId, amount, points: milkosy })
+        });
+        showToast(`Dodano ${milkosy} Milkosów ✅`);
+        milkAddPointsForm.reset();
+        milkPointsPreview.textContent = "Milkosy do dodania: —";
+        milkLoadStats();
+        milkLoadUsers();
+      }catch(err){
+        showToast("Nie udało się dodać Milkosów", true);
+      }
+    });
+
+    // ---------- REWARDS ----------
+    const milkAddRewardForm = document.getElementById("milkAddRewardForm");
+    const milkRewardsList = document.getElementById("milkRewardsList");
+    const milkRewardHint = document.getElementById("milkRewardHint");
+
+    function rewardCardHTML(r){
+      return `
+        <article class="milk-list-item" data-id="${r.id || r._id}">
+          <div>
+            <div style="font-weight:900; font-size:1.05rem;">${r.title}</div>
+            <div class="reservation-meta" style="margin-top:6px;">
+              <span class="tag"><i class="fa-solid fa-coins"></i> ${r.cost} Milkosów</span>
+              ${r.desc ? `<span class="tag"><i class="fa-regular fa-note-sticky"></i> ${r.desc}</span>` : ""}
+            </div>
+          </div>
+          <div class="milk-list-actions">
+            <button class="btn btn-danger milk-remove-reward">
+              <i class="fa-solid fa-trash"></i> Usuń
+            </button>
+          </div>
+        </article>
+      `;
+    }
+
+    async function milkLoadRewards(){
+      try{
+        milkRewardsList.innerHTML = `<div class="empty">Ładuję nagrody...</div>`;
+        const rewards = await milkFetch("/api/milk/rewards");
+        if(!rewards.length){
+          milkRewardsList.innerHTML = `<div class="empty">Brak nagród</div>`;
+          return;
+        }
+        milkRewardsList.innerHTML = rewards.map(rewardCardHTML).join("");
+
+        milkRewardsList.querySelectorAll(".milk-remove-reward").forEach(btn=>{
+          btn.addEventListener("click", async ()=>{
+            const card = btn.closest(".milk-list-item");
+            const id = card.dataset.id;
+            try{
+              await milkFetch(`/api/milk/rewards/${id}`, { method:"DELETE" });
+              showToast("Usunięto nagrodę ✅");
+              milkLoadRewards();
+            }catch(e){
+              showToast("Nie udało się usunąć nagrody", true);
+            }
+          });
+        });
+
+      }catch(e){
+        console.error(e);
+        milkRewardsList.innerHTML = `<div class="empty" style="color:#b00000">Błąd pobierania nagród</div>`;
+      }
+    }
+
+    milkAddRewardForm?.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      milkRewardHint.textContent = "";
+      const fd = new FormData(milkAddRewardForm);
+      const payload = {
+        title: String(fd.get("title")||"").trim(),
+        cost: parseInt(fd.get("cost")||"0",10),
+        desc: String(fd.get("desc")||"").trim()
+      };
+
+      try{
+        await milkFetch("/api/milk/rewards", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify(payload)
+        });
+        showToast("Dodano nagrodę ✅");
+        milkAddRewardForm.reset();
+        milkLoadRewards();
+      }catch(e){
+        milkRewardHint.textContent = "Błąd dodania nagrody.";
+        showToast("Nie udało się dodać nagrody", true);
+      }
+    });
+
+    // ---------- USERS + HISTORY ----------
+    const milkUsersList = document.getElementById("milkUsersList");
+    const milkUserModal = document.getElementById("milkUserModal");
+    const milkCloseUserModal = document.getElementById("milkCloseUserModal");
+    const milkUserModalBody = document.getElementById("milkUserModalBody");
+
+    function userRowHTML(u){
+      return `
+        <article class="milk-list-item milk-user-row" data-id="${u.id}">
+          <div>
+            <div style="font-weight:900;">${u.username || u.name || "Użytkownik"}</div>
+            <div class="reservation-meta" style="margin-top:6px;">
+              <span class="tag"><i class="fa-solid fa-id-card"></i> ID: ${u.id}</span>
+              <span class="tag"><i class="fa-solid fa-coins"></i> ${u.points || 0} Milkosów</span>
+            </div>
+          </div>
+          <div class="milk-muted">Podgląd →</div>
+        </article>
+      `;
+    }
+
+    async function milkLoadUsers(){
+      try{
+        milkUsersList.innerHTML = `<div class="empty">Ładuję użytkowników...</div>`;
+        const users = await milkFetch("/api/milk/users");
+        if(!users.length){
+          milkUsersList.innerHTML = `<div class="empty">Brak użytkowników</div>`;
+          return;
+        }
+
+        milkUsersList.innerHTML = users.map(userRowHTML).join("");
+
+        milkUsersList.querySelectorAll(".milk-user-row").forEach(row=>{
+          row.addEventListener("click", async ()=>{
+            const id = row.dataset.id;
+            try{
+              const detail = await milkFetch(`/api/milk/users/${id}`);
+              openMilkUserModal(detail);
+            }catch(e){
+              showToast("Nie udało się pobrać użytkownika", true);
+            }
+          });
+        });
+
+      }catch(e){
+        milkUsersList.innerHTML = `<div class="empty" style="color:#b00000">Błąd pobierania użytkowników</div>`;
+      }
+    }
+
+    function openMilkUserModal(detail){
+      const u = detail.user || detail;
+      const history = detail.history || [];
+
+      milkUserModalBody.innerHTML = `
+        <div class="stat">
+          <div>${u.username || u.name || "Użytkownik"}<br><small>ID: ${u.id}</small></div>
+          <div>${u.points || 0} Milkosów</div>
+        </div>
+
+        <div class="section-title" style="font-size:1.05rem;">Ostatnie wymiany nagród</div>
+        ${
+          history.length
+            ? history.map(h=>`
+              <div class="reservation-item">
+                <div>
+                  <div style="font-weight:900;">${h.rewardTitle || "Nagroda"}</div>
+                  <div class="reservation-meta" style="margin-top:6px;">
+                    <span class="tag"><i class="fa-regular fa-clock"></i> ${new Date(h.createdAt||Date.now()).toLocaleString()}</span>
+                    <span class="tag"><i class="fa-solid fa-coins"></i> -${h.cost || 0} Milkosów</span>
+                    ${h.code ? `<span class="tag"><i class="fa-solid fa-ticket"></i> Kod: ${h.code}</span>` : ""}
+                  </div>
+                </div>
+              </div>
+            `).join("")
+            : `<div class="empty">Brak wymian</div>`
+        }
+      `;
+
+      milkUserModal.classList.add("show");
+      milkUserModal.setAttribute("aria-hidden","false");
+    }
+
+    function closeMilkUserModal(){
+      milkUserModal.classList.remove("show");
+      milkUserModal.setAttribute("aria-hidden","true");
+    }
+    milkCloseUserModal?.addEventListener("click", closeMilkUserModal);
+    milkUserModal?.addEventListener("click", (e)=>{
+      if(e.target === milkUserModal) closeMilkUserModal();
+    });
+
+    // ---------- PICKUP BY CODE ----------
+    const milkPickupForm = document.getElementById("milkPickupForm");
+    const milkPickupResult = document.getElementById("milkPickupResult");
+
+    milkPickupForm?.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      milkPickupResult.textContent = "Sprawdzam kod...";
+      const code = String(new FormData(milkPickupForm).get("code")||"").trim();
+
+      try{
+        const out = await milkFetch("/api/milk/redeems/verify", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ code })
+        });
+
+        milkPickupResult.innerHTML = `
+          <div class="stat">
+            <div>Nagroda</div>
+            <div>${out.rewardTitle || "—"}</div>
+          </div>
+          <div class="small">Użytkownik: ${out.userId || "—"}</div>
+          <div class="small">Status: ${out.used ? "JUŻ ODEBRANA" : "DO ODBIORU"}</div>
+        `;
+
+        if(!out.used){
+          showToast("Kod poprawny ✅ Można wydać nagrodę");
+        }else{
+          showToast("Kod już wykorzystany", true);
+        }
+
+      }catch(err){
+        milkPickupResult.textContent = "Niepoprawny kod lub błąd serwera.";
+        showToast("Niepoprawny kod", true);
+      }
+    });
+
+    // ---------- init when tab opened ----------
+    document.getElementById("milkTabBtn")?.addEventListener("click", ()=>{
+      milkLoadStats();
+      milkLoadRewards();
+      milkLoadUsers();
+    });
   </script>
 </body>
 </html>

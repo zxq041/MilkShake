@@ -911,9 +911,10 @@
 
     function showNewReservationOverlay(r){
       overlayQueue.push(r);
-      if(overlayActive) return;
 
+      if(overlayActive) return;
       overlayActive = true;
+
       const next = overlayQueue.shift();
       if(!next){
         overlayActive = false;
@@ -925,7 +926,6 @@
 
       newResOverlay.classList.add("show");
       newResOverlay.setAttribute("aria-hidden","false");
-
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
@@ -934,13 +934,15 @@
       newResOverlay.setAttribute("aria-hidden","true");
 
       overlayActive = false;
+
+      // pokaż następny z kolejki (naprawione)
       if(overlayQueue.length){
-        showNewReservationOverlay(overlayQueue.shift());
+        showNewReservationOverlay(overlayQueue[0]);
+        overlayQueue.shift();
       }
     }
 
     acceptNewResBtn?.addEventListener("click", hideNewReservationOverlay);
-
     newResOverlay?.addEventListener("click", (e)=>{
       if(e.target === newResOverlay) hideNewReservationOverlay();
     });
@@ -1094,8 +1096,6 @@
             playBellFor5s();
             showToast("Nowa rezerwacja 🔔");
             fireNotification(r);
-
-            // NEW: fullscreen overlay
             showNewReservationOverlay(r);
           });
         }
@@ -1106,19 +1106,20 @@
       }
     }
 
+    // POPRAWIONE: overlay pokazuje się zawsze na evencie socket
     function onNewReservation(r){
       const nr = normalizeRes(r);
-      if(reservations.some(x=>x.id===nr.id)) return;
 
-      reservations.push(nr);
+      const exists = reservations.some(x=>x.id === nr.id);
+      if(!exists){
+        reservations.push(nr);
+        render();
+      }
+
       playBellFor5s();
       showToast("Nowa rezerwacja 🔔");
       fireNotification(nr);
-
-      // NEW: fullscreen overlay
       showNewReservationOverlay(nr);
-
-      render();
     }
 
     document.getElementById("refreshBtn").addEventListener("click", ()=>fetchReservationsAndMerge());

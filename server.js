@@ -24,11 +24,12 @@ if (!MONGO_URL) {
   console.error("❌ Brak MONGO_URL w zmiennych Railway!");
 }
 
-mongoose.connect(MONGO_URL, {
-  dbName: "milkshakebar",
-})
-.then(() => console.log("✅ MongoDB connected"))
-.catch(err => console.error("MongoDB connect error:", err));
+mongoose
+  .connect(MONGO_URL, {
+    dbName: "milkshakebar",
+  })
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.error("MongoDB connect error:", err));
 
 // ==========================
 //  MODELS
@@ -38,7 +39,7 @@ const ProductSchema = new mongoose.Schema({
   desc: { type: String, default: "" },
   price: { type: String, default: "" },
   image: { type: String, default: "" },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
 });
 
 const ReservationSchema = new mongoose.Schema({
@@ -49,12 +50,12 @@ const ReservationSchema = new mongoose.Schema({
   guests: { type: String, required: true },
   room: { type: String, required: true },
   notes: { type: String, default: "" },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
 });
 
 const HappySchema = new mongoose.Schema({
   text: { type: String, default: "" },
-  updatedAt: { type: Date, default: Date.now }
+  updatedAt: { type: Date, default: Date.now },
 });
 
 // NOWE: Pracownicy
@@ -62,7 +63,7 @@ const EmployeeSchema = new mongoose.Schema({
   name: { type: String, required: true },
   pin: { type: String, required: true, unique: true }, // 4 cyfry
   role: { type: String, enum: ["manager", "employee"], default: "employee" },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
 });
 
 const Product = mongoose.model("Product", ProductSchema);
@@ -88,13 +89,14 @@ const storage = multer.diskStorage({
     const safeName =
       Date.now() + "-" + file.originalname.replace(/[^\w.-]/g, "_");
     cb(null, safeName);
-  }
+  },
 });
 const upload = multer({ storage });
 
 app.post("/api/upload", upload.single("image"), (req, res) => {
-  if (!req.file) return res.status(400).json({ ok:false, message:"Brak pliku" });
-  res.json({ ok:true, url:`/uploads/${req.file.filename}` });
+  if (!req.file)
+    return res.status(400).json({ ok: false, message: "Brak pliku" });
+  res.json({ ok: true, url: `/uploads/${req.file.filename}` });
 });
 
 // ==========================
@@ -110,31 +112,34 @@ io.on("connection", (socket) => {
 app.post("/api/login", async (req, res) => {
   try {
     const { pin } = req.body || {};
-    const fixedPin = String(pin || "").replace(/\D/g,"").padStart(4,"0").slice(0,4);
+    const fixedPin = String(pin || "")
+      .replace(/\D/g, "")
+      .padStart(4, "0")
+      .slice(0, 4);
 
     // właściciel
     if (fixedPin === "0051") {
       return res.json({
         ok: true,
         role: "owner",
-        user: { name: "Właściciel", pin: fixedPin }
+        user: { name: "Właściciel", pin: fixedPin },
       });
     }
 
     // manager / employee
     const emp = await Employee.findOne({ pin: fixedPin });
     if (!emp) {
-      return res.status(401).json({ ok:false, message:"Niepoprawny kod" });
+      return res.status(401).json({ ok: false, message: "Niepoprawny kod" });
     }
 
     res.json({
-      ok:true,
+      ok: true,
       role: emp.role,
-      user: { id: emp._id, name: emp.name, pin: emp.pin }
+      user: { id: emp._id, name: emp.name, pin: emp.pin },
     });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok:false, message:"Błąd logowania" });
+    res.status(500).json({ ok: false, message: "Błąd logowania" });
   }
 });
 
@@ -149,7 +154,7 @@ app.get("/api/pracownicy", async (req, res) => {
     res.json(list);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok:false, message:"Błąd pobierania pracowników" });
+    res.status(500).json({ ok: false, message: "Błąd pobierania pracowników" });
   }
 });
 
@@ -158,36 +163,43 @@ app.post("/api/pracownicy", async (req, res) => {
   try {
     const { name, pin, role } = req.body || {};
 
-    const fixedPin = String(pin || "").replace(/\D/g,"").padStart(4,"0").slice(0,4);
-    const fixedRole = (role === "manager") ? "manager" : "employee";
+    const fixedPin = String(pin || "")
+      .replace(/\D/g, "")
+      .padStart(4, "0")
+      .slice(0, 4);
+    const fixedRole = role === "manager" ? "manager" : "employee";
 
     if (!name || fixedPin.length !== 4) {
-      return res.status(400).json({ ok:false, message:"Podaj imię i PIN (4 cyfry)" });
+      return res
+        .status(400)
+        .json({ ok: false, message: "Podaj imię i PIN (4 cyfry)" });
     }
 
     if (fixedPin === "0051") {
-      return res.status(400).json({ ok:false, message:"Ten PIN jest zarezerwowany dla właściciela" });
+      return res
+        .status(400)
+        .json({ ok: false, message: "Ten PIN jest zarezerwowany dla właściciela" });
     }
 
     const exists = await Employee.findOne({ pin: fixedPin });
     if (exists) {
-      return res.status(400).json({ ok:false, message:"Ten PIN już istnieje" });
+      return res.status(400).json({ ok: false, message: "Ten PIN już istnieje" });
     }
 
     const emp = await Employee.create({
       name: String(name).trim(),
       pin: fixedPin,
-      role: fixedRole
+      role: fixedRole,
     });
 
-    res.json({ ok:true, employee: emp });
+    res.json({ ok: true, employee: emp });
   } catch (e) {
     console.error(e);
     // jeśli unikalność PIN wywaliła w Mongo
     if (String(e).includes("E11000")) {
-      return res.status(400).json({ ok:false, message:"Ten PIN już istnieje" });
+      return res.status(400).json({ ok: false, message: "Ten PIN już istnieje" });
     }
-    res.status(500).json({ ok:false, message:"Błąd dodawania pracownika" });
+    res.status(500).json({ ok: false, message: "Błąd dodawania pracownika" });
   }
 });
 
@@ -195,10 +207,10 @@ app.post("/api/pracownicy", async (req, res) => {
 app.delete("/api/pracownicy/:id", async (req, res) => {
   try {
     await Employee.findByIdAndDelete(req.params.id);
-    res.json({ ok:true });
+    res.json({ ok: true });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok:false, message:"Błąd usuwania pracownika" });
+    res.status(500).json({ ok: false, message: "Błąd usuwania pracownika" });
   }
 });
 
@@ -214,11 +226,11 @@ app.get("/api/data", async (req, res) => {
     res.json({
       products,
       reservations,
-      happy: happyDoc?.text || ""
+      happy: happyDoc?.text || "",
     });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok:false, message:"Błąd /api/data" });
+    res.status(500).json({ ok: false, message: "Błąd /api/data" });
   }
 });
 
@@ -237,28 +249,29 @@ app.post("/api/produkty", async (req, res) => {
       title: p.title || p.name || "Produkt",
       desc: p.desc || p.description || "",
       price: p.price ?? "",
-      image: p.image || ""
+      image: p.image || "",
     });
 
     io.emit("products-updated", await Product.find().sort({ createdAt: -1 }));
-    res.json({ ok:true, product });
+    res.json({ ok: true, product });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok:false, message:"Błąd dodawania produktu" });
+    res.status(500).json({ ok: false, message: "Błąd dodawania produktu" });
   }
 });
 
 app.put("/api/produkty/:id", async (req, res) => {
   try {
     const id = req.params.id;
-    const updated = await Product.findByIdAndUpdate(id, req.body, { new:true });
-    if (!updated) return res.status(404).json({ ok:false, message:"Nie znaleziono produktu" });
+    const updated = await Product.findByIdAndUpdate(id, req.body, { new: true });
+    if (!updated)
+      return res.status(404).json({ ok: false, message: "Nie znaleziono produktu" });
 
     io.emit("products-updated", await Product.find().sort({ createdAt: -1 }));
-    res.json({ ok:true, product: updated });
+    res.json({ ok: true, product: updated });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok:false, message:"Błąd edycji produktu" });
+    res.status(500).json({ ok: false, message: "Błąd edycji produktu" });
   }
 });
 
@@ -268,10 +281,10 @@ app.delete("/api/produkty/:id", async (req, res) => {
     await Product.findByIdAndDelete(id);
 
     io.emit("products-updated", await Product.find().sort({ createdAt: -1 }));
-    res.json({ ok:true });
+    res.json({ ok: true });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok:false, message:"Błąd usuwania produktu" });
+    res.status(500).json({ ok: false, message: "Błąd usuwania produktu" });
   }
 });
 
@@ -287,7 +300,9 @@ app.post("/api/rezerwacje", async (req, res) => {
   try {
     const r = req.body || {};
     if (!r.name || !r.phone || !r.date || !r.time || !r.guests || !r.room) {
-      return res.status(400).json({ ok:false, message:"Uzupełnij wszystkie wymagane pola." });
+      return res
+        .status(400)
+        .json({ ok: false, message: "Uzupełnij wszystkie wymagane pola." });
     }
 
     const reservation = await Reservation.create({
@@ -297,25 +312,28 @@ app.post("/api/rezerwacje", async (req, res) => {
       time: String(r.time),
       guests: String(r.guests),
       room: String(r.room),
-      notes: String(r.notes || "")
+      notes: String(r.notes || ""),
     });
 
     io.emit("new-reservation", reservation);
-    res.json({ ok:true, reservation });
+    res.json({ ok: true, reservation });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok:false, message:"Błąd zapisu rezerwacji" });
+    res.status(500).json({ ok: false, message: "Błąd zapisu rezerwacji" });
   }
 });
 
 app.delete("/api/rezerwacje/:id", async (req, res) => {
   try {
     await Reservation.findByIdAndDelete(req.params.id);
-    io.emit("reservations-updated", await Reservation.find().sort({ createdAt: -1 }));
-    res.json({ ok:true });
+    io.emit(
+      "reservations-updated",
+      await Reservation.find().sort({ createdAt: -1 })
+    );
+    res.json({ ok: true });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok:false, message:"Błąd usuwania rezerwacji" });
+    res.status(500).json({ ok: false, message: "Błąd usuwania rezerwacji" });
   }
 });
 
@@ -330,28 +348,37 @@ app.post("/api/happy", async (req, res) => {
     await HappyBar.create({ text, updatedAt: new Date() });
 
     io.emit("happy-updated", text);
-    res.json({ ok:true, happy: text });
+    res.json({ ok: true, happy: text });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok:false, message:"Błąd zapisu paska informacji" });
+    res.status(500).json({ ok: false, message: "Błąd zapisu paska informacji" });
   }
 });
 
 // ==========================
-//  ROUTES
+//  ROUTES (CLEAN URLS)
 // ==========================
+
+// clean: /admin
 app.get("/admin", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
 });
 
+// clean: /menu
 app.get("/menu", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "menu.html"));
 });
+
+// przekierowania ze starych adresów *.html na clean URL (SEO)
+app.get("/menu.html", (req, res) => res.redirect(301, "/menu"));
+app.get("/admin.html", (req, res) => res.redirect(301, "/admin"));
+app.get("/index.html", (req, res) => res.redirect(301, "/"));
 
 app.get("/favicon.ico", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "favicon.ico"));
 });
 
+// SPA fallback
 app.get("*", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });

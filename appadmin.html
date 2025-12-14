@@ -1,0 +1,1344 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Milk — Panel (Aplikacja)</title>
+
+  <meta name="theme-color" content="#FF6A00" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <style>
+    :root{
+      --primary:#FF6A00;
+      --secondary:#FF9100;
+      --bg:#FFF6EC;
+      --text:#2B1300;
+      --white:#fff;
+      --grad:linear-gradient(135deg,var(--primary),var(--secondary));
+      --shadow:0 14px 40px rgba(0,0,0,.12);
+      --shadow-soft:0 8px 22px rgba(0,0,0,.08);
+      --radius:20px;
+      --glass:rgba(255,255,255,.88);
+      --glass-strong:rgba(255,255,255,.96);
+      --line:rgba(0,0,0,.06);
+      --success:#16A34A;
+      --danger:#DC2626;
+      --muted:rgba(43,19,0,.70);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:Poppins,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+
+    .app{
+      display:grid;
+      grid-template-columns: 300px 1fr;
+      min-height:100vh;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      position:sticky; top:0;
+      height:100vh;
+      padding: calc(12px + var(--safe-top)) 12px 12px;
+      border-right:1px solid var(--line);
+      background: rgba(255,246,236,.95);
+      backdrop-filter: blur(12px);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .toplink{
+      display:flex; align-items:center; gap:10px;
+      padding:12px;
+      border-radius:22px;
+      background: var(--glass);
+      border:1px solid rgba(255,255,255,.98);
+      box-shadow: var(--shadow-soft);
+      text-decoration:none;
+      color: var(--text);
+      font-weight:900;
+    }
+    .toplink i{
+      width:40px;height:40px;border-radius:16px;
+      display:grid;place-items:center;
+      background: rgba(0,0,0,.05);
+    }
+    .toplink span{ font-size:.95rem; }
+
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      padding:12px;
+      border-radius:22px;
+      background: var(--glass);
+      border:1px solid rgba(255,255,255,.98);
+      box-shadow: var(--shadow-soft);
+    }
+    .logo{
+      width:44px;height:44px;border-radius:16px;
+      background: var(--grad);
+      color:#fff;
+      display:grid;place-items:center;
+      box-shadow:0 10px 24px rgba(255,106,0,.30);
+      flex:0 0 auto;
+    }
+    .brand h1{
+      font-size:1.02rem;
+      line-height:1.1;
+      font-weight:900;
+    }
+    .brand p{
+      font-size:.82rem;
+      opacity:.75;
+      font-weight:800;
+      margin-top:2px;
+    }
+
+    .nav{
+      display:flex; flex-direction:column; gap:8px;
+      padding:10px;
+      border-radius:22px;
+      background: var(--glass);
+      border:1px solid rgba(255,255,255,.98);
+      box-shadow: var(--shadow-soft);
+    }
+    .navbtn{
+      border:none;
+      cursor:pointer;
+      width:100%;
+      text-align:left;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 12px;
+      border-radius:16px;
+      background: rgba(255,255,255,.92);
+      border:1px solid rgba(0,0,0,.05);
+      transition:.15s;
+      color: var(--text);
+      font-weight:900;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .navbtn .left{
+      display:flex; align-items:center; gap:10px;
+      min-width:0;
+    }
+    .navbtn i{
+      width:38px;height:38px;border-radius:14px;
+      display:grid;place-items:center;
+      background: rgba(0,0,0,.05);
+      flex:0 0 auto;
+    }
+    .navbtn .label{
+      display:grid;
+      min-width:0;
+    }
+    .navbtn .label span{
+      font-size:.95rem;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .navbtn .label small{
+      font-size:.78rem; opacity:.7; font-weight:800;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .navbtn.active{
+      background: var(--grad);
+      color:#fff;
+      border-color: rgba(255,255,255,.18);
+      box-shadow:0 12px 26px rgba(255,106,0,.26);
+    }
+    .navbtn.active i{ background: rgba(255,255,255,.20); color:#fff; }
+
+    /* Main */
+    .main{
+      padding: calc(14px + var(--safe-top)) 16px calc(16px + var(--safe-bottom));
+    }
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 16px;
+      border-radius:24px;
+      background: var(--glass);
+      border:1px solid rgba(255,255,255,.98);
+      box-shadow: var(--shadow);
+      margin-bottom:14px;
+    }
+    .topbar .title{
+      display:grid;
+      gap:2px;
+    }
+    .topbar .title h2{
+      font-size:1.25rem;
+      font-weight:900;
+      background: var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      line-height:1.15;
+    }
+    .topbar .title p{
+      font-size:.86rem;
+      opacity:.78;
+      font-weight:800;
+    }
+
+    .btn{
+      border:none; cursor:pointer;
+      font-weight:900;
+      border-radius:16px;
+      padding:12px 14px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      transition:.15s;
+      text-decoration:none;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      justify-content:center;
+      color: var(--text);
+      background: rgba(255,255,255,.92);
+      border:1px solid rgba(0,0,0,.06);
+    }
+    .btn-primary{
+      background: var(--grad);
+      color:#fff;
+      border-color: rgba(255,255,255,.18);
+      box-shadow:0 10px 24px rgba(255,106,0,.30);
+    }
+    .btn-danger{
+      background: linear-gradient(135deg, #ff3b3b, #ff7a3b);
+      color:#fff;
+      border-color: rgba(255,255,255,.18);
+      box-shadow:0 10px 24px rgba(255,59,59,.18);
+    }
+    .btn-small{ padding:9px 10px; border-radius:14px; font-size:.92rem; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:12px;
+    }
+    .card{
+      background: var(--glass);
+      border:1px solid rgba(255,255,255,.98);
+      border-radius:24px;
+      box-shadow: var(--shadow);
+      padding:16px;
+      overflow:hidden;
+    }
+    .muted{ opacity:.82; color: var(--muted); font-weight:700; line-height:1.55; }
+    .section-title{
+      font-size:1.05rem;
+      font-weight:900;
+      background: var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      margin-bottom:10px;
+    }
+
+    /* KPI */
+    .kpi{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .kpi .icon{
+      width:48px;height:48px;border-radius:18px;
+      display:grid;place-items:center;
+      background: var(--grad);
+      color:#fff;
+      box-shadow:0 10px 24px rgba(255,106,0,.22);
+      flex:0 0 auto;
+    }
+    .kpi .val{
+      font-size:1.55rem;
+      font-weight:900;
+      letter-spacing:.2px;
+      line-height:1;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings:"tnum";
+    }
+    .kpi .lab{
+      font-size:.86rem;
+      opacity:.78;
+      font-weight:800;
+      margin-top:4px;
+    }
+
+    /* Forms */
+    label{ font-size:.9rem; font-weight:900; margin:8px 0 6px; display:block; }
+    input,select,textarea{
+      width:100%;
+      padding:12px 14px;
+      border-radius:14px;
+      border:2px solid #eee;
+      background: var(--white);
+      font-size:1rem;
+      outline:none;
+      transition:.15s;
+      font-family:inherit;
+    }
+    input:focus,select:focus,textarea:focus{
+      border-color: var(--primary);
+      box-shadow:0 8px 20px rgba(255,106,0,.10);
+    }
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .row3{ display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; }
+
+    /* Table */
+    .table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius:18px;
+      border:1px solid rgba(0,0,0,.06);
+      background: rgba(255,255,255,.94);
+    }
+    .table th, .table td{
+      padding:12px 12px;
+      text-align:left;
+      font-size:.92rem;
+      border-bottom:1px solid rgba(0,0,0,.06);
+      vertical-align:top;
+    }
+    .table th{
+      font-weight:900;
+      background: rgba(255,106,0,.08);
+    }
+    .table tr:last-child td{ border-bottom:none; }
+    .right{ text-align:right; }
+    .mono{ font-variant-numeric: tabular-nums; font-feature-settings:"tnum"; }
+
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:.78rem;
+      background: rgba(0,0,0,.06);
+    }
+    .tag.ok{ background: rgba(22,163,74,.12); color: #0e6b2f; }
+    .tag.pending{ background: rgba(255,106,0,.12); color: #8a3d00; }
+    .tag.bad{ background: rgba(220,38,38,.12); color: #8a1010; }
+
+    /* Modal */
+    .overlay{
+      position:fixed; inset:0; z-index:90;
+      display:none;
+      background: rgba(0,0,0,.32);
+      backdrop-filter: blur(2px);
+      padding: calc(14px + var(--safe-top)) 14px calc(14px + var(--safe-bottom));
+    }
+    .overlay.show{ display:grid; place-items:center; }
+    .modal{
+      width:min(860px, 100%);
+      background: var(--glass-strong);
+      border-radius:26px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.98);
+      overflow:hidden;
+    }
+    .modal-head{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:14px 16px;
+      background: rgba(255,246,236,.94);
+      border-bottom:1px solid rgba(0,0,0,.06);
+    }
+    .modal-head h3{
+      font-size:1.1rem;
+      font-weight:900;
+      background: var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+    .modal-body{ padding:16px; display:grid; gap:12px; }
+    .close{
+      width:42px;height:42px;border-radius:14px;
+      border:none; cursor:pointer;
+      background:#fff;
+      box-shadow: var(--shadow-soft);
+      display:grid;place-items:center;
+    }
+
+    /* Toast */
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom: 18px;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--success);
+      color:#fff;
+      font-weight:900;
+      padding:10px 14px;
+      border-radius:999px;
+      box-shadow:0 14px 34px rgba(0,0,0,.25);
+      opacity:0;
+      pointer-events:none;
+      transition:.2s;
+      z-index:200;
+      display:flex; gap:8px; align-items:center;
+      max-width: calc(100% - 28px);
+    }
+    .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+    .toast.danger{ background: var(--danger); }
+
+    @media (max-width: 980px){
+      .app{ grid-template-columns: 1fr; }
+      .sidebar{
+        position:relative;
+        height:auto;
+        border-right:none;
+        border-bottom:1px solid var(--line);
+      }
+    }
+    @media (max-width: 560px){
+      .row{ grid-template-columns: 1fr; }
+      .row3{ grid-template-columns: 1fr; }
+      .topbar{ flex-direction:column; align-items:stretch; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <!-- Back to main admin -->
+      <a class="toplink" href="admin.html" aria-label="Panel Główny">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Panel Główny</span>
+      </a>
+
+      <div class="brand">
+        <div class="logo"><i class="fa-solid fa-crown"></i></div>
+        <div>
+          <h1>Milk — Panel</h1>
+          <p>zarządzanie aplikacją</p>
+        </div>
+      </div>
+
+      <div class="nav" id="nav">
+        <button class="navbtn active" data-tab="dashboard">
+          <div class="left">
+            <i class="fa-solid fa-chart-line"></i>
+            <div class="label">
+              <span>Strona główna</span>
+              <small>Statystyki</small>
+            </div>
+          </div>
+        </button>
+
+        <button class="navbtn" data-tab="addpoints">
+          <div class="left">
+            <i class="fa-solid fa-circle-plus"></i>
+            <div class="label">
+              <span>Dodaj Punkty</span>
+              <small>Milk ID + kwota</small>
+            </div>
+          </div>
+        </button>
+
+        <button class="navbtn" data-tab="orders">
+          <div class="left">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <div class="label">
+              <span>Zamówienia</span>
+              <small>Zamów i odbierz</small>
+            </div>
+          </div>
+        </button>
+
+        <button class="navbtn" data-tab="clients">
+          <div class="left">
+            <i class="fa-solid fa-users"></i>
+            <div class="label">
+              <span>Klienci</span>
+              <small>Baza + historia</small>
+            </div>
+          </div>
+        </button>
+
+        <button class="navbtn" data-tab="redeem">
+          <div class="left">
+            <i class="fa-solid fa-ticket"></i>
+            <div class="label">
+              <span>Zrealizuj Kod</span>
+              <small>Nagrody / vouchery</small>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <div style="margin-top:auto"></div>
+      <!-- (celowo puste) bez DEMO/API i bez dodatkowych info -->
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+      <header class="topbar">
+        <div class="title">
+          <h2 id="pageTitle">Strona główna</h2>
+          <p id="pageSub">Statystyki aplikacji</p>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-small" id="exportBtn"><i class="fa-solid fa-file-export"></i> Eksport</button>
+          <button class="btn btn-primary btn-small" id="quickAddBtn"><i class="fa-solid fa-circle-plus"></i> Szybkie punkty</button>
+          <button class="btn btn-small" id="refreshBtn"><i class="fa-solid fa-rotate"></i> Odśwież</button>
+        </div>
+      </header>
+
+      <!-- DASHBOARD -->
+      <section class="tab" id="tab-dashboard">
+        <div class="grid">
+          <div class="card" style="grid-column: span 3;">
+            <div class="kpi">
+              <div>
+                <div class="val mono" id="kpiUsers">—</div>
+                <div class="lab">Klienci</div>
+              </div>
+              <div class="icon"><i class="fa-solid fa-users"></i></div>
+            </div>
+          </div>
+
+          <div class="card" style="grid-column: span 3;">
+            <div class="kpi">
+              <div>
+                <div class="val mono" id="kpiPoints">—</div>
+                <div class="lab">Łączne punkty</div>
+              </div>
+              <div class="icon"><i class="fa-solid fa-star"></i></div>
+            </div>
+          </div>
+
+          <div class="card" style="grid-column: span 3;">
+            <div class="kpi">
+              <div>
+                <div class="val mono" id="kpiOrders">—</div>
+                <div class="lab">Zamówienia</div>
+              </div>
+              <div class="icon"><i class="fa-solid fa-bag-shopping"></i></div>
+            </div>
+          </div>
+
+          <div class="card" style="grid-column: span 3;">
+            <div class="kpi">
+              <div>
+                <div class="val mono" id="kpiCodes">—</div>
+                <div class="lab">Kody do realizacji</div>
+              </div>
+              <div class="icon"><i class="fa-solid fa-ticket"></i></div>
+            </div>
+          </div>
+
+          <div class="card" style="grid-column: span 7;">
+            <div class="section-title">Ostatnie zamówienia</div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Milk ID</th>
+                  <th>Lokal</th>
+                  <th class="right">Suma</th>
+                  <th class="right">Status</th>
+                  <th class="right">Akcja</th>
+                </tr>
+              </thead>
+              <tbody id="dashOrdersBody">
+                <tr><td colspan="6" class="muted">Ładowanie…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card" style="grid-column: span 5;">
+            <div class="section-title">Dodaj punkty</div>
+
+            <div class="row">
+              <div>
+                <label>Milk ID</label>
+                <input id="dashMilkId" placeholder="np. 123456" inputmode="numeric" autocomplete="off">
+              </div>
+              <div>
+                <label>Kwota (PLN)</label>
+                <input id="dashAmount" placeholder="np. 87.50" inputmode="decimal" autocomplete="off">
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:10px">
+              <div>
+                <label>Punkty</label>
+                <input id="dashPointsPreview" disabled value="0">
+              </div>
+              <div style="display:grid; align-items:end">
+                <button class="btn btn-primary" id="dashAddPointsBtn"><i class="fa-solid fa-circle-plus"></i> Dodaj</button>
+              </div>
+            </div>
+
+            <div class="muted" style="margin-top:10px" id="dashAddResult">—</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADD POINTS -->
+      <section class="tab" id="tab-addpoints" style="display:none">
+        <div class="grid">
+          <div class="card" style="grid-column: span 12;">
+            <div class="section-title">Dodaj Punkty</div>
+
+            <div class="row3">
+              <div>
+                <label>Milk ID</label>
+                <input id="apMilkId" placeholder="np. 123456" inputmode="numeric" autocomplete="off">
+              </div>
+              <div>
+                <label>Kwota (PLN)</label>
+                <input id="apAmount" placeholder="np. 120" inputmode="decimal" autocomplete="off">
+              </div>
+              <div>
+                <label>Punkty</label>
+                <input id="apPoints" disabled value="0">
+              </div>
+            </div>
+
+            <div style="height:10px"></div>
+            <button class="btn btn-primary" id="apSubmit"><i class="fa-solid fa-paper-plane"></i> Wyślij punkty</button>
+
+            <div class="muted" style="margin-top:10px" id="apResult">—</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ORDERS -->
+      <section class="tab" id="tab-orders" style="display:none">
+        <div class="grid">
+          <div class="card" style="grid-column: span 12;">
+            <div class="section-title">Zamówienia — “Zamów i odbierz”</div>
+
+            <div class="row">
+              <div>
+                <label>Szukaj</label>
+                <input id="ordersSearch" placeholder="Milk ID, lokal, status…" autocomplete="off">
+              </div>
+              <div>
+                <label>Status</label>
+                <select id="ordersStatus">
+                  <option value="">Wszystkie</option>
+                  <option value="Przyjęte">Przyjęte</option>
+                  <option value="W realizacji">W realizacji</option>
+                  <option value="Gotowe">Gotowe</option>
+                  <option value="Wydane">Wydane</option>
+                  <option value="Anulowane">Anulowane</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="height:10px"></div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Milk ID</th>
+                  <th>Lokal</th>
+                  <th>Zamówienie</th>
+                  <th class="right">Suma</th>
+                  <th class="right">Status</th>
+                  <th class="right">Akcja</th>
+                </tr>
+              </thead>
+              <tbody id="ordersBody">
+                <tr><td colspan="7" class="muted">Ładowanie…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- CLIENTS -->
+      <section class="tab" id="tab-clients" style="display:none">
+        <div class="grid">
+          <div class="card" style="grid-column: span 7;">
+            <div class="section-title">Klienci</div>
+
+            <div class="row">
+              <div>
+                <label>Szukaj klienta</label>
+                <input id="clientsSearch" placeholder="Milk ID / email / imię / telefon…" autocomplete="off">
+              </div>
+              <div>
+                <label>Sortowanie</label>
+                <select id="clientsSort">
+                  <option value="new">Najnowsi</option>
+                  <option value="points">Najwięcej punktów</option>
+                  <option value="orders">Najwięcej zamówień</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="height:10px"></div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Milk ID</th>
+                  <th>Email</th>
+                  <th>Imię i nazwisko</th>
+                  <th>Telefon</th>
+                  <th class="right">Punkty</th>
+                  <th class="right">Akcja</th>
+                </tr>
+              </thead>
+              <tbody id="clientsBody">
+                <tr><td colspan="6" class="muted">Ładowanie…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card" style="grid-column: span 5;">
+            <div class="section-title">Szczegóły klienta</div>
+            <div class="muted" id="clientEmpty">
+              Kliknij klienta na liście, aby zobaczyć historię.
+            </div>
+
+            <div id="clientDetails" style="display:none; gap:10px">
+              <div class="card" id="clientCard" style="box-shadow:none;border:1px solid rgba(0,0,0,.06);background:rgba(255,255,255,.92)"></div>
+
+              <div class="section-title">Historia</div>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Typ</th>
+                    <th>Szczegóły</th>
+                  </tr>
+                </thead>
+                <tbody id="clientHistoryBody"></tbody>
+              </table>
+
+              <div style="height:10px"></div>
+              <button class="btn btn-primary" id="clientQuickPoints"><i class="fa-solid fa-circle-plus"></i> Dodaj punkty temu klientowi</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- REDEEM -->
+      <section class="tab" id="tab-redeem" style="display:none">
+        <div class="grid">
+          <div class="card" style="grid-column: span 7;">
+            <div class="section-title">Zrealizuj kod</div>
+
+            <div class="row">
+              <div>
+                <label>Kod</label>
+                <input id="redeemCode" placeholder="np. MSB-AB12CD" autocomplete="off">
+              </div>
+              <div style="display:grid; align-items:end">
+                <button class="btn btn-primary" id="redeemCheckBtn"><i class="fa-solid fa-magnifying-glass"></i> Sprawdź</button>
+              </div>
+            </div>
+
+            <div style="height:10px"></div>
+            <div class="muted" id="redeemPreview">Wpisz kod i kliknij “Sprawdź”.</div>
+
+            <div style="height:10px"></div>
+            <button class="btn btn-danger" id="redeemConfirmBtn" disabled><i class="fa-solid fa-check"></i> Zatwierdź realizację</button>
+
+            <div class="muted" style="margin-top:10px" id="redeemResult">—</div>
+          </div>
+
+          <div class="card" style="grid-column: span 5;">
+            <div class="section-title">Kody do realizacji</div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Kod</th>
+                  <th>Milk ID</th>
+                  <th>Nagroda</th>
+                  <th class="right">Akcja</th>
+                </tr>
+              </thead>
+              <tbody id="codesBody">
+                <tr><td colspan="4" class="muted">Ładowanie…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="modalTitle">Szczegóły</h3>
+        <button class="close" id="modalClose" aria-label="Zamknij"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"><i class="fa-solid fa-check-circle"></i><span id="toastText"></span></div>
+
+  <script>
+    const $ = (q, el=document) => el.querySelector(q);
+    const $$ = (q, el=document) => Array.from(el.querySelectorAll(q));
+
+    const toastEl = $("#toast");
+    const toastText = $("#toastText");
+    function toast(msg, danger=false){
+      toastText.textContent = msg;
+      toastEl.classList.toggle("danger", danger);
+      toastEl.classList.add("show");
+      clearTimeout(toastEl._t);
+      toastEl._t = setTimeout(()=>toastEl.classList.remove("show"), 2600);
+    }
+
+    const overlay = $("#overlay");
+    const modalTitle = $("#modalTitle");
+    const modalBody = $("#modalBody");
+    $("#modalClose").addEventListener("click", ()=> overlay.classList.remove("show"));
+    overlay.addEventListener("click", (e)=>{ if(e.target === overlay) overlay.classList.remove("show"); });
+    function openModal(title, html){
+      modalTitle.textContent = title;
+      modalBody.innerHTML = html;
+      overlay.classList.add("show");
+    }
+
+    function formatPLN(n){
+      const v = Number(n || 0);
+      return v.toLocaleString("pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + " zł";
+    }
+    function formatDateTime(dt){
+      if(!dt) return "—";
+      try{ return new Date(dt).toLocaleString("pl-PL"); }
+      catch{ return String(dt); }
+    }
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    // 10 zł = 1 pkt
+    function calcPoints(amountPLN){
+      const amt = Number(String(amountPLN).replace(",", "."));
+      if(!isFinite(amt) || amt <= 0) return 0;
+      return Math.floor(amt / 10);
+    }
+
+    // ---- API endpoints (podłącz backend) ----
+    const API = {
+      async stats(){
+        const r = await fetch("/api/admin/stats", { cache:"no-store" });
+        if(!r.ok) throw new Error("Błąd statystyk");
+        return await r.json();
+      },
+      async users(){
+        const r = await fetch("/api/admin/users", { cache:"no-store" });
+        if(!r.ok) throw new Error("Błąd klientów");
+        return await r.json();
+      },
+      async userHistory(milkId){
+        const r = await fetch(`/api/admin/users/${encodeURIComponent(milkId)}/history`, { cache:"no-store" });
+        if(!r.ok) throw new Error("Błąd historii");
+        return await r.json();
+      },
+      async orders(){
+        const r = await fetch("/api/admin/orders", { cache:"no-store" });
+        if(!r.ok) throw new Error("Błąd zamówień");
+        return await r.json();
+      },
+      async addPoints({ milkId, amountPLN }){
+        const points = calcPoints(amountPLN);
+        const payload = { milkId, amountPLN:Number(String(amountPLN).replace(",", ".")), points };
+
+        const r = await fetch("/api/admin/add-points", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify(payload)
+        });
+        if(!r.ok){
+          const e = await r.json().catch(()=>({}));
+          throw new Error(e.message || "Błąd dodawania punktów");
+        }
+        return await r.json().catch(()=>({ ok:true, points }));
+      },
+      async codes(){
+        const r = await fetch("/api/admin/codes", { cache:"no-store" });
+        if(!r.ok) throw new Error("Błąd kodów");
+        return await r.json();
+      },
+      async checkCode(code){
+        const r = await fetch("/api/admin/codes/check", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ code })
+        });
+        if(!r.ok){
+          const e = await r.json().catch(()=>({}));
+          throw new Error(e.message || "Kod nieprawidłowy");
+        }
+        return await r.json();
+      },
+      async redeemCode(code){
+        const r = await fetch("/api/admin/codes/redeem", {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body: JSON.stringify({ code })
+        });
+        if(!r.ok){
+          const e = await r.json().catch(()=>({}));
+          throw new Error(e.message || "Nie udało się zrealizować kodu");
+        }
+        return await r.json().catch(()=>({ ok:true }));
+      }
+    };
+
+    // ---- State ----
+    const state = {
+      activeTab: "dashboard",
+      stats: null,
+      users: [],
+      orders: [],
+      codes: [],
+      selectedUser: null,
+      selectedCode: null
+    };
+
+    // ---- Tabs ----
+    const tabEls = {
+      dashboard: $("#tab-dashboard"),
+      addpoints: $("#tab-addpoints"),
+      orders: $("#tab-orders"),
+      clients: $("#tab-clients"),
+      redeem: $("#tab-redeem"),
+    };
+
+    const titleMap = {
+      dashboard: { t:"Strona główna", s:"Statystyki aplikacji" },
+      addpoints: { t:"Dodaj Punkty", s:"Milk ID + kwota" },
+      orders: { t:"Zamówienia", s:"Zamów i odbierz" },
+      clients: { t:"Klienci", s:"Baza + historia" },
+      redeem: { t:"Zrealizuj Kod", s:"Weryfikacja i realizacja" },
+    };
+
+    function setTab(name){
+      state.activeTab = name;
+      $$("#nav .navbtn").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+      Object.entries(tabEls).forEach(([k,el]) => el.style.display = (k===name) ? "block" : "none");
+      $("#pageTitle").textContent = titleMap[name].t;
+      $("#pageSub").textContent = titleMap[name].s;
+      window.scrollTo({ top:0, behavior:"smooth" });
+    }
+    $$("#nav .navbtn").forEach(btn => btn.addEventListener("click", ()=> setTab(btn.dataset.tab)));
+
+    // ---- Previews ----
+    function wirePointsPreview(amountEl, pointsEl){
+      function update(){ pointsEl.value = String(calcPoints(amountEl.value)); }
+      amountEl.addEventListener("input", update);
+      amountEl.addEventListener("change", update);
+      update();
+    }
+    wirePointsPreview($("#dashAmount"), $("#dashPointsPreview"));
+    wirePointsPreview($("#apAmount"), $("#apPoints"));
+
+    // ---- Tags ----
+    function statusTag(s){
+      const v = String(s||"").toLowerCase();
+      if(v.includes("wydane")) return `<span class="tag ok"><i class="fa-solid fa-check"></i> Wydane</span>`;
+      if(v.includes("gotowe")) return `<span class="tag ok"><i class="fa-solid fa-bell"></i> Gotowe</span>`;
+      if(v.includes("anul")) return `<span class="tag bad"><i class="fa-solid fa-xmark"></i> Anulowane</span>`;
+      if(v.includes("real")) return `<span class="tag pending"><i class="fa-solid fa-hourglass-half"></i> W realizacji</span>`;
+      return `<span class="tag pending"><i class="fa-solid fa-inbox"></i> ${esc(s||"Przyjęte")}</span>`;
+    }
+    function typeTag(t){
+      const v = String(t||"").toLowerCase();
+      if(v.includes("order")) return `<span class="tag pending"><i class="fa-solid fa-bag-shopping"></i> Zamówienie</span>`;
+      if(v.includes("points")) return `<span class="tag ok"><i class="fa-solid fa-star"></i> Punkty</span>`;
+      if(v.includes("code")) return `<span class="tag ok"><i class="fa-solid fa-ticket"></i> Kod</span>`;
+      if(v.includes("reward")) return `<span class="tag pending"><i class="fa-solid fa-gift"></i> Nagroda</span>`;
+      return `<span class="tag">${esc(t||"akcja")}</span>`;
+    }
+
+    // ---- Render ----
+    function renderKPIs(){
+      const s = state.stats || { users:0, totalPoints:0, totalOrders:0, pendingCodes:0 };
+      $("#kpiUsers").textContent = (s.users ?? 0).toLocaleString("pl-PL");
+      $("#kpiPoints").textContent = (s.totalPoints ?? 0).toLocaleString("pl-PL");
+      $("#kpiOrders").textContent = (s.totalOrders ?? 0).toLocaleString("pl-PL");
+      $("#kpiCodes").textContent = (s.pendingCodes ?? 0).toLocaleString("pl-PL");
+    }
+
+    function openOrderModal(o){
+      const items = (o.items || []).map(i => `• ${esc(i.qty)}x ${esc(i.title)} (${esc(formatPLN(i.price))})`).join("<br>");
+      openModal("Szczegóły zamówienia", `
+        <div class="card" style="box-shadow:none;border:1px solid rgba(0,0,0,.06);background:rgba(255,255,255,.94)">
+          <div style="display:grid;gap:8px">
+            <div><b>ID:</b> <span class="mono">${esc(o.id)}</span></div>
+            <div><b>Milk ID:</b> <span class="mono">${esc(o.milkId)}</span></div>
+            <div><b>Data:</b> ${esc(formatDateTime(o.createdAt))}</div>
+            <div><b>Lokal:</b> ${esc(o.pickupLocation || "—")} • ${esc(o.pickupTime || "—")}</div>
+            <div><b>Status:</b> ${statusTag(o.status)}</div>
+            <div><b>Pozycje:</b><br>${items || "—"}</div>
+            <div style="border-top:1px dashed rgba(0,0,0,.10);padding-top:10px;display:flex;justify-content:space-between">
+              <b>Suma</b> <b class="mono">${esc(formatPLN(o.total))}</b>
+            </div>
+          </div>
+        </div>
+      `);
+    }
+
+    function renderDashOrders(){
+      const body = $("#dashOrdersBody");
+      const list = (state.orders || []).slice(0,5);
+      if(!list.length){
+        body.innerHTML = `<tr><td colspan="6" class="muted">Brak zamówień.</td></tr>`;
+        return;
+      }
+      body.innerHTML = list.map(o => `
+        <tr>
+          <td>${esc(formatDateTime(o.createdAt))}</td>
+          <td class="mono">${esc(o.milkId)}</td>
+          <td>${esc(o.pickupLocation || "—")} • ${esc(o.pickupTime || "—")}</td>
+          <td class="right mono">${esc(formatPLN(o.total))}</td>
+          <td class="right">${statusTag(o.status)}</td>
+          <td class="right">
+            <button class="btn btn-small" data-open-order="${esc(o.id)}"><i class="fa-solid fa-eye"></i></button>
+          </td>
+        </tr>
+      `).join("");
+
+      $$("[data-open-order]").forEach(b => b.addEventListener("click", ()=>{
+        const id = b.dataset.openOrder;
+        const o = state.orders.find(x=>String(x.id)===String(id));
+        if(o) openOrderModal(o);
+      }));
+    }
+
+    function renderOrders(){
+      const body = $("#ordersBody");
+      const q = ($("#ordersSearch").value || "").trim().toLowerCase();
+      const st = $("#ordersStatus").value;
+
+      let list = [...(state.orders || [])];
+      if(q){
+        list = list.filter(o => {
+          const blob = [
+            o.milkId, o.pickupLocation, o.status,
+            (o.items||[]).map(i=>i.title).join(" ")
+          ].join(" ").toLowerCase();
+          return blob.includes(q);
+        });
+      }
+      if(st){
+        list = list.filter(o => String(o.status||"").toLowerCase() === st.toLowerCase());
+      }
+
+      if(!list.length){
+        body.innerHTML = `<tr><td colspan="7" class="muted">Brak wyników.</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = list.map(o => `
+        <tr>
+          <td>${esc(formatDateTime(o.createdAt))}</td>
+          <td class="mono">${esc(o.milkId)}</td>
+          <td>${esc(o.pickupLocation || "—")} • ${esc(o.pickupTime || "—")}</td>
+          <td>${esc((o.items||[]).map(i => `${i.qty}x ${i.title}`).join(", "))}</td>
+          <td class="right mono">${esc(formatPLN(o.total))}</td>
+          <td class="right">${statusTag(o.status)}</td>
+          <td class="right">
+            <button class="btn btn-small" data-open-order="${esc(o.id)}"><i class="fa-solid fa-eye"></i></button>
+          </td>
+        </tr>
+      `).join("");
+
+      $$("[data-open-order]").forEach(b => b.addEventListener("click", ()=>{
+        const id = b.dataset.openOrder;
+        const o = state.orders.find(x=>String(x.id)===String(id));
+        if(o) openOrderModal(o);
+      }));
+    }
+
+    function renderClients(){
+      const body = $("#clientsBody");
+      const q = ($("#clientsSearch").value || "").trim().toLowerCase();
+      const sort = $("#clientsSort").value;
+
+      let list = [...(state.users || [])];
+
+      const orderCount = new Map();
+      (state.orders||[]).forEach(o=>{
+        const k = String(o.milkId||"");
+        orderCount.set(k, (orderCount.get(k)||0)+1);
+      });
+
+      if(q){
+        list = list.filter(u => {
+          const blob = [u.milkId, u.email, u.name, u.phone].join(" ").toLowerCase();
+          return blob.includes(q);
+        });
+      }
+
+      if(sort === "points"){
+        list.sort((a,b)=>(b.points||0)-(a.points||0));
+      }else if(sort === "orders"){
+        list.sort((a,b)=>(orderCount.get(String(b.milkId))||0)-(orderCount.get(String(a.milkId))||0));
+      }else{
+        list.sort((a,b)=> new Date(b.createdAt||0) - new Date(a.createdAt||0));
+      }
+
+      if(!list.length){
+        body.innerHTML = `<tr><td colspan="6" class="muted">Brak wyników.</td></tr>`;
+        return;
+      }
+
+      body.innerHTML = list.map(u => `
+        <tr>
+          <td class="mono">${esc(u.milkId)}</td>
+          <td>${esc(u.email||"—")}</td>
+          <td>${esc(u.name||"—")}</td>
+          <td>${esc(u.phone||"—")}</td>
+          <td class="right mono"><b>${esc((u.points||0).toLocaleString("pl-PL"))}</b></td>
+          <td class="right">
+            <button class="btn btn-small" data-open-user="${esc(u.milkId)}"><i class="fa-solid fa-user"></i></button>
+          </td>
+        </tr>
+      `).join("");
+
+      $$("[data-open-user]").forEach(b => b.addEventListener("click", ()=> openUser(b.dataset.openUser)));
+    }
+
+    async function openUser(milkId){
+      const u = state.users.find(x => String(x.milkId) === String(milkId));
+      if(!u) return;
+      state.selectedUser = u;
+
+      $("#clientEmpty").style.display = "none";
+      $("#clientDetails").style.display = "grid";
+      $("#clientCard").innerHTML = `
+        <div style="display:grid;gap:6px">
+          <div><b>Milk ID:</b> <span class="mono">${esc(u.milkId)}</span></div>
+          <div><b>Email:</b> ${esc(u.email||"—")}</div>
+          <div><b>Imię i nazwisko:</b> ${esc(u.name||"—")}</div>
+          <div><b>Telefon:</b> ${esc(u.phone||"—")}</div>
+          <div style="border-top:1px dashed rgba(0,0,0,.10);padding-top:10px;display:flex;justify-content:space-between">
+            <b>Punkty</b> <b class="mono">${esc((u.points||0).toLocaleString("pl-PL"))}</b>
+          </div>
+        </div>
+      `;
+
+      const body = $("#clientHistoryBody");
+      body.innerHTML = `<tr><td colspan="3" class="muted">Ładowanie…</td></tr>`;
+      try{
+        const hist = await API.userHistory(String(u.milkId));
+        if(!hist.length){
+          body.innerHTML = `<tr><td colspan="3" class="muted">Brak historii.</td></tr>`;
+          return;
+        }
+        body.innerHTML = hist.map(h => `
+          <tr>
+            <td>${esc(formatDateTime(h.ts))}</td>
+            <td>${typeTag(h.type)}</td>
+            <td>${esc(h.detail || "")}</td>
+          </tr>
+        `).join("");
+      }catch(e){
+        body.innerHTML = `<tr><td colspan="3" class="muted">Błąd: ${esc(e.message)}</td></tr>`;
+      }
+    }
+
+    function renderCodes(){
+      const body = $("#codesBody");
+      const list = state.codes || [];
+      if(!list.length){
+        body.innerHTML = `<tr><td colspan="4" class="muted">Brak kodów.</td></tr>`;
+        return;
+      }
+      body.innerHTML = list.map(c => `
+        <tr>
+          <td class="mono">${esc(c.code)}</td>
+          <td class="mono">${esc(c.milkId)}</td>
+          <td>${esc(c.rewardTitle || "—")}</td>
+          <td class="right">
+            <button class="btn btn-small" data-fill-code="${esc(c.code)}"><i class="fa-solid fa-arrow-right"></i></button>
+          </td>
+        </tr>
+      `).join("");
+
+      $$("[data-fill-code]").forEach(b => b.addEventListener("click", ()=>{
+        $("#redeemCode").value = b.dataset.fillCode;
+        setTab("redeem");
+        $("#redeemCode").focus();
+      }));
+    }
+
+    async function submitAddPoints(milkId, amount){
+      const pts = calcPoints(amount);
+      if(!String(milkId||"").trim()){
+        toast("Wpisz Milk ID", true);
+        throw new Error("Brak Milk ID");
+      }
+      if(pts <= 0){
+        toast("Kwota za mała", true);
+        throw new Error("0 pkt");
+      }
+      await API.addPoints({ milkId:String(milkId).trim(), amountPLN: amount });
+      toast(`Dodano +${pts} pkt`);
+    }
+
+    // Actions
+    $("#dashAddPointsBtn").addEventListener("click", async ()=>{
+      $("#dashAddResult").textContent = "Wysyłanie…";
+      try{
+        await submitAddPoints($("#dashMilkId").value, $("#dashAmount").value);
+        $("#dashAddResult").textContent = "Sukces";
+        await refreshAll();
+      }catch(e){
+        $("#dashAddResult").textContent = `Błąd: ${e.message}`;
+      }
+    });
+
+    $("#apSubmit").addEventListener("click", async ()=>{
+      $("#apResult").textContent = "Wysyłanie…";
+      try{
+        await submitAddPoints($("#apMilkId").value, $("#apAmount").value);
+        $("#apResult").textContent = "Sukces";
+        await refreshAll();
+        $("#apMilkId").value = "";
+        $("#apAmount").value = "";
+        $("#apPoints").value = "0";
+      }catch(e){
+        $("#apResult").textContent = `Błąd: ${e.message}`;
+      }
+    });
+
+    $("#ordersSearch").addEventListener("input", renderOrders);
+    $("#ordersStatus").addEventListener("change", renderOrders);
+
+    $("#clientsSearch").addEventListener("input", renderClients);
+    $("#clientsSort").addEventListener("change", renderClients);
+
+    $("#clientQuickPoints").addEventListener("click", ()=>{
+      if(!state.selectedUser) return;
+      setTab("addpoints");
+      $("#apMilkId").value = state.selectedUser.milkId;
+      $("#apAmount").focus();
+    });
+
+    $("#redeemCheckBtn").addEventListener("click", async ()=>{
+      const code = ($("#redeemCode").value || "").trim();
+      $("#redeemResult").textContent = "—";
+      $("#redeemConfirmBtn").disabled = true;
+      state.selectedCode = null;
+      $("#redeemPreview").textContent = "Sprawdzam…";
+
+      if(!code){
+        $("#redeemPreview").textContent = "Wpisz kod i kliknij “Sprawdź”.";
+        toast("Wpisz kod", true);
+        return;
+      }
+
+      try{
+        const info = await API.checkCode(code);
+        state.selectedCode = info;
+        $("#redeemPreview").innerHTML = `
+          <b>Kod poprawny</b><br>
+          <span class="muted">
+            <b>Kod:</b> <span class="mono">${esc(info.code)}</span><br>
+            <b>Milk ID:</b> <span class="mono">${esc(info.milkId)}</span><br>
+            <b>Nagroda:</b> ${esc(info.rewardTitle || "—")}
+          </span>
+        `;
+        $("#redeemConfirmBtn").disabled = false;
+        toast("Kod znaleziony");
+      }catch(e){
+        $("#redeemPreview").textContent = `Błąd: ${e.message}`;
+        toast(e.message, true);
+      }
+    });
+
+    $("#redeemConfirmBtn").addEventListener("click", async ()=>{
+      const info = state.selectedCode;
+      if(!info) return;
+      $("#redeemConfirmBtn").disabled = true;
+      $("#redeemResult").textContent = "Realizuję…";
+      try{
+        await API.redeemCode(info.code);
+        $("#redeemResult").textContent = "Zrealizowano";
+        $("#redeemCode").value = "";
+        $("#redeemPreview").textContent = "Wpisz kod i kliknij “Sprawdź”.";
+        state.selectedCode = null;
+        toast("Kod zrealizowany");
+        await refreshAll();
+      }catch(e){
+        $("#redeemResult").textContent = `Błąd: ${e.message}`;
+        toast(e.message, true);
+      }
+    });
+
+    $("#exportBtn").addEventListener("click", ()=>{
+      const payload = { stats: state.stats, users: state.users, orders: state.orders, codes: state.codes };
+      const txt = JSON.stringify(payload, null, 2);
+      openModal("Eksport (JSON)", `
+        <textarea style="width:100%;min-height:280px;border-radius:18px;border:2px solid #eee;padding:12px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">${esc(txt)}</textarea>
+        <button class="btn btn-primary" id="copyExport"><i class="fa-solid fa-copy"></i> Kopiuj</button>
+      `);
+      setTimeout(()=>{
+        $("#copyExport")?.addEventListener("click", async ()=>{
+          try{ await navigator.clipboard.writeText(txt); toast("Skopiowano"); }
+          catch{ toast("Nie udało się skopiować", true); }
+        });
+      },0);
+    });
+
+    $("#quickAddBtn").addEventListener("click", ()=>{
+      setTab("addpoints");
+      $("#apMilkId").focus();
+    });
+
+    $("#refreshBtn").addEventListener("click", refreshAll);
+
+    async function refreshAll(){
+      try{
+        state.stats = await API.stats();
+        state.users = await API.users();
+        state.orders = await API.orders();
+        state.codes = await API.codes();
+
+        renderKPIs();
+        renderDashOrders();
+        renderOrders();
+        renderClients();
+        renderCodes();
+
+        toast("Odświeżono");
+      }catch(e){
+        toast("Błąd odświeżania: " + e.message, true);
+      }
+    }
+
+    (function init(){
+      setTab("dashboard");
+      refreshAll();
+    })();
+  </script>
+</body>
+</html>

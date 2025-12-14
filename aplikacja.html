@@ -164,10 +164,9 @@
       display:flex;
       align-items:center;
       position:relative;
-      /* ✅ już bez własnego tła — korzysta z globalnego */
       background:transparent;
     }
-    .hero::before{ content:none; } /* ✅ wyłączamy hero overlay, bo jest globalny */
+    .hero::before{ content:none; }
 
     .hero-inner{
       position:relative;z-index:1;
@@ -241,7 +240,7 @@
     .section{
       padding:86px 0;
       position:relative;
-      background:transparent; /* ✅ spójne tło z body */
+      background:transparent;
     }
     .section-title{
       font-size:clamp(2.1rem,4.3vw,3.2rem);
@@ -387,7 +386,7 @@
       align-items:center;
     }
 
-    /* ✅ telefon większy */
+    /* ✅ telefon większy (desktop), skalowany niżej w media queries */
     .card {
       width: 300px;
       height: 600px;
@@ -504,31 +503,101 @@
     .hello { display:none; }
     .hidden { display:none; }
 
-    /* Responsive */
+    /* =========================
+       RESPONSIVE (IMPROVED)
+       ========================= */
+
+    /* Tablet / mobile menu */
     @media (max-width: 992px){
+      .container{padding:0 16px}
+
       .nav-menu{
         position:fixed;top:0;right:-100%;
-        width:70%;height:100vh;
+        width:min(82%, 360px);
+        height:100vh;
         background:#fff;
         box-shadow:-10px 0 30px rgba(0,0,0,.1);
         display:flex;
         flex-direction:column;
-        justify-content:center;
-        gap:34px;
+        justify-content:flex-start;
+        gap:26px;
+        padding:90px 22px 24px;
         transition:right .45s cubic-bezier(.77,0,.175,1);
       }
       .nav-menu.active{right:0}
+      .nav-menu .nav-link{font-size:1.05rem}
+
       .hamburger{display:block}
+
+      .hero{padding-top:92px; min-height:auto}
       .hero-inner{grid-template-columns:1fr; text-align:center}
       .chip{margin:0 auto}
       .cta{justify-content:center}
       .kpi-row{justify-content:center}
       .grid-3{grid-template-columns:1fr}
       .steps{grid-template-columns:1fr}
-      .card{transform:none}
+
+      /* telefon preview sensownie mniejszy */
+      .phone-holder{margin-top:18px}
+      .card{width:260px;height:520px; transform:none}
+      .navbar > .btn.btn-primary{
+        padding:12px 14px !important;
+        font-size:.95rem;
+      }
     }
-    @media (max-width: 420px){
+
+    /* Telefon */
+    @media (max-width: 560px){
+      .header{padding:14px 0}
+      .header.scrolled{padding:12px 0}
+
+      .logo img{width:42px;height:42px}
+
+      h1{font-size:clamp(2.1rem, 9vw, 3.2rem); line-height:1.08}
+      .lead{font-size:1.02rem; line-height:1.75; max-width:unset}
+
+      .section{padding:64px 0}
+      .section-sub{font-size:1rem; margin-bottom:26px}
+
+      /* CTA: pełna szerokość, wygodne klikanie */
+      .cta{gap:10px}
       .btn{width:100%}
+      .btn-xl{padding:16px 18px; font-size:1.02rem}
+
+      /* chip + kpi: czytelnie pod kciuk */
+      .chip{max-width:100%; text-align:left}
+      .kpi-row{gap:8px}
+      .kpi{width:100%; justify-content:center}
+
+      /* karty i kroki ciaśniej */
+      .cardx{padding:16px}
+      .step{padding:16px}
+
+      /* phone jeszcze mniejszy */
+      .card{width:230px;height:460px}
+    }
+
+    /* Sticky CTA na dole (mobile) */
+    .mobile-cta{display:none}
+    @media (max-width: 560px){
+      .mobile-cta{
+        display:block;
+        position:fixed;
+        left:0; right:0; bottom:0;
+        padding:12px 14px;
+        background:rgba(255,246,236,.86);
+        backdrop-filter:blur(12px);
+        -webkit-backdrop-filter:blur(12px);
+        border-top:1px solid var(--line);
+        z-index:1200;
+      }
+      body{padding-bottom:86px} /* żeby treść nie wchodziła pod CTA */
+    }
+
+    /* bardzo małe telefony */
+    @media (max-width: 420px){
+      .nav-menu{width:88%}
+      .card{width:215px;height:430px}
     }
   </style>
 </head>
@@ -542,7 +611,7 @@
           <span>MilkShake Bar</span>
         </a>
 
-        <ul class="nav-menu" id="navMenu">
+        <ul class="nav-menu" id="navMenu" aria-label="Nawigacja">
           <li><a class="nav-link" href="index.html#about">O nas</a></li>
           <li><a class="nav-link" href="menu.html">Menu</a></li>
           <li><a class="nav-link" href="index.html#reservation">Rezerwacje</a></li>
@@ -785,6 +854,13 @@
     </div>
   </footer>
 
+  <!-- Sticky CTA na dole (tylko mobile) -->
+  <div class="mobile-cta" aria-label="Szybka instalacja aplikacji">
+    <a class="btn btn-primary" href="app.html">
+      Instaluj Milk <i class="fas fa-download"></i>
+    </a>
+  </div>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const header = document.getElementById('header');
@@ -802,7 +878,18 @@
       hamburger?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') toggleMenu();
       });
+
+      // zamykanie menu po kliknięciu w link
       document.querySelectorAll('.nav-link').forEach(a => a.addEventListener('click', closeMenu));
+
+      // zamykanie menu po kliknięciu poza (super wygodne na telefonie)
+      document.addEventListener('click', (e) => {
+        if (!navMenu.classList.contains('active')) return;
+        const target = e.target;
+        const clickedInsideMenu = navMenu.contains(target);
+        const clickedHamburger = hamburger.contains(target);
+        if (!clickedInsideMenu && !clickedHamburger) closeMenu();
+      });
 
       const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {

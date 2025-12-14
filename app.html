@@ -205,13 +205,7 @@
     }
     .status-dot.open{ background: var(--success); }
     .status-dot.closed{ background: var(--danger); }
-
-    .opening-hint{
-      font-size:.82rem;
-      opacity:.75;
-      font-weight:800;
-    }
-
+    .opening-hint{ font-size:.82rem; opacity:.75; font-weight:800; }
     .opening-hours{
       font-size:.9rem;
       line-height:1.55;
@@ -223,10 +217,7 @@
     }
     .opening-card.expanded .opening-hours{ display:grid; }
     .opening-hours b{ font-weight:900; }
-    .opening-hours .today{
-      font-weight:900;
-      color: var(--link);
-    }
+    .opening-hours .today{ font-weight:900; color: var(--link); }
 
     /* Quick actions */
     .quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
@@ -304,9 +295,7 @@
       height:74%;
       object-fit:contain;
     }
-    .eatmi-text{
-      min-width:0;
-    }
+    .eatmi-text{ min-width:0; }
     .eatmi-text b{
       font-size:1.12rem;
       font-weight:900;
@@ -497,15 +486,8 @@
       overflow:hidden;
       text-overflow:ellipsis;
     }
-    .nav-btn i{
-      font-size:clamp(.95rem, 2.8vw, 1.12rem);
-      line-height:1;
-    }
-    .nav-btn .lbl{
-      font-size:clamp(.62rem, 2.2vw, .73rem);
-      line-height:1.05;
-      text-align:center;
-    }
+    .nav-btn i{font-size:clamp(.95rem, 2.8vw, 1.12rem);line-height:1;}
+    .nav-btn .lbl{font-size:clamp(.62rem, 2.2vw, .73rem);line-height:1.05;text-align:center;}
     .nav-btn.active{
       background:var(--grad);
       color:#fff;
@@ -517,12 +499,8 @@
       .row{grid-template-columns:1fr}
       .quick-grid{grid-template-columns:1fr 1fr 1fr}
     }
-    @media (max-width:420px){
-      .eatmi-text span{display:none;}
-    }
-    @media (max-width:380px){
-      .quick-grid{grid-template-columns:1fr 1fr}
-    }
+    @media (max-width:420px){ .eatmi-text span{display:none;} }
+    @media (max-width:380px){ .quick-grid{grid-template-columns:1fr 1fr} }
 
     /* Toast */
     .toast{
@@ -586,157 +564,352 @@
     }
     .modal-actions{ margin-top:10px; display:grid; gap:8px; }
 
-    /* === PWA Install Guide (OBOWIĄZKOWE) === */
+    /* =========================
+       NOWY: PWA INSTALL GUIDE
+       ========================= */
     .install-guide{
       position:fixed; inset:0; z-index:200;
-      background: linear-gradient(180deg, rgba(255,246,236,.96), rgba(255,246,236,.985));
       display:none;
       padding: calc(14px + var(--safe-top)) 14px calc(14px + var(--safe-bottom));
       overflow:auto;
+      background:
+        radial-gradient(900px 600px at 10% 10%, rgba(255,106,0,.12), transparent 60%),
+        radial-gradient(900px 600px at 90% 90%, rgba(255,145,0,.14), transparent 60%),
+        linear-gradient(180deg, rgba(255,246,236,.98), rgba(255,246,236,.985));
     }
     .install-guide.show{ display:block; }
 
-    .install-card{
-      max-width: 820px;
+    .install-shell{
+      max-width: 860px;
       margin: 0 auto;
-      background: var(--glass);
+      display:grid;
+      gap:12px;
+    }
+
+    .install-hero{
+      background: rgba(255,255,255,.86);
       border: 1px solid rgba(255,255,255,.98);
-      border-radius: 22px;
+      border-radius: 26px;
       box-shadow: var(--shadow);
       padding: 16px;
+      overflow:hidden;
+      position:relative;
     }
-    .install-kicker{ font-weight:900; opacity:.75; font-size:.9rem; }
+    .install-hero::after{
+      content:"";
+      position:absolute;
+      right:-70px; top:-70px;
+      width:260px; height:260px;
+      background: radial-gradient(circle, rgba(255,106,0,.22), transparent 65%);
+      transform: rotate(18deg);
+      pointer-events:none;
+    }
+
+    .install-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .install-brand{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      min-width:0;
+    }
+    .install-badge{
+      width:54px;height:54px;border-radius:18px;
+      background: var(--grad);
+      color:#fff;
+      display:grid;
+      place-items:center;
+      box-shadow: 0 12px 26px rgba(255,106,0,.35);
+      font-size:1.25rem;
+      flex:0 0 auto;
+    }
+    .install-headline{
+      min-width:0;
+    }
+    .install-kicker{ font-weight:900; opacity:.72; font-size:.9rem; }
     .install-title{
-      font-size:1.35rem; font-weight:900;
+      font-size:1.35rem;
+      font-weight:900;
+      margin-top:2px;
+      line-height:1.15;
       background:var(--grad);
       -webkit-background-clip:text;
       -webkit-text-fill-color:transparent;
-      margin-top:4px;
     }
-    .install-sub{ margin-top:6px; opacity:.85; line-height:1.5; }
+    .install-sub{
+      margin-top:6px;
+      opacity:.86;
+      line-height:1.45;
+      font-weight:700;
+      max-width: 58ch;
+    }
 
-    .install-tabs{
-      margin-top:12px;
+    .platform-switch{
       display:grid;
       grid-template-columns:1fr 1fr;
       gap:8px;
+      margin-top:12px;
     }
-    .install-tab{
+    .platform-btn{
       border:none; cursor:pointer;
       padding:12px 10px;
-      border-radius:16px;
+      border-radius:18px;
       background: rgba(255,255,255,.92);
       border:1px solid rgba(0,0,0,.06);
       font-weight:900;
-      display:flex; align-items:center; justify-content:center; gap:8px;
+      display:flex; align-items:center; justify-content:center; gap:10px;
       -webkit-tap-highlight-color: transparent;
       transition:.2s transform,.2s box-shadow,.2s opacity,.2s background;
       color: var(--text);
-      opacity:.85;
+      opacity:.88;
     }
-    .install-tab.active{
+    .platform-btn i{
+      width:34px;height:34px;border-radius:12px;
+      display:grid;place-items:center;
+      background: rgba(0,0,0,.05);
+      font-size:1.05rem;
+    }
+    .platform-btn.active{
       background: var(--grad);
       color:#fff;
       opacity:1;
-      box-shadow:0 8px 18px rgba(255,106,0,.35);
+      box-shadow:0 10px 22px rgba(255,106,0,.32);
       transform: translateY(-1px);
     }
+    .platform-btn.active i{ background: rgba(255,255,255,.22); color:#fff; }
 
-    .install-body{ margin-top:12px; }
+    .install-panel{
+      background: rgba(255,255,255,.84);
+      border: 1px solid rgba(255,255,255,.98);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
     .install-pane{ display:none; }
     .install-pane.active{ display:block; }
 
-    .install-steps{
-      margin:0;
-      padding-left:18px;
+    .steps{
       display:grid;
       gap:10px;
-      line-height:1.5;
-      font-weight:700;
+      margin-top:10px;
+    }
+    .step{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      padding:12px;
+      border-radius:18px;
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(0,0,0,.05);
+      box-shadow: var(--shadow-soft);
+    }
+    .step-num{
+      width:36px;height:36px;border-radius:14px;
+      background: var(--grad);
+      color:#fff;
+      display:grid;place-items:center;
+      font-weight:900;
+      flex:0 0 auto;
+      box-shadow:0 8px 18px rgba(255,106,0,.28);
+    }
+    .step-body b{ font-weight:900; }
+    .step-body{
+      line-height:1.45;
+      font-weight:750;
       opacity:.92;
     }
-    .install-steps b{ font-weight:900; }
 
-    .ios-share{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      width:28px; height:28px;
-      border-radius:10px;
-      background: rgba(0,0,0,.06);
-      font-size: .95rem;
-      margin-left:6px;
+    .install-ctaRow{
+      display:grid;
+      gap:8px;
+      margin-top:12px;
     }
+    .install-note{
+      margin-top:10px;
+      font-size:.86rem;
+      opacity:.82;
+      line-height:1.45;
+      font-weight:700;
+      padding:12px;
+      border-radius:18px;
+      background: rgba(255,255,255,.9);
+      border:1px dashed rgba(0,0,0,.10);
+    }
+    .install-note i{ color: var(--primary); }
 
-    .install-foot{ margin-top:14px; }
+    .install-helpRow{
+      margin-top:12px;
+      display:grid;
+      gap:8px;
+    }
+    .help-pill{
+      background: rgba(255,255,255,.9);
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:18px;
+      padding:12px;
+      box-shadow: var(--shadow-soft);
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      font-weight:750;
+      opacity:.92;
+      line-height:1.45;
+    }
+    .help-pill .hico{
+      width:40px;height:40px;border-radius:14px;
+      background: rgba(0,0,0,.05);
+      display:grid;place-items:center;
+      flex:0 0 auto;
+    }
+    .help-pill b{ font-weight:900; }
+
+    @media (max-width:520px){
+      .platform-switch{ grid-template-columns:1fr; }
+    }
   </style>
 </head>
 <body>
   <div class="blob b1"></div>
   <div class="blob b2"></div>
 
-  <!-- PWA INSTALL GUIDE (OBOWIĄZKOWY, tylko w przeglądarce) -->
+  <!-- NOWY: PORADNIK INSTALACJI (prosty i ładny) -->
   <section id="installGuide" class="install-guide" aria-hidden="true">
-    <div class="install-card">
-      <div class="install-head">
-        <div>
-          <div class="install-kicker">Milk • Instalacja aplikacji</div>
-          <div class="install-title">Dodaj aplikację do ekranu głównego</div>
-          <div class="install-sub">
-            Aby korzystać z Milk, dodaj aplikację do ekranu głównego i uruchom z ikony.
+    <div class="install-shell">
+
+      <div class="install-hero">
+        <div class="install-top">
+          <div class="install-brand">
+            <div class="install-badge"><i class="fa-solid fa-mobile-screen-button"></i></div>
+            <div class="install-headline">
+              <div class="install-kicker">Milk • uruchom jak aplikację</div>
+              <div class="install-title">Dodaj Milk do ekranu głównego</div>
+              <div class="install-sub">
+                To zajmie <b>około 10 sekund</b>. Potem otwierasz Milk z ikony — szybciej i wygodniej.
+              </div>
+            </div>
           </div>
+        </div>
+
+        <div class="platform-switch" style="position:relative;z-index:2;">
+          <button class="platform-btn active" data-guide-tab="android">
+            <i class="fa-brands fa-android"></i> Android (Chrome)
+          </button>
+          <button class="platform-btn" data-guide-tab="ios">
+            <i class="fa-brands fa-apple"></i> iPhone / iPad (Safari)
+          </button>
         </div>
       </div>
 
-      <div class="install-tabs">
-        <button class="install-tab active" data-guide-tab="android">
-          <i class="fa-brands fa-android"></i> Android
-        </button>
-        <button class="install-tab" data-guide-tab="ios">
-          <i class="fa-brands fa-apple"></i> iOS (Safari)
-        </button>
-      </div>
-
-      <div class="install-body">
+      <div class="install-panel">
         <!-- ANDROID -->
         <div class="install-pane active" data-guide-pane="android">
-          <ol class="install-steps">
-            <li>Otwórz menu przeglądarki <b>⋮</b> (Chrome) lub <b>inne</b>.</li>
-            <li>Wybierz <b>„Dodaj do ekranu głównego”</b> lub <b>„Zainstaluj aplikację”</b>.</li>
-            <li>Potwierdź przyciskiem <b>Dodaj / Zainstaluj</b>.</li>
-            <li>Uruchom <b>Milk</b> z ikony na ekranie głównym.</li>
-          </ol>
+          <div class="subtitle" style="margin:0;">Android — instalacja</div>
+          <div class="tiny" style="margin-top:4px; opacity:.78;">
+            Najczęściej działa w <b>Chrome</b>. Jeśli widzisz przycisk „Zainstaluj”, kliknij go.
+          </div>
 
-          <button id="androidInstallBtn" class="btn btn-primary btn-wide" style="margin-top:10px; display:none;">
-            Zainstaluj teraz <i class="fa-solid fa-download"></i>
-          </button>
+          <div class="install-ctaRow">
+            <button id="androidInstallBtn" class="btn btn-primary btn-wide" style="display:none;">
+              Zainstaluj teraz <i class="fa-solid fa-download"></i>
+            </button>
+            <div class="tiny" id="androidInstallHint" style="opacity:.78; text-align:center;">
+              Jeśli nie widzisz przycisku — zrób to ręcznie poniżej.
+            </div>
+          </div>
 
-          <div class="tiny" style="margin-top:8px; opacity:.8;">
-            Problem z dodaniem aplikacji do ekranu głównego ? Poinformuj nas mailowo : support@velorie.pl
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-body">
+                Naciśnij menu przeglądarki: <b>⋮</b> (prawy górny róg).
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-body">
+                Wybierz <b>„Zainstaluj aplikację”</b> lub <b>„Dodaj do ekranu głównego”</b>.
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-body">
+                Potwierdź: <b>Zainstaluj / Dodaj</b>. Gotowe ✅
+              </div>
+            </div>
+          </div>
+
+          <div class="install-helpRow">
+            <div class="help-pill">
+              <div class="hico"><i class="fa-solid fa-circle-question"></i></div>
+              <div>
+                <b>Nie widzę tej opcji?</b><br>
+                Upewnij się, że masz otwarte w <b>Chrome</b> i odśwież stronę. Czasem trzeba przewinąć listę w menu.
+              </div>
+            </div>
+          </div>
+
+          <div class="install-note">
+            <i class="fa-solid fa-shield-heart"></i>
+            Poradnik zniknie automatycznie, gdy uruchomisz Milk z ikony (tryb aplikacji).
+            <div class="tiny" style="margin-top:6px; opacity:.78;">
+              Problem? Napisz: <b>support@velorie.pl</b>
+            </div>
           </div>
         </div>
 
         <!-- IOS -->
         <div class="install-pane" data-guide-pane="ios">
-          <ol class="install-steps">
-            <li>Otwórz stronę w <b>Safari</b> (na iPhonie/iPadzie).</li>
-            <li>Kliknij ikonę <b>Udostępnij</b> <span class="ios-share">⬆️</span> (na dole ekranu).</li>
-            <li>Wybierz <b>„Dodaj do ekranu początkowego”</b>.</li>
-            <li>Potwierdź <b>Dodaj</b>.</li>
-            <li>Uruchom <b>Milk</b> z ikony na ekranie głównym.</li>
-          </ol>
+          <div class="subtitle" style="margin:0;">iPhone / iPad — instalacja</div>
+          <div class="tiny" style="margin-top:4px; opacity:.78;">
+            Ważne: na iOS dodawanie działa w <b>Safari</b> (nie w Chrome).
+          </div>
 
-          <div class="tiny" style="margin-top:8px; opacity:.8;">
-            Problem z dodaniem aplikacji do ekranu głównego ? Poinformuj nas mailowo : support@velorie.pl
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div class="step-body">
+                Otwórz tę stronę w <b>Safari</b>.
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div class="step-body">
+                Kliknij <b>Udostępnij</b> (ikonka <b>⬆️</b> na dole ekranu).
+              </div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div class="step-body">
+                Wybierz <b>„Dodaj do ekranu początkowego”</b>, potem <b>Dodaj</b>. Gotowe ✅
+              </div>
+            </div>
+          </div>
+
+          <div class="install-helpRow">
+            <div class="help-pill">
+              <div class="hico"><i class="fa-solid fa-lightbulb"></i></div>
+              <div>
+                <b>Nie ma „Dodaj do ekranu”?</b><br>
+                Przewiń listę w dół w panelu udostępniania. Jeśli dalej brak — upewnij się, że to <b>Safari</b>.
+              </div>
+            </div>
+          </div>
+
+          <div class="install-note">
+            <i class="fa-solid fa-shield-heart"></i>
+            Poradnik zniknie automatycznie, gdy uruchomisz Milk z ikony (tryb aplikacji).
+            <div class="tiny" style="margin-top:6px; opacity:.78;">
+              Problem? Napisz: <b>support@velorie.pl</b>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="install-foot">
-        <div class="tiny" style="text-align:center; opacity:.75; margin-top:8px;">
-          Poradnik zniknie automatycznie po uruchomieniu aplikacji z ekranu głównego.
-        </div>
-      </div>
     </div>
   </section>
 
@@ -1257,7 +1430,7 @@
 
     function renderOpeningHours(){
       const now = new Date();
-      const day = now.getDay(); // 0=niedz, 1=pon, ...
+      const day = now.getDay();
       const minutesNow = now.getHours()*60 + now.getMinutes();
 
       const today = openingSchedule[day];
@@ -1748,7 +1921,7 @@
       });
     });
 
-    // ---------- PWA install guide logic (OBOWIĄZKOWE) ----------
+    // ---------- NOWY: install guide logic ----------
     const installGuideEl = document.getElementById("installGuide");
     const guideTabs = document.querySelectorAll("[data-guide-tab]");
     const guidePanes = document.querySelectorAll("[data-guide-pane]");
@@ -1759,7 +1932,6 @@
       const iosStandalone = (typeof navigator !== "undefined" && "standalone" in navigator) ? navigator.standalone : false;
       return !!(standaloneDisplay || iosStandalone);
     }
-
     function isIOS(){
       return /iphone|ipad|ipod/i.test(navigator.userAgent);
     }
@@ -1769,25 +1941,23 @@
       installGuideEl?.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
     }
-
     function hideInstallGuide(){
       installGuideEl?.classList.remove("show");
       installGuideEl?.setAttribute("aria-hidden", "true");
       document.body.style.overflow = "";
     }
 
+    function setGuideTab(name){
+      guideTabs.forEach(b=> b.classList.toggle("active", b.dataset.guideTab===name));
+      guidePanes.forEach(p=> p.classList.toggle("active", p.dataset.guidePane===name));
+    }
+
     guideTabs.forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        const name = btn.dataset.guideTab;
-        guideTabs.forEach(b=> b.classList.toggle("active", b===btn));
-        guidePanes.forEach(p=> p.classList.toggle("active", p.dataset.guidePane===name));
-      });
+      btn.addEventListener("click", ()=> setGuideTab(btn.dataset.guideTab));
     });
 
     (function initGuideDefaultTab(){
-      const initial = isIOS() ? "ios" : "android";
-      guideTabs.forEach(b=> b.classList.toggle("active", b.dataset.guideTab===initial));
-      guidePanes.forEach(p=> p.classList.toggle("active", p.dataset.guidePane===initial));
+      setGuideTab(isIOS() ? "ios" : "android");
     })();
 
     let deferredPrompt = null;
@@ -1809,7 +1979,7 @@
       androidInstallBtn.style.display = "none";
     });
 
-    // WYMUSZAMY: w przeglądarce zawsze poradnik, w PWA zawsze aplikacja
+    // WYMUSZENIE: w przeglądarce poradnik, w PWA aplikacja
     (function gateAppWithInstallGuide(){
       const inStandalone = isStandaloneMode();
       if(!inStandalone){

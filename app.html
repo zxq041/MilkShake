@@ -1365,86 +1365,126 @@
   </div>
 
   <script>
-    // ---------- PWA ----------
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
-    }
+  // ---------- PWA ----------
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+  }
 
-    // ---------- Tabs ----------
-    const tabs = {
-      points: document.getElementById("tab-points"),
-      rewards: document.getElementById("tab-rewards"),
-      order: document.getElementById("tab-order"),
-      res: document.getElementById("tab-res"),
-      account: document.getElementById("tab-account"),
-    };
-    const navButtons = document.querySelectorAll(".nav-btn");
-    function openTab(name){
-      Object.entries(tabs).forEach(([k, el]) => el.classList.toggle("active", k===name));
-      navButtons.forEach(b => b.classList.toggle("active", b.dataset.tab===name));
-      window.scrollTo({top:0, behavior:"smooth"});
-    }
-    navButtons.forEach(btn => btn.addEventListener("click", () => openTab(btn.dataset.tab)));
-    document.querySelectorAll("[data-go]").forEach(b=> b.addEventListener("click", ()=> openTab(b.dataset.go)));
+  // ---------- Helpers / API ----------
+  const API = {
+    async json(url, opts = {}) {
+      const res = await fetch(url, {
+        headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
+        ...opts,
+      });
 
-    // ---------- Toast ----------
-    const toast = document.getElementById("toast");
-    const toastText = document.getElementById("toastText");
-    function showToast(msg, danger=false){
-      toastText.textContent = msg;
-      toast.classList.toggle("danger", danger);
-      toast.classList.add("show");
-      setTimeout(()=>toast.classList.remove("show"), 3200);
-    }
+      // jeśli backend zwróci HTML (np. SPA fallback), pokaż czytelny błąd
+      const ct = res.headers.get("content-type") || "";
+      const text = await res.text();
 
-    // ---------- Storage ----------
-    const store = {
-      get(key, fallback){
-        try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
-        catch { return fallback; }
-      },
-      set(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
-    };
+      let data = null;
+      if (ct.includes("application/json")) {
+        try { data = JSON.parse(text); } catch { data = null; }
+      }
 
-    // ---------- Opening hours / status ----------
-    const openingCardEl = document.getElementById("openingCard");
-    const openDotEl   = document.getElementById("openDot");
-    const openTextEl  = document.getElementById("openText");
-    const openHoursEl = document.getElementById("openingHours");
-    const openHintEl  = document.getElementById("openHint");
+      if (!res.ok) {
+        const msg =
+          (data && (data.message || data.error)) ||
+          (text && text.slice(0, 140)) ||
+          `HTTP ${res.status}`;
+        throw new Error(msg);
+      }
 
-    const openingSchedule = {
-      0: { label: "niedziela", open: "09:00", close: "21:00" },
-      1: { label: "poniedziałek", open: "08:00", close: "21:00" },
-      2: { label: "wtorek", open: "08:00", close: "21:00" },
-      3: { label: "środa", open: "08:00", close: "21:00" },
-      4: { label: "czwartek", open: "08:00", close: "21:00" },
-      5: { label: "piątek", open: "08:00", close: "22:00" },
-      6: { label: "sobota", open: "09:00", close: "22:00" },
-    };
+      // jeżeli miał być JSON, a jest HTML -> też błąd
+      if (!ct.includes("application/json") && text.trim().startsWith("<")) {
+        throw new Error("Backend zwrócił HTML zamiast JSON (sprawdź routing / endpoint).");
+      }
 
-    function toMinutes(hhmm){
-      const [h,m] = hhmm.split(":").map(Number);
-      return h*60 + m;
-    }
+      return data ?? (text ? JSON.parse(text) : null);
+    },
+  };
 
-    function renderOpeningHours(){
-      const now = new Date();
-      const day = now.getDay();
-      const minutesNow = now.getHours()*60 + now.getMinutes();
+  // ---------- Tabs ----------
+  const tabs = {
+    points: document.getElementById("tab-points"),
+    rewards: document.getElementById("tab-rewards"),
+    order: document.getElementById("tab-order"),
+    res: document.getElementById("tab-res"),
+    account: document.getElementById("tab-account"),
+  };
+  const navButtons = document.querySelectorAll(".nav-btn");
+  function openTab(name) {
+    Object.entries(tabs).forEach(([k, el]) => el.classList.toggle("active", k === name));
+    navButtons.forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  navButtons.forEach((btn) => btn.addEventListener("click", () => openTab(btn.dataset.tab)));
+  document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => openTab(b.dataset.go)));
 
-      const today = openingSchedule[day];
-      const openM  = toMinutes(today.open);
-      const closeM = toMinutes(today.close);
+  // ---------- Toast ----------
+  const toast = document.getElementById("toast");
+  const toastText = document.getElementById("toastText");
+  function showToast(msg, danger = false) {
+    toastText.textContent = msg;
+    toast.classList.toggle("danger", danger);
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 3200);
+  }
 
-      const isOpen = minutesNow >= openM && minutesNow < closeM;
+  // ---------- Storage (punkty / konto nadal lokalnie jak miałeś) ----------
+  const store = {
+    get(key, fallback) {
+      try {
+        return JSON.parse(localStorage.getItem(key)) ?? fallback;
+      } catch {
+        return fallback;
+      }
+    },
+    set(key, val) {
+      localStorage.setItem(key, JSON.stringify(val));
+    },
+  };
 
-      openDotEl.classList.remove("open","closed");
-      openDotEl.classList.add(isOpen ? "open" : "closed");
-      openTextEl.textContent = isOpen ? "Jesteśmy Otwarci" : "Jesteśmy Zamknięci";
+  // ---------- Opening hours / status ----------
+  const openingCardEl = document.getElementById("openingCard");
+  const openDotEl = document.getElementById("openDot");
+  const openTextEl = document.getElementById("openText");
+  const openHoursEl = document.getElementById("openingHours");
+  const openHintEl = document.getElementById("openHint");
 
-      const order = [1,2,3,4,5,6,0];
-      openHoursEl.innerHTML = order.map(d=>{
+  const openingSchedule = {
+    0: { label: "niedziela", open: "09:00", close: "21:00" },
+    1: { label: "poniedziałek", open: "08:00", close: "21:00" },
+    2: { label: "wtorek", open: "08:00", close: "21:00" },
+    3: { label: "środa", open: "08:00", close: "21:00" },
+    4: { label: "czwartek", open: "08:00", close: "21:00" },
+    5: { label: "piątek", open: "08:00", close: "22:00" },
+    6: { label: "sobota", open: "09:00", close: "22:00" },
+  };
+
+  function toMinutes(hhmm) {
+    const [h, m] = hhmm.split(":").map(Number);
+    return h * 60 + m;
+  }
+
+  function renderOpeningHours() {
+    const now = new Date();
+    const day = now.getDay();
+    const minutesNow = now.getHours() * 60 + now.getMinutes();
+
+    const today = openingSchedule[day];
+    const openM = toMinutes(today.open);
+    const closeM = toMinutes(today.close);
+
+    const isOpen = minutesNow >= openM && minutesNow < closeM;
+
+    openDotEl.classList.remove("open", "closed");
+    openDotEl.classList.add(isOpen ? "open" : "closed");
+    openTextEl.textContent = isOpen ? "Jesteśmy Otwarci" : "Jesteśmy Zamknięci";
+
+    const order = [1, 2, 3, 4, 5, 6, 0];
+    openHoursEl.innerHTML = order
+      .map((d) => {
         const s = openingSchedule[d];
         const isToday = d === day;
         return `
@@ -1452,110 +1492,116 @@
             <b>${s.label}</b> ${s.open}–${s.close}
           </div>
         `;
-      }).join("");
+      })
+      .join("");
+  }
+
+  openingCardEl.addEventListener("click", () => {
+    openingCardEl.classList.toggle("expanded");
+    const expanded = openingCardEl.classList.contains("expanded");
+    openHintEl.textContent = expanded
+      ? "Kliknij, aby ukryć godziny otwarcia"
+      : "Kliknij, aby zobaczyć godziny otwarcia";
+  });
+
+  renderOpeningHours();
+  setInterval(renderOpeningHours, 60 * 1000);
+
+  // ---------- Clear points history once ----------
+  (function clearHistoryOnce() {
+    const didClear = store.get("didClearHistoryOnce", false);
+    if (!didClear) {
+      store.set("pointsHistory", []);
+      store.set("didClearHistoryOnce", true);
     }
+  })();
 
-    openingCardEl.addEventListener("click", ()=>{
-      openingCardEl.classList.toggle("expanded");
-      const expanded = openingCardEl.classList.contains("expanded");
-      openHintEl.textContent = expanded
-        ? "Kliknij, aby ukryć godziny otwarcia"
-        : "Kliknij, aby zobaczyć godziny otwarcia";
-    });
+  // ---------- Loyalty code modal ----------
+  const loyaltyCodeEl = document.getElementById("loyaltyCode");
+  const showCodeBtn = document.getElementById("showCodeBtn");
+  const copyCodeBtn = document.getElementById("copyCodeBtn");
+  const codeModal = document.getElementById("codeModal");
 
-    renderOpeningHours();
-    setInterval(renderOpeningHours, 60*1000);
-
-    // ---------- Clear points history once ----------
-    (function clearHistoryOnce(){
-      const didClear = store.get("didClearHistoryOnce", false);
-      if(!didClear){
-        store.set("pointsHistory", []);
-        store.set("didClearHistoryOnce", true);
-      }
-    })();
-
-    // ---------- Loyalty code modal ----------
-    const loyaltyCodeEl = document.getElementById("loyaltyCode");
-    const showCodeBtn   = document.getElementById("showCodeBtn");
-    const copyCodeBtn   = document.getElementById("copyCodeBtn");
-    const codeModal     = document.getElementById("codeModal");
-
-    function generate6DigitCode(){
-      return String(Math.floor(100000 + Math.random() * 900000));
+  function generate6DigitCode() {
+    return String(Math.floor(100000 + Math.random() * 900000));
+  }
+  function getOrCreateLoyaltyCode() {
+    let code = store.get("loyaltyCode", null);
+    if (!code || String(code).length !== 6) {
+      code = generate6DigitCode();
+      store.set("loyaltyCode", code);
     }
-    function getOrCreateLoyaltyCode(){
-      let code = store.get("loyaltyCode", null);
-      if(!code || String(code).length !== 6){
-        code = generate6DigitCode();
-        store.set("loyaltyCode", code);
-      }
-      return String(code);
-    }
-    function renderLoyaltyCode(){
-      loyaltyCodeEl.textContent = getOrCreateLoyaltyCode();
-    }
-    function openCodeModal(){
-      renderLoyaltyCode();
-      codeModal.classList.add("show");
-      document.body.style.overflow = "hidden";
-    }
-    function closeCodeModal(){
-      codeModal.classList.remove("show");
-      document.body.style.overflow = "";
-    }
-    showCodeBtn?.addEventListener("click", openCodeModal);
-    codeModal?.querySelectorAll("[data-close]").forEach(el=> el.addEventListener("click", closeCodeModal));
+    return String(code);
+  }
+  function renderLoyaltyCode() {
+    loyaltyCodeEl.textContent = getOrCreateLoyaltyCode();
+  }
+  function openCodeModal() {
+    renderLoyaltyCode();
+    codeModal.classList.add("show");
+    document.body.style.overflow = "hidden";
+  }
+  function closeCodeModal() {
+    codeModal.classList.remove("show");
+    document.body.style.overflow = "";
+  }
+  showCodeBtn?.addEventListener("click", openCodeModal);
+  codeModal?.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", closeCodeModal));
 
-    copyCodeBtn?.addEventListener("click", async ()=>{
-      const code = loyaltyCodeEl.textContent;
-      try{
-        await navigator.clipboard.writeText(code);
-        showToast("Kod skopiowany ✅");
-      }catch{
-        showToast("Nie udało się skopiować 🤏", true);
-      }
-    });
+  copyCodeBtn?.addEventListener("click", async () => {
+    const code = loyaltyCodeEl.textContent;
+    try {
+      await navigator.clipboard.writeText(code);
+      showToast("Kod skopiowany ✅");
+    } catch {
+      showToast("Nie udało się skopiować 🤏", true);
+    }
+  });
 
-    // ---------- Points ----------
-    const pointsCountEl = document.getElementById("pointsCount");
-    const pointsPillEl  = document.getElementById("pointsPill");
-    const pointsProgressEl = document.getElementById("pointsProgress");
-    const historyEl = document.getElementById("pointsHistory");
+  // ---------- Points ----------
+  const pointsCountEl = document.getElementById("pointsCount");
+  const pointsPillEl = document.getElementById("pointsPill");
+  const pointsProgressEl = document.getElementById("pointsProgress");
+  const historyEl = document.getElementById("pointsHistory");
 
-    function renderPoints(){
-      const pts = store.get("points", 0);
-      pointsCountEl.textContent = pts;
-      pointsPillEl.textContent = pts + " pkt";
-      const pct = Math.min(100, (pts % 100));
-      pointsProgressEl.style.width = pct + "%";
+  function renderPoints() {
+    const pts = store.get("points", 0);
+    pointsCountEl.textContent = pts;
+    pointsPillEl.textContent = pts + " pkt";
+    const pct = Math.min(100, pts % 100);
+    pointsProgressEl.style.width = pct + "%";
 
-      const hist = store.get("pointsHistory", []);
-      historyEl.innerHTML = hist.length
-        ? hist.map(h => `<div style="padding:8px 0;border-bottom:1px dashed rgba(0,0,0,.06)">
+    const hist = store.get("pointsHistory", []);
+    historyEl.innerHTML = hist.length
+      ? hist
+          .map(
+            (h) => `<div style="padding:8px 0;border-bottom:1px dashed rgba(0,0,0,.06)">
               <b>${h.text}</b><div class="tiny">${h.date}</div>
-           </div>`).join("")
-        : `<div class="empty">
+           </div>`
+          )
+          .join("")
+      : `<div class="empty">
             <div class="icon"><i class="fa-solid fa-clock"></i></div>
             <div>
               <b>Historia punktów jest pusta</b>
               <div class="tiny">Punkty pojawią się po pierwszym naliczeniu.</div>
             </div>
            </div>`;
-    }
+  }
 
-    // ---------- Rewards ----------
-    const rewards = [
-      { id:"shake_small", title:"Milkshake mały", cost:80, icon:"fa-ice-cream", desc:"Dowolny smak" },
-      { id:"shake_big", title:"Milkshake duży", cost:120, icon:"fa-glass-whiskey", desc:"Z dodatkami" },
-      { id:"dessert", title:"Dowolny deser", cost:150, icon:"fa-cookie-bite", desc:"Z gabloty" },
-      { id:"breakfast", title:"Śniadanie", cost:200, icon:"fa-egg", desc:"Na miejscu" },
-    ];
-    const rewardsListEl = document.getElementById("rewardsList");
+  // ---------- Rewards ----------
+  const rewards = [
+    { id: "shake_small", title: "Milkshake mały", cost: 80, icon: "fa-ice-cream", desc: "Dowolny smak" },
+    { id: "shake_big", title: "Milkshake duży", cost: 120, icon: "fa-glass-whiskey", desc: "Z dodatkami" },
+    { id: "dessert", title: "Dowolny deser", cost: 150, icon: "fa-cookie-bite", desc: "Z gabloty" },
+    { id: "breakfast", title: "Śniadanie", cost: 200, icon: "fa-egg", desc: "Na miejscu" },
+  ];
+  const rewardsListEl = document.getElementById("rewardsList");
 
-    function renderRewards(){
-      const pts = store.get("points", 0);
-      rewardsListEl.innerHTML = rewards.map(r => {
+  function renderRewards() {
+    const pts = store.get("points", 0);
+    rewardsListEl.innerHTML = rewards
+      .map((r) => {
         const disabled = pts < r.cost;
         return `
           <div class="reward">
@@ -1577,73 +1623,84 @@
             </div>
           </div>
         `;
-      }).join("");
-      rewardsListEl.querySelectorAll("[data-redeem]").forEach(btn=>{
-        btn.addEventListener("click", ()=> redeemReward(btn.dataset.redeem));
-      });
+      })
+      .join("");
+    rewardsListEl.querySelectorAll("[data-redeem]").forEach((btn) => {
+      btn.addEventListener("click", () => redeemReward(btn.dataset.redeem));
+    });
+  }
+
+  function redeemReward(id) {
+    const r = rewards.find((x) => x.id === id);
+    if (!r) return;
+    const pts = store.get("points", 0);
+    if (pts < r.cost) {
+      showToast("Masz za mało punktów 😅", true);
+      return;
     }
+    store.set("points", pts - r.cost);
 
-    function redeemReward(id){
-      const r = rewards.find(x=>x.id===id);
-      if(!r) return;
-      const pts = store.get("points", 0);
-      if(pts < r.cost){ showToast("Masz za mało punktów 😅", true); return; }
-      store.set("points", pts - r.cost);
+    const hist = store.get("pointsHistory", []);
+    hist.unshift({ text: `Wymieniono: -${r.cost} pkt (${r.title})`, date: new Date().toLocaleString("pl-PL") });
+    store.set("pointsHistory", hist);
 
-      const hist = store.get("pointsHistory", []);
-      hist.unshift({ text: `Wymieniono: -${r.cost} pkt (${r.title})`, date: new Date().toLocaleString("pl-PL") });
-      store.set("pointsHistory", hist);
+    renderPoints();
+    renderRewards();
+    showToast(`Nagroda odebrana: ${r.title} 🎁`);
+    openTab("rewards");
+  }
 
-      renderPoints(); renderRewards();
-      showToast(`Nagroda odebrana: ${r.title} 🎁`);
-      openTab("rewards");
+  // ---------- Order & pickup (ZAPIS DO PANELU) ----------
+  const menuItems = [
+    { id: "m1", title: "Milkshake klasyczny", price: 18, icon: "fa-ice-cream", desc: "Dowolny smak" },
+    { id: "m2", title: "Milkshake premium", price: 24, icon: "fa-glass-whiskey", desc: "Z dodatkami" },
+    { id: "m3", title: "Deser dnia", price: 16, icon: "fa-cookie-bite", desc: "Z gabloty" },
+    { id: "m4", title: "Burger Milk", price: 29, icon: "fa-burger", desc: "Wołowina / kurczak" },
+    { id: "m5", title: "Frytki", price: 10, icon: "fa-potato", desc: "Klasyczne" },
+  ];
+
+  const menuListEl = document.getElementById("menuList");
+  const cartListEl = document.getElementById("cartList");
+  const cartTotalEl = document.getElementById("cartTotal");
+  const submitOrderBtn = document.getElementById("submitOrderBtn");
+  const ordersListEl = document.getElementById("ordersList");
+
+  function getCart() {
+    return store.get("orderCart", []);
+  }
+  function setCart(c) {
+    store.set("orderCart", c);
+  }
+
+  function addToCart(id) {
+    const item = menuItems.find((x) => x.id === id);
+    if (!item) return;
+    const cart = getCart();
+    const existing = cart.find((c) => c.id === id);
+    if (existing) existing.qty++;
+    else cart.push({ id, qty: 1 });
+    setCart(cart);
+    renderCart();
+    showToast(`Dodano: ${item.title}`);
+  }
+
+  function changeQty(id, delta) {
+    const cart = getCart();
+    const line = cart.find((c) => c.id === id);
+    if (!line) return;
+    line.qty += delta;
+    if (line.qty <= 0) {
+      const idx = cart.findIndex((c) => c.id === id);
+      cart.splice(idx, 1);
     }
+    setCart(cart);
+    renderCart();
+  }
 
-    // ---------- Order & pickup ----------
-    const menuItems = [
-      { id:"m1", title:"Milkshake klasyczny", price:18, icon:"fa-ice-cream", desc:"Dowolny smak" },
-      { id:"m2", title:"Milkshake premium", price:24, icon:"fa-glass-whiskey", desc:"Z dodatkami" },
-      { id:"m3", title:"Deser dnia", price:16, icon:"fa-cookie-bite", desc:"Z gabloty" },
-      { id:"m4", title:"Burger Milk", price:29, icon:"fa-burger", desc:"Wołowina / kurczak" },
-      { id:"m5", title:"Frytki", price:10, icon:"fa-potato", desc:"Klasyczne" },
-    ];
-
-    const menuListEl = document.getElementById("menuList");
-    const cartListEl = document.getElementById("cartList");
-    const cartTotalEl = document.getElementById("cartTotal");
-    const submitOrderBtn = document.getElementById("submitOrderBtn");
-    const ordersListEl = document.getElementById("ordersList");
-
-    function getCart(){ return store.get("orderCart", []); }
-    function setCart(c){ store.set("orderCart", c); }
-
-    function addToCart(id){
-      const item = menuItems.find(x=>x.id===id);
-      if(!item) return;
-      const cart = getCart();
-      const existing = cart.find(c=>c.id===id);
-      if(existing) existing.qty++;
-      else cart.push({ id, qty:1 });
-      setCart(cart);
-      renderCart();
-      showToast(`Dodano: ${item.title}`);
-    }
-
-    function changeQty(id, delta){
-      const cart = getCart();
-      const line = cart.find(c=>c.id===id);
-      if(!line) return;
-      line.qty += delta;
-      if(line.qty<=0){
-        const idx = cart.findIndex(c=>c.id===id);
-        cart.splice(idx,1);
-      }
-      setCart(cart);
-      renderCart();
-    }
-
-    function renderMenu(){
-      menuListEl.innerHTML = menuItems.map(m=>`
+  function renderMenu() {
+    menuListEl.innerHTML = menuItems
+      .map(
+        (m) => `
         <div class="menu-item">
           <div class="menu-left">
             <div class="menu-ico"><i class="fa-solid ${m.icon}"></i></div>
@@ -1657,17 +1714,19 @@
             <button class="btn btn-primary btn-small" data-add="${m.id}">Dodaj</button>
           </div>
         </div>
-      `).join("");
+      `
+      )
+      .join("");
 
-      menuListEl.querySelectorAll("[data-add]").forEach(btn=>{
-        btn.addEventListener("click", ()=> addToCart(btn.dataset.add));
-      });
-    }
+    menuListEl.querySelectorAll("[data-add]").forEach((btn) => {
+      btn.addEventListener("click", () => addToCart(btn.dataset.add));
+    });
+  }
 
-    function renderCart(){
-      const cart = getCart();
-      if(!cart.length){
-        cartListEl.innerHTML = `
+  function renderCart() {
+    const cart = getCart();
+    if (!cart.length) {
+      cartListEl.innerHTML = `
           <div class="empty">
             <div class="icon"><i class="fa-solid fa-bag-shopping"></i></div>
             <div>
@@ -1675,16 +1734,17 @@
               <div class="tiny">Dodaj coś z menu.</div>
             </div>
           </div>`;
-        cartTotalEl.textContent = "0 zł";
-        submitOrderBtn.disabled = true;
-        return;
-      }
+      cartTotalEl.textContent = "0 zł";
+      submitOrderBtn.disabled = true;
+      return;
+    }
 
-      submitOrderBtn.disabled = false;
+    submitOrderBtn.disabled = false;
 
-      let total = 0;
-      cartListEl.innerHTML = cart.map(c=>{
-        const m = menuItems.find(x=>x.id===c.id);
+    let total = 0;
+    cartListEl.innerHTML = cart
+      .map((c) => {
+        const m = menuItems.find((x) => x.id === c.id);
         const lineTotal = m.price * c.qty;
         total += lineTotal;
         return `
@@ -1700,99 +1760,143 @@
             </div>
           </div>
         `;
-      }).join("");
+      })
+      .join("");
 
-      cartTotalEl.textContent = total + " zł";
+    cartTotalEl.textContent = total + " zł";
 
-      cartListEl.querySelectorAll("[data-qty]").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          const id = btn.dataset.qty;
-          const d = Number(btn.dataset.d);
-          changeQty(id, d);
-        });
+    cartListEl.querySelectorAll("[data-qty]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.qty;
+        const d = Number(btn.dataset.d);
+        changeQty(id, d);
       });
+    });
+  }
+
+  async function submitOrder() {
+    const cart = getCart();
+    if (!cart.length) {
+      showToast("Koszyk pusty 😅", true);
+      return;
     }
 
-    function submitOrder(){
-      const cart = getCart();
-      if(!cart.length){ showToast("Koszyk pusty 😅", true); return; }
+    const pickupTime = document.getElementById("pickupTime").value;
+    const pickupLocation = document.getElementById("pickupLocation").value;
+    const notes = document.getElementById("orderNotes").value;
 
-      const pickupTime = document.getElementById("pickupTime").value;
-      const pickupLocation = document.getElementById("pickupLocation").value;
-      const notes = document.getElementById("orderNotes").value;
+    if (!pickupTime) {
+      showToast("Ustaw godzinę odbioru ⏰", true);
+      return;
+    }
 
-      if(!pickupTime){
-        showToast("Ustaw godzinę odbioru ⏰", true);
-        return;
-      }
+    const items = cart.map((c) => {
+      const m = menuItems.find((x) => x.id === c.id);
+      return { title: m.title, qty: c.qty, price: m.price };
+    });
+    const total = items.reduce((s, i) => s + i.price * i.qty, 0);
 
-      const items = cart.map(c=>{
-        const m = menuItems.find(x=>x.id===c.id);
-        return { title:m.title, qty:c.qty, price:m.price };
-      });
-
-      const total = items.reduce((s,i)=>s+i.price*i.qty,0);
-
-      const orders = store.get("orders", []);
-      orders.unshift({
-        id: crypto.randomUUID(),
-        items,
-        total,
+    // zapis do backendu (panel "appadmin.html" powinien to czytać)
+    try {
+      const payload = {
+        source: "app",
         pickupTime,
         pickupLocation,
-        notes,
-        date: new Date().toLocaleString("pl-PL"),
-        status: "Przyjęte"
+        notes: notes || "",
+        items,
+        total,
+        createdAt: new Date().toISOString(),
+        status: "Przyjęte",
+        user: store.get("user", null),
+        loyaltyCode: store.get("loyaltyCode", null),
+      };
+
+      // UWAGA: ten endpoint MUSI istnieć w server.js
+      // jeśli go nie masz -> dostaniesz 404 i pokaże się toast z błędem
+      await API.json("/api/admin/orders", {
+        method: "POST",
+        body: JSON.stringify(payload),
       });
-      store.set("orders", orders);
 
       setCart([]);
       document.getElementById("orderNotes").value = "";
       renderCart();
-      renderOrders();
-      showToast("Zamówienie złożone ✅");
+      showToast("Zamówienie wysłane ✅");
+      await refreshOrdersFromServer();
       openTab("order");
+    } catch (e) {
+      showToast("Błąd zamówienia: " + e.message, true);
     }
+  }
 
-    function renderOrders(){
-      const orders = store.get("orders", []);
-      ordersListEl.innerHTML = orders.length
-        ? orders.map(o=>`
+  submitOrderBtn.addEventListener("click", submitOrder);
+
+  // lista zamówień z backendu (jeśli endpoint istnieje)
+  async function refreshOrdersFromServer() {
+    try {
+      const data = await API.json("/api/admin/orders");
+      const orders = Array.isArray(data) ? data : (data?.orders || []);
+      renderOrdersUI(orders);
+    } catch (e) {
+      // fallback: pokaż lokalne jeśli backend nie ma endpointu
+      const local = store.get("orders", []);
+      renderOrdersUI(local, true);
+    }
+  }
+
+  function renderOrdersUI(orders, isLocal = false) {
+    ordersListEl.innerHTML = orders.length
+      ? orders
+          .map(
+            (o) => `
             <div class="res-item">
-              <b>${o.pickupLocation} • ${o.pickupTime}</b>
-              <div class="tiny">Złożono: ${o.date}</div>
-              <div class="tiny">Status: <b>${o.status}</b></div>
+              <b>${(o.pickupLocation || "—")} • ${(o.pickupTime || "—")}</b>
+              <div class="tiny">Złożono: ${o.date || o.createdAt || "—"}</div>
+              <div class="tiny">Status: <b>${o.status || "Przyjęte"}</b>${isLocal ? " (lokalnie)" : ""}</div>
               <div style="margin-top:6px">
-                ${o.items.map(i=>`• ${i.qty}x ${i.title}`).join("<br>")}
+                ${(o.items || []).map((i) => `• ${i.qty}x ${i.title}`).join("<br>")}
               </div>
               <div class="divider"></div>
               <div style="display:flex;justify-content:space-between;font-weight:900">
-                <span>Razem</span><span>${o.total} zł</span>
+                <span>Razem</span><span>${o.total ?? 0} zł</span>
               </div>
               <div class="tiny" style="margin-top:4px">
                 Płatność na miejscu przy odbiorze.
               </div>
             </div>
-          `).join("")
-        : `<div class="empty">
+          `
+          )
+          .join("")
+      : `<div class="empty">
             <div class="icon"><i class="fa-solid fa-bag-shopping"></i></div>
             <div>
               <b>Brak zamówień</b>
               <div class="tiny">Twoje zamówienia pojawią się tutaj.</div>
             </div>
            </div>`;
+  }
+
+  // ---------- Reservations (WYSYŁKA DO /api/rezerwacje) ----------
+  const resForm = document.getElementById("reservationForm");
+  const resListEl = document.getElementById("reservationsList");
+
+  async function refreshReservationsFromServer() {
+    try {
+      const list = await API.json("/api/rezerwacje");
+      // pokaż tylko te, które należą do użytkownika jeśli chcesz filtrować po tel/email – na razie pokazuję "Twoje" lokalnie:
+      // ale żeby mieć spójność, pokażę listę lokalnych wysłanych + fallback.
+      renderReservationsUI(list, false);
+    } catch (e) {
+      const local = store.get("reservations_local", []);
+      renderReservationsUI(local, true);
     }
+  }
 
-    submitOrderBtn.addEventListener("click", submitOrder);
-
-    // ---------- Reservations ----------
-    const resForm = document.getElementById("reservationForm");
-    const resListEl = document.getElementById("reservationsList");
-
-    function renderReservations(){
-      const list = store.get("reservations", []);
-      resListEl.innerHTML = list.length
-        ? list.map(r => `
+  function renderReservationsUI(list, isLocal = false) {
+    resListEl.innerHTML = list.length
+      ? list
+          .map(
+            (r) => `
             <div class="res-item">
               <b>${r.date} • ${r.time}</b>
               <div>${r.guests} os. • ${r.room}</div>
@@ -1800,11 +1904,17 @@
               ${r.notes ? `<div class="tiny">Uwagi: ${r.notes}</div>` : ""}
               <div class="divider"></div>
               <div class="res-actions">
-                <button class="btn btn-ghost btn-small" data-del="${r.id}">Usuń</button>
+                ${
+                  isLocal
+                    ? `<button class="btn btn-ghost btn-small" data-del-local="${r.id}">Usuń</button>`
+                    : ``
+                }
               </div>
             </div>
-          `).join("")
-        : `<div class="empty">
+          `
+          )
+          .join("")
+      : `<div class="empty">
             <div class="icon"><i class="fa-solid fa-calendar-check"></i></div>
             <div>
               <b>Brak rezerwacji</b>
@@ -1812,192 +1922,224 @@
             </div>
            </div>`;
 
-      resListEl.querySelectorAll("[data-del]").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          const id = btn.dataset.del;
-          const newList = store.get("reservations", []).filter(x=>x.id!==id);
-          store.set("reservations", newList);
-          renderReservations();
-          showToast("Rezerwacja usunięta");
-        });
+    // tylko lokalne można usuwać (backend usuwa admin panel)
+    resListEl.querySelectorAll("[data-del-local]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const id = btn.dataset.delLocal;
+        const newList = store.get("reservations_local", []).filter((x) => x.id !== id);
+        store.set("reservations_local", newList);
+        refreshReservationsFromServer();
+        showToast("Rezerwacja usunięta");
       });
+    });
+  }
+
+  resForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fd = new FormData(resForm);
+    const data = Object.fromEntries(fd.entries());
+
+    // walidacja jak w backendzie
+    if (!data.name || !data.phone || !data.date || !data.time || !data.guests || !data.room) {
+      showToast("Uzupełnij wszystkie pola", true);
+      return;
     }
 
-    resForm.addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      const fd = new FormData(resForm);
-      const data = Object.fromEntries(fd.entries());
-      const list = store.get("reservations", []);
-      list.unshift({ ...data, id: crypto.randomUUID() });
-      store.set("reservations", list);
+    try {
+      // WYŚLIJ DO BACKENDU -> admin.html zobaczy
+      const payload = {
+        name: String(data.name),
+        phone: String(data.phone),
+        date: String(data.date),
+        time: String(data.time),
+        guests: String(data.guests),
+        room: String(data.room),
+        notes: String(data.notes || ""),
+        source: "app",
+      };
+
+      await API.json("/api/rezerwacje", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      // zachowaj kopię "Twoje" lokalnie (bo backend nie ma per-user auth)
+      const local = store.get("reservations_local", []);
+      local.unshift({ ...payload, id: crypto.randomUUID() });
+      store.set("reservations_local", local);
+
       resForm.reset();
-      renderReservations();
-      showToast("Rezerwacja zapisana 🧡");
+      showToast("Rezerwacja wysłana 🧡");
+      await refreshReservationsFromServer();
       openTab("res");
-    });
-
-    (() => {
-      const dateInput = resForm.querySelector("input[name='date']");
-      const iso = new Date().toISOString().split("T")[0];
-      dateInput.min = iso;
-    })();
-
-    // ---------- Account / Auth ----------
-    const loggedOutEl = document.getElementById("accountLoggedOut");
-    const loggedInEl  = document.getElementById("accountLoggedIn");
-    const avatarEl = document.getElementById("avatar");
-    const accNameEl = document.getElementById("accName");
-    const accEmailEl = document.getElementById("accEmail");
-
-    function setUser(user){ store.set("user", user); renderAccount(); }
-    function renderAccount(){
-      const user = store.get("user", null);
-      const isLogged = !!user;
-      loggedOutEl.style.display = isLogged ? "none" : "flex";
-      loggedInEl.style.display  = isLogged ? "flex" : "none";
-      if(isLogged){
-        const initials = (user.name || "Milk User").split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
-        avatarEl.textContent = initials;
-        accNameEl.textContent = user.name || "Użytkownik";
-        accEmailEl.textContent = user.email || "";
-      }
+    } catch (err) {
+      showToast("Seen błąd: " + err.message, true);
     }
+  });
 
-    document.getElementById("loginGoogle").addEventListener("click", ()=>{
-      setUser({ provider:"google", name:"Użytkownik Google", email:"google@user.com" });
-      showToast("Zalogowano przez Google ✅");
-      openTab("account");
-    });
+  (() => {
+    const dateInput = resForm.querySelector("input[name='date']");
+    const iso = new Date().toISOString().split("T")[0];
+    dateInput.min = iso;
+  })();
 
-    document.getElementById("loginEmailForm").addEventListener("submit", (e)=>{
-      e.preventDefault();
-      const fd = new FormData(e.target);
-      const email = fd.get("email");
-      setUser({ provider:"email", name: email.split("@")[0], email });
-      showToast("Zalogowano ✅");
-      openTab("account");
-      e.target.reset();
-    });
+  // ---------- Account / Auth ----------
+  const loggedOutEl = document.getElementById("accountLoggedOut");
+  const loggedInEl = document.getElementById("accountLoggedIn");
+  const avatarEl = document.getElementById("avatar");
+  const accNameEl = document.getElementById("accName");
+  const accEmailEl = document.getElementById("accEmail");
 
-    document.getElementById("logoutBtn").addEventListener("click", ()=>{
-      store.set("user", null);
-      renderAccount();
-      showToast("Wylogowano");
-    });
-
-    // ---------- Subpages ----------
-    const subpages = {
-      personal: document.getElementById("page-personal"),
-      language: document.getElementById("page-language"),
-      about: document.getElementById("page-about"),
-      help: document.getElementById("page-help")
-    };
-    function openSubpage(name){
-      closeSubpages();
-      subpages[name]?.classList.add("active");
-    }
-    function closeSubpages(){
-      Object.values(subpages).forEach(p=>p.classList.remove("active"));
-    }
-    document.querySelectorAll("[data-back]").forEach(b=>b.addEventListener("click", closeSubpages));
-    document.querySelectorAll(".list-item[data-open]").forEach(item=>{
-      item.addEventListener("click", ()=> openSubpage(item.dataset.open));
-    });
-
-    document.getElementById("savePersonalBtn").addEventListener("click", ()=>{
-      const user = store.get("user", {}) || {};
-      user.name = document.getElementById("personalName").value || user.name;
-      user.phone = document.getElementById("personalPhone").value || user.phone;
-      user.email = document.getElementById("personalEmail").value || user.email;
-      setUser(user);
-      showToast("Dane zapisane");
-      closeSubpages();
-    });
-    document.querySelectorAll("[data-lang]").forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        store.set("lang", btn.dataset.lang);
-        showToast("Zapisano język");
-        closeSubpages();
-      });
-    });
-
-    // ---------- NOWY: install guide logic ----------
-    const installGuideEl = document.getElementById("installGuide");
-    const guideTabs = document.querySelectorAll("[data-guide-tab]");
-    const guidePanes = document.querySelectorAll("[data-guide-pane]");
-    const androidInstallBtn = document.getElementById("androidInstallBtn");
-
-    function isStandaloneMode(){
-      const standaloneDisplay = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
-      const iosStandalone = (typeof navigator !== "undefined" && "standalone" in navigator) ? navigator.standalone : false;
-      return !!(standaloneDisplay || iosStandalone);
-    }
-    function isIOS(){
-      return /iphone|ipad|ipod/i.test(navigator.userAgent);
-    }
-
-    function showInstallGuide(){
-      installGuideEl?.classList.add("show");
-      installGuideEl?.setAttribute("aria-hidden", "false");
-      document.body.style.overflow = "hidden";
-    }
-    function hideInstallGuide(){
-      installGuideEl?.classList.remove("show");
-      installGuideEl?.setAttribute("aria-hidden", "true");
-      document.body.style.overflow = "";
-    }
-
-    function setGuideTab(name){
-      guideTabs.forEach(b=> b.classList.toggle("active", b.dataset.guideTab===name));
-      guidePanes.forEach(p=> p.classList.toggle("active", p.dataset.guidePane===name));
-    }
-
-    guideTabs.forEach(btn=>{
-      btn.addEventListener("click", ()=> setGuideTab(btn.dataset.guideTab));
-    });
-
-    (function initGuideDefaultTab(){
-      setGuideTab(isIOS() ? "ios" : "android");
-    })();
-
-    let deferredPrompt = null;
-    window.addEventListener("beforeinstallprompt", (e)=>{
-      e.preventDefault();
-      deferredPrompt = e;
-      if(androidInstallBtn){
-        androidInstallBtn.style.display = "inline-flex";
-        androidInstallBtn.disabled = false;
-      }
-    });
-
-    androidInstallBtn?.addEventListener("click", async ()=>{
-      if(!deferredPrompt) return;
-      androidInstallBtn.disabled = true;
-      deferredPrompt.prompt();
-      try{ await deferredPrompt.userChoice; }catch{}
-      deferredPrompt = null;
-      androidInstallBtn.style.display = "none";
-    });
-
-    // WYMUSZENIE: w przeglądarce poradnik, w PWA aplikacja
-    (function gateAppWithInstallGuide(){
-      const inStandalone = isStandaloneMode();
-      if(!inStandalone){
-        showInstallGuide();
-      } else {
-        hideInstallGuide();
-      }
-    })();
-
-    // ---------- Init ----------
-    renderPoints();
-    renderRewards();
-    renderMenu();
-    renderCart();
-    renderOrders();
-    renderReservations();
+  function setUser(user) {
+    store.set("user", user);
     renderAccount();
-    openTab("points");
-  </script>
-</body>
-</html>
+  }
+  function renderAccount() {
+    const user = store.get("user", null);
+    const isLogged = !!user;
+    loggedOutEl.style.display = isLogged ? "none" : "flex";
+    loggedInEl.style.display = isLogged ? "flex" : "none";
+    if (isLogged) {
+      const initials = (user.name || "Milk User").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+      avatarEl.textContent = initials;
+      accNameEl.textContent = user.name || "Użytkownik";
+      accEmailEl.textContent = user.email || "";
+    }
+  }
+
+  document.getElementById("loginGoogle").addEventListener("click", () => {
+    setUser({ provider: "google", name: "Użytkownik Google", email: "google@user.com" });
+    showToast("Zalogowano przez Google ✅");
+    openTab("account");
+  });
+
+  document.getElementById("loginEmailForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const email = fd.get("email");
+    setUser({ provider: "email", name: String(email).split("@")[0], email });
+    showToast("Zalogowano ✅");
+    openTab("account");
+    e.target.reset();
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    store.set("user", null);
+    renderAccount();
+    showToast("Wylogowano");
+  });
+
+  // ---------- Subpages ----------
+  const subpages = {
+    personal: document.getElementById("page-personal"),
+    language: document.getElementById("page-language"),
+    about: document.getElementById("page-about"),
+    help: document.getElementById("page-help"),
+  };
+  function openSubpage(name) {
+    closeSubpages();
+    subpages[name]?.classList.add("active");
+  }
+  function closeSubpages() {
+    Object.values(subpages).forEach((p) => p.classList.remove("active"));
+  }
+  document.querySelectorAll("[data-back]").forEach((b) => b.addEventListener("click", closeSubpages));
+  document.querySelectorAll(".list-item[data-open]").forEach((item) => {
+    item.addEventListener("click", () => openSubpage(item.dataset.open));
+  });
+
+  document.getElementById("savePersonalBtn").addEventListener("click", () => {
+    const user = store.get("user", {}) || {};
+    user.name = document.getElementById("personalName").value || user.name;
+    user.phone = document.getElementById("personalPhone").value || user.phone;
+    user.email = document.getElementById("personalEmail").value || user.email;
+    setUser(user);
+    showToast("Dane zapisane");
+    closeSubpages();
+  });
+  document.querySelectorAll("[data-lang]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      store.set("lang", btn.dataset.lang);
+      showToast("Zapisano język");
+      closeSubpages();
+    });
+  });
+
+  // ---------- Install guide logic (zostawione jak miałeś) ----------
+  const installGuideEl = document.getElementById("installGuide");
+  const guideTabs = document.querySelectorAll("[data-guide-tab]");
+  const guidePanes = document.querySelectorAll("[data-guide-pane]");
+  const androidInstallBtn = document.getElementById("androidInstallBtn");
+
+  function isStandaloneMode() {
+    const standaloneDisplay = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+    const iosStandalone = typeof navigator !== "undefined" && "standalone" in navigator ? navigator.standalone : false;
+    return !!(standaloneDisplay || iosStandalone);
+  }
+  function isIOS() {
+    return /iphone|ipad|ipod/i.test(navigator.userAgent);
+  }
+
+  function showInstallGuide() {
+    installGuideEl?.classList.add("show");
+    installGuideEl?.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+  function hideInstallGuide() {
+    installGuideEl?.classList.remove("show");
+    installGuideEl?.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+
+  function setGuideTab(name) {
+    guideTabs.forEach((b) => b.classList.toggle("active", b.dataset.guideTab === name));
+    guidePanes.forEach((p) => p.classList.toggle("active", p.dataset.guidePane === name));
+  }
+  guideTabs.forEach((btn) => btn.addEventListener("click", () => setGuideTab(btn.dataset.guideTab)));
+
+  (function initGuideDefaultTab() {
+    setGuideTab(isIOS() ? "ios" : "android");
+  })();
+
+  let deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (androidInstallBtn) {
+      androidInstallBtn.style.display = "inline-flex";
+      androidInstallBtn.disabled = false;
+    }
+  });
+
+  androidInstallBtn?.addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+    androidInstallBtn.disabled = true;
+    deferredPrompt.prompt();
+    try {
+      await deferredPrompt.userChoice;
+    } catch {}
+    deferredPrompt = null;
+    androidInstallBtn.style.display = "none";
+  });
+
+  (function gateAppWithInstallGuide() {
+    const inStandalone = isStandaloneMode();
+    if (!inStandalone) {
+      showInstallGuide();
+    } else {
+      hideInstallGuide();
+    }
+  })();
+
+  // ---------- Init ----------
+  renderPoints();
+  renderRewards();
+  renderMenu();
+  renderCart();
+  renderAccount();
+  openTab("points");
+
+  // wczytanie z backendu:
+  refreshReservationsFromServer();
+  refreshOrdersFromServer();
+</script>

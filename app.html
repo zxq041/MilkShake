@@ -1,0 +1,1833 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Milk</title>
+
+  <meta name="theme-color" content="#FF6A00" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <style>
+    :root{
+      --primary:#FF6A00;
+      --secondary:#FF9100;
+      --accent:#FFE0B2;
+      --bg:#FFF6EC;
+      --text:#2B1300;
+      --white:#fff;
+      --grad:linear-gradient(135deg,var(--primary),var(--secondary));
+      --radius:20px;
+      --shadow:0 14px 40px rgba(0,0,0,.12);
+      --shadow-soft:0 8px 22px rgba(0,0,0,.08);
+      --glass:rgba(255,255,255,.82);
+      --glass-strong:rgba(255,255,255,.97);
+      --success:#16A34A;
+      --danger:#DC2626;
+      --link:#8a3d00;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:Poppins,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      -webkit-font-smoothing:antialiased;
+      padding-bottom: calc(118px + var(--safe-bottom));
+    }
+
+    /* Decorative blobs */
+    .blob{
+      position:fixed;z-index:-1;filter:blur(70px);opacity:.33;
+      width:280px;height:280px;border-radius:50%;
+      background:
+        radial-gradient(circle at 30% 30%, #ffe1c7, transparent 60%),
+        var(--grad);
+    }
+    .blob.b1{top:-70px;left:-70px}
+    .blob.b2{bottom:-110px;right:-90px;transform:rotate(25deg)}
+
+    /* Topbar */
+    .topbar{
+      position:sticky;top:0;z-index:20;
+      padding: calc(10px + var(--safe-top)) 14px 10px;
+      background:rgba(255,246,236,.96);
+      backdrop-filter:blur(16px);
+      border-bottom:1px solid rgba(0,0,0,.06);
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .brand{
+      display:flex;align-items:center;gap:10px;font-weight:900;
+      font-size:1.08rem;letter-spacing:.2px;
+    }
+    .logo-wrap{
+      width:40px;height:40px;border-radius:50%;
+      background:rgba(255,255,255,.9);
+      display:grid;place-items:center;
+      box-shadow:var(--shadow-soft);
+      border:2px solid rgba(255,255,255,.9);
+      overflow:hidden;
+    }
+    .logo-wrap img{
+      width:100%;height:100%;object-fit:cover;border-radius:50%;
+    }
+    .pill{
+      background:var(--grad);
+      color:#fff;font-weight:900;font-size:.85rem;
+      padding:7px 11px;border-radius:999px;
+      display:flex;gap:7px;align-items:center;
+      box-shadow:0 6px 16px rgba(255,106,0,.35);
+    }
+
+    /* Layout */
+    .container{padding:14px;max-width:820px;margin:0 auto;}
+    .stack{display:flex;flex-direction:column;gap:12px;}
+    .card{
+      background:var(--glass);
+      backdrop-filter:blur(14px);
+      border:1px solid rgba(255,255,255,.98);
+      border-radius:22px;
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+    .title{
+      font-size:1.6rem;font-weight:900;
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      margin-bottom:6px;
+    }
+    .subtitle{font-weight:900;margin-bottom:8px;font-size:1.05rem;}
+    .muted{opacity:.82;font-size:.95rem;line-height:1.55}
+    .tiny{font-size:.82rem;opacity:.7}
+
+    label{font-size:.9rem;font-weight:900;margin:8px 0 6px;display:block}
+    input,select,textarea{
+      width:100%;padding:12px 14px;border-radius:14px;
+      border:2px solid #eee;background:var(--white);
+      font-size:1rem;outline:none;
+      transition:.2s border-color,.2s box-shadow,.2s transform;
+      font-family:inherit;
+    }
+    input:focus,select:focus,textarea:focus{
+      border-color:var(--primary);
+      box-shadow:0 6px 18px rgba(255,106,0,.12);
+      transform:translateY(-1px);
+    }
+    textarea{min-height:84px;resize:vertical}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+    .btn{
+      border:none;cursor:pointer;font-weight:900;border-radius:16px;
+      padding:12px 14px;display:inline-flex;align-items:center;gap:8px;
+      transition:.2s transform,.2s box-shadow,.2s opacity,.2s background;
+      text-decoration:none;user-select:none;-webkit-tap-highlight-color: transparent;
+      justify-content:center;
+    }
+    .btn:active{transform:translateY(1px)}
+    .btn-primary{
+      background:var(--grad);color:#fff;
+      box-shadow:0 8px 22px rgba(255,106,0,.5);
+    }
+    .btn-ghost{
+      background:rgba(255,255,255,.92);
+      border:1px solid rgba(0,0,0,.06);
+      color:var(--text);
+    }
+    .btn-small{padding:8px 10px;font-size:.9rem;border-radius:12px}
+    .btn-wide{width:100%;}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+
+    .tab{display:none;animation:fade .22s ease}
+    .tab.active{display:block}
+    @keyframes fade{
+      from{opacity:0;transform:translateY(8px) scale(.99)}
+      to{opacity:1;transform:none}
+    }
+
+    .points-hero{
+      background:var(--grad);color:#fff;border-radius:22px;padding:16px;
+      display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;
+      box-shadow:var(--shadow);position:relative;overflow:hidden;
+    }
+    .points-hero::after{
+      content:"";position:absolute;right:-40px;top:-40px;width:170px;height:170px;
+      background:radial-gradient(circle, rgba(255,255,255,.45), transparent 60%);
+      transform:rotate(18deg);
+      pointer-events:none;
+    }
+    #showCodeBtn{position:relative;z-index:2;}
+    .points-count{font-size:2.5rem;font-weight:900;letter-spacing:.6px;line-height:1;}
+    .points-sub{display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap;}
+    .chip{
+      background:rgba(255,255,255,.2);
+      padding:6px 10px;border-radius:999px;font-weight:900;font-size:.82rem;
+      display:inline-flex;gap:6px;align-items:center;
+    }
+    .progress{margin-top:10px;background:rgba(255,255,255,.24);height:10px;border-radius:999px;overflow:hidden;}
+    .progress > div{height:100%;background:rgba(255,255,255,.96);width:0%;transition:width .35s ease;border-radius:999px;}
+
+    /* Opening hours / status */
+    .opening-card{
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255,255,255,.98);
+      border-radius: 18px;
+      box-shadow: var(--shadow-soft);
+      padding: 12px 14px;
+      display: grid;
+      gap: 8px;
+      text-align: center;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .opening-status{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      font-weight:900;
+      font-size:1.02rem;
+    }
+    .status-dot{
+      width:10px;height:10px;border-radius:50%;
+      background:#ccc;
+      box-shadow: 0 0 0 3px rgba(0,0,0,.04);
+    }
+    .status-dot.open{ background: var(--success); }
+    .status-dot.closed{ background: var(--danger); }
+
+    .opening-hint{
+      font-size:.82rem;
+      opacity:.75;
+      font-weight:800;
+    }
+
+    .opening-hours{
+      font-size:.9rem;
+      line-height:1.55;
+      opacity:.9;
+      display:none;
+      gap:2px;
+      padding-top:6px;
+      border-top:1px dashed rgba(0,0,0,.08);
+    }
+    .opening-card.expanded .opening-hours{ display:grid; }
+    .opening-hours b{ font-weight:900; }
+    .opening-hours .today{
+      font-weight:900;
+      color: var(--link);
+    }
+
+    /* Quick actions */
+    .quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+    .quick{
+      background:var(--glass-strong);border:1px solid rgba(0,0,0,.04);
+      border-radius:18px;padding:12px;display:grid;gap:6px;place-items:center;text-align:center;
+      box-shadow:var(--shadow-soft);
+      transition:.2s transform,.2s box-shadow;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .quick:active{transform:translateY(1px)}
+    .quick i{
+      width:46px;height:46px;border-radius:14px;display:grid;place-items:center;
+      background:var(--grad);color:#fff;box-shadow:0 6px 16px rgba(255,106,0,.45);
+      font-size:1.1rem;
+    }
+    .quick b{font-size:.95rem;font-weight:900}
+    .quick span{font-size:.8rem;opacity:.7}
+
+    /* === Eatmi premium banner === */
+    .eatmi-banner{
+      margin-top:14px;
+      width:100%;
+      border-radius:22px;
+      padding:16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      background:
+        linear-gradient(135deg, rgba(255,106,0,.95), rgba(255,145,0,.95));
+      color:#fff;
+      box-shadow:0 14px 34px rgba(255,106,0,.45);
+      text-decoration:none;
+      cursor:pointer;
+      -webkit-tap-highlight-color: transparent;
+      position:relative;
+      overflow:hidden;
+      transition:.25s transform,.25s box-shadow,.25s opacity;
+    }
+    .eatmi-banner::after{
+      content:"";
+      position:absolute;
+      right:-60px; top:-60px;
+      width:220px; height:220px;
+      background:radial-gradient(circle, rgba(255,255,255,.38), transparent 65%);
+      transform:rotate(18deg);
+      pointer-events:none;
+    }
+    .eatmi-banner:hover{ box-shadow:0 18px 42px rgba(255,106,0,.55); }
+    .eatmi-banner:active{ transform:translateY(1px); }
+
+    .eatmi-left{
+      display:flex;
+      align-items:center;
+      gap:14px;
+      min-width:0;
+      position:relative;
+      z-index:2;
+    }
+    .eatmi-logo{
+      width:56px;
+      height:56px;
+      border-radius:18px;
+      background:#fff;
+      display:grid;
+      place-items:center;
+      box-shadow:0 8px 20px rgba(0,0,0,.18);
+      flex:0 0 auto;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.35);
+    }
+    .eatmi-logo img{
+      width:74%;
+      height:74%;
+      object-fit:contain;
+    }
+    .eatmi-text{
+      min-width:0;
+    }
+    .eatmi-text b{
+      font-size:1.12rem;
+      font-weight:900;
+      display:block;
+      letter-spacing:.2px;
+      line-height:1.1;
+    }
+    .eatmi-text span{
+      font-size:.92rem;
+      opacity:.92;
+      display:block;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .eatmi-cta{
+      position:relative;
+      z-index:2;
+      flex:0 0 auto;
+      background:#fff;
+      color:#ff6a00;
+      font-weight:900;
+      border-radius:16px;
+      padding:10px 14px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      box-shadow:0 8px 18px rgba(0,0,0,.18);
+      transition:.2s transform;
+    }
+    .eatmi-banner:hover .eatmi-cta{ transform:translateX(2px); }
+
+    /* Rewards */
+    .reward{
+      display:flex;gap:12px;align-items:center;justify-content:space-between;
+      background:var(--glass-strong);border:1px solid rgba(0,0,0,.04);
+      border-radius:18px;padding:12px;
+      box-shadow:var(--shadow-soft);
+    }
+    .reward-left{display:flex;gap:12px;align-items:center;}
+    .reward-ico{
+      width:52px;height:52px;border-radius:16px;background:var(--grad);color:#fff;display:grid;place-items:center;
+      box-shadow:0 6px 16px rgba(255,106,0,.45);font-size:1.25rem;
+    }
+    .reward-title{font-weight:900}
+    .reward + .reward{margin-top:10px}
+
+    /* Reservations */
+    .res-item{
+      padding:10px;border-radius:14px;background:#fff;border:1px solid #eee;display:grid;gap:4px;
+    }
+    .res-item b{font-weight:900}
+    .res-actions{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}
+    .divider{height:1px;background:rgba(0,0,0,.06);margin:4px 0 0;}
+
+    /* Order & pickup */
+    .menu-list{display:grid;gap:10px;}
+    .menu-item{
+      background:var(--glass-strong);
+      border:1px solid rgba(0,0,0,.05);
+      border-radius:16px;
+      padding:12px;
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      box-shadow:var(--shadow-soft);
+    }
+    .menu-left{display:flex;gap:10px;align-items:center;}
+    .menu-ico{
+      width:48px;height:48px;border-radius:14px;background:var(--grad);color:#fff;
+      display:grid;place-items:center;font-size:1.2rem;box-shadow:0 6px 14px rgba(255,106,0,.4);
+    }
+    .menu-title{font-weight:900}
+    .menu-desc{font-size:.85rem;opacity:.7}
+    .menu-price{font-weight:900}
+    .cart-line{
+      display:flex;align-items:center;justify-content:space-between;gap:8px;
+      background:#fff;border:1px solid #eee;border-radius:12px;padding:8px 10px;
+    }
+    .cart-actions{display:flex;gap:6px;align-items:center;}
+    .qty-btn{
+      width:28px;height:28px;border-radius:8px;border:none;cursor:pointer;font-weight:900;
+      background:rgba(0,0,0,.06);
+    }
+
+    /* Account UI */
+    .account-hero{display:flex;gap:12px;align-items:center;}
+    .avatar{
+      width:56px;height:56px;border-radius:16px;background:var(--grad);display:grid;place-items:center;
+      color:#fff;font-size:1.3rem;font-weight:900;box-shadow:0 8px 20px rgba(255,106,0,.5);
+    }
+    .account-name{font-weight:900;font-size:1.1rem}
+    .account-mail{font-size:.9rem;opacity:.75}
+    .list{display:flex;flex-direction:column;gap:8px;}
+    .list-item{
+      background:var(--glass-strong);border:1px solid rgba(0,0,0,.04);
+      padding:12px;border-radius:16px;display:flex;align-items:center;justify-content:space-between;
+      box-shadow:var(--shadow-soft);
+      cursor:pointer;transition:.2s transform,.2s box-shadow;-webkit-tap-highlight-color: transparent;
+    }
+    .list-item:active{transform:translateY(1px)}
+    .list-left{display:flex;gap:10px;align-items:center;}
+    .li-ico{
+      width:40px;height:40px;border-radius:12px;background:rgba(0,0,0,.05);
+      display:grid;place-items:center;font-size:1.05rem;
+    }
+    .li-title{font-weight:900}
+    .li-sub{font-size:.85rem;opacity:.7}
+
+    /* Auth */
+    .auth-wrap{display:grid;gap:10px;}
+    .auth-btn{width:100%;justify-content:center;font-weight:900;}
+    .auth-btn.google{background:#fff;border:2px solid #eee;}
+    .auth-sep{display:flex;align-items:center;gap:10px;margin:6px 0;}
+    .auth-sep::before,.auth-sep::after{content:"";flex:1;height:1px;background:rgba(0,0,0,.08);}
+    .auth-sep span{font-size:.85rem;opacity:.7;font-weight:800;}
+
+    /* Subpages */
+    .subpage{
+      position:fixed;inset:0;background:var(--bg);z-index:80;display:none;flex-direction:column;
+      animation:slideIn .25s ease;padding-bottom: calc(20px + var(--safe-bottom));
+    }
+    .subpage.active{display:flex;}
+    @keyframes slideIn{from{opacity:0;transform:translateX(8px)}to{opacity:1;transform:none}}
+    .sub-top{
+      position:sticky;top:0;z-index:5;
+      padding: calc(10px + var(--safe-top)) 14px 10px;
+      background:rgba(255,246,236,.96);backdrop-filter:blur(12px);
+      border-bottom:1px solid rgba(0,0,0,.06);
+      display:flex;align-items:center;gap:10px;
+    }
+    .back-btn{
+      width:40px;height:40px;border-radius:12px;border:none;background:#fff;cursor:pointer;
+      display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.08);
+    }
+    .sub-title{font-weight:900;font-size:1.05rem}
+
+    /* Empty */
+    .empty{
+      background:var(--glass-strong);padding:14px;border-radius:16px;border:1px dashed rgba(0,0,0,.07);
+      display:flex;gap:12px;align-items:center;
+    }
+    .empty .icon{
+      width:48px;height:48px;border-radius:14px;background:var(--grad);color:#fff;display:grid;place-items:center;font-size:1.2rem;
+      box-shadow:0 6px 14px rgba(255,106,0,.4);
+    }
+
+    /* Bottom nav */
+    .bottom-nav{
+      position:fixed;
+      left:0; right:0;
+      bottom:10px;
+      z-index:50;
+      display:flex;
+      justify-content:center;
+      pointer-events:none;
+    }
+    .nav-wrap{
+      pointer-events:auto;
+      width:min(820px,calc(100% - 18px));
+      background:rgba(255,255,255,.88);
+      backdrop-filter:blur(16px);
+      border:1px solid rgba(255,255,255,.98);
+      box-shadow:0 10px 28px rgba(0,0,0,.18);
+      border-radius:999px;
+      padding:6px 6px;
+      display:flex;
+      gap:6px;
+      align-items:stretch;
+    }
+    .nav-btn{
+      flex:1 1 0;
+      min-width:0;
+      background:transparent;
+      border:none;
+      cursor:pointer;
+      border-radius:999px;
+      padding:8px 4px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:4px;
+      font-weight:900;
+      color:var(--text);
+      opacity:.7;
+      transition:.2s all;
+      -webkit-tap-highlight-color: transparent;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .nav-btn i{
+      font-size:clamp(.95rem, 2.8vw, 1.12rem);
+      line-height:1;
+    }
+    .nav-btn .lbl{
+      font-size:clamp(.62rem, 2.2vw, .73rem);
+      line-height:1.05;
+      text-align:center;
+    }
+    .nav-btn.active{
+      background:var(--grad);
+      color:#fff;
+      opacity:1;
+      transform:translateY(-2px);
+      box-shadow:0 8px 18px rgba(255,106,0,.45);
+    }
+    @media (max-width:560px){
+      .row{grid-template-columns:1fr}
+      .quick-grid{grid-template-columns:1fr 1fr 1fr}
+    }
+    @media (max-width:420px){
+      .eatmi-text span{display:none;}
+    }
+    @media (max-width:380px){
+      .quick-grid{grid-template-columns:1fr 1fr}
+    }
+
+    /* Toast */
+    .toast{
+      position:fixed;left:50%;bottom: calc(126px + var(--safe-bottom));
+      transform:translateX(-50%) translateY(8px);
+      background:var(--success);color:#fff;font-weight:900;font-size:.95rem;
+      padding:10px 14px;border-radius:999px;box-shadow:0 10px 25px rgba(0,0,0,.25);
+      opacity:0;pointer-events:none;transition:.25s;z-index:999;display:flex;gap:8px;align-items:center;
+    }
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .toast.danger{background:var(--danger)}
+
+    /* Modal */
+    .modal{position:fixed; inset:0; z-index:100; display:none;}
+    .modal.show{display:block;}
+    .modal-backdrop{
+      position:absolute; inset:0;
+      background:rgba(0,0,0,.35);
+      backdrop-filter: blur(2px);
+      animation:fadeBg .18s ease;
+    }
+    @keyframes fadeBg{from{opacity:0}to{opacity:1}}
+    .modal-sheet{
+      position:absolute; left:0; right:0; bottom:0;
+      background: var(--glass-strong);
+      border-radius: 22px 22px 0 0;
+      box-shadow: 0 -12px 40px rgba(0,0,0,.25);
+      padding: 10px 14px 18px;
+      transform: translateY(12px);
+      animation:sheetUp .22s ease forwards;
+    }
+    @keyframes sheetUp{to{transform:translateY(0)}}
+    .modal-handle{
+      width:46px; height:5px; border-radius:999px;
+      background:rgba(0,0,0,.12); margin:6px auto 10px;
+    }
+    .modal-header{
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:10px;
+    }
+    .modal-title{
+      font-weight:900; font-size:1.2rem;
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
+    .modal-close{
+      width:40px; height:40px; border-radius:12px; border:none; cursor:pointer;
+      background:#fff; display:grid; place-items:center;
+      box-shadow: var(--shadow-soft);
+    }
+    .modal-code-box{
+      background:#0f0f0f; color:#fff;
+      border-radius:18px; padding:18px 14px;
+      box-shadow: inset 0 0 0 2px rgba(255,255,255,.06);
+    }
+    .modal-code{
+      font-size:2.4rem; font-weight:900;
+      letter-spacing:10px; text-align:center;
+      font-variant-numeric: tabular-nums;
+    }
+    .modal-actions{ margin-top:10px; display:grid; gap:8px; }
+
+    /* === PWA Install Guide (OBOWIĄZKOWE) === */
+    .install-guide{
+      position:fixed; inset:0; z-index:200;
+      background: linear-gradient(180deg, rgba(255,246,236,.96), rgba(255,246,236,.985));
+      display:none;
+      padding: calc(14px + var(--safe-top)) 14px calc(14px + var(--safe-bottom));
+      overflow:auto;
+    }
+    .install-guide.show{ display:block; }
+
+    .install-card{
+      max-width: 820px;
+      margin: 0 auto;
+      background: var(--glass);
+      border: 1px solid rgba(255,255,255,.98);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+    .install-kicker{ font-weight:900; opacity:.75; font-size:.9rem; }
+    .install-title{
+      font-size:1.35rem; font-weight:900;
+      background:var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      margin-top:4px;
+    }
+    .install-sub{ margin-top:6px; opacity:.85; line-height:1.5; }
+
+    .install-tabs{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+    }
+    .install-tab{
+      border:none; cursor:pointer;
+      padding:12px 10px;
+      border-radius:16px;
+      background: rgba(255,255,255,.92);
+      border:1px solid rgba(0,0,0,.06);
+      font-weight:900;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      -webkit-tap-highlight-color: transparent;
+      transition:.2s transform,.2s box-shadow,.2s opacity,.2s background;
+      color: var(--text);
+      opacity:.85;
+    }
+    .install-tab.active{
+      background: var(--grad);
+      color:#fff;
+      opacity:1;
+      box-shadow:0 8px 18px rgba(255,106,0,.35);
+      transform: translateY(-1px);
+    }
+
+    .install-body{ margin-top:12px; }
+    .install-pane{ display:none; }
+    .install-pane.active{ display:block; }
+
+    .install-steps{
+      margin:0;
+      padding-left:18px;
+      display:grid;
+      gap:10px;
+      line-height:1.5;
+      font-weight:700;
+      opacity:.92;
+    }
+    .install-steps b{ font-weight:900; }
+
+    .ios-share{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width:28px; height:28px;
+      border-radius:10px;
+      background: rgba(0,0,0,.06);
+      font-size: .95rem;
+      margin-left:6px;
+    }
+
+    .install-foot{ margin-top:14px; }
+  </style>
+</head>
+<body>
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+
+  <!-- PWA INSTALL GUIDE (OBOWIĄZKOWY, tylko w przeglądarce) -->
+  <section id="installGuide" class="install-guide" aria-hidden="true">
+    <div class="install-card">
+      <div class="install-head">
+        <div>
+          <div class="install-kicker">Milk • Instalacja aplikacji</div>
+          <div class="install-title">Dodaj aplikację do ekranu głównego</div>
+          <div class="install-sub">
+            Aby korzystać z Milk, dodaj aplikację do ekranu głównego i uruchom z ikony.
+          </div>
+        </div>
+      </div>
+
+      <div class="install-tabs">
+        <button class="install-tab active" data-guide-tab="android">
+          <i class="fa-brands fa-android"></i> Android
+        </button>
+        <button class="install-tab" data-guide-tab="ios">
+          <i class="fa-brands fa-apple"></i> iOS (Safari)
+        </button>
+      </div>
+
+      <div class="install-body">
+        <!-- ANDROID -->
+        <div class="install-pane active" data-guide-pane="android">
+          <ol class="install-steps">
+            <li>Otwórz menu przeglądarki <b>⋮</b> (Chrome) lub <b>inne</b>.</li>
+            <li>Wybierz <b>„Dodaj do ekranu głównego”</b> lub <b>„Zainstaluj aplikację”</b>.</li>
+            <li>Potwierdź przyciskiem <b>Dodaj / Zainstaluj</b>.</li>
+            <li>Uruchom <b>Milk</b> z ikony na ekranie głównym.</li>
+          </ol>
+
+          <button id="androidInstallBtn" class="btn btn-primary btn-wide" style="margin-top:10px; display:none;">
+            Zainstaluj teraz <i class="fa-solid fa-download"></i>
+          </button>
+
+          <div class="tiny" style="margin-top:8px; opacity:.8;">
+            Problem z dodaniem aplikacji do ekranu głównego ? Poinformuj nas mailowo : support@velorie.pl
+          </div>
+        </div>
+
+        <!-- IOS -->
+        <div class="install-pane" data-guide-pane="ios">
+          <ol class="install-steps">
+            <li>Otwórz stronę w <b>Safari</b> (na iPhonie/iPadzie).</li>
+            <li>Kliknij ikonę <b>Udostępnij</b> <span class="ios-share">⬆️</span> (na dole ekranu).</li>
+            <li>Wybierz <b>„Dodaj do ekranu początkowego”</b>.</li>
+            <li>Potwierdź <b>Dodaj</b>.</li>
+            <li>Uruchom <b>Milk</b> z ikony na ekranie głównym.</li>
+          </ol>
+
+          <div class="tiny" style="margin-top:8px; opacity:.8;">
+            Problem z dodaniem aplikacji do ekranu głównego ? Poinformuj nas mailowo : support@velorie.pl
+          </div>
+        </div>
+      </div>
+
+      <div class="install-foot">
+        <div class="tiny" style="text-align:center; opacity:.75; margin-top:8px;">
+          Poradnik zniknie automatycznie po uruchomieniu aplikacji z ekranu głównego.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo-wrap">
+        <img src="https://i.imgur.com/UNPIPSC.png" alt="Milk logo">
+      </div>
+      Milk
+    </div>
+    <div class="pill"><i class="fa-solid fa-star"></i> <span id="pointsPill">0 pkt</span></div>
+  </div>
+
+  <main class="container">
+
+    <!-- TAB: PUNKTY -->
+    <section id="tab-points" class="tab active">
+
+      <!-- Opening hours + status (klikane) -->
+      <div class="opening-card" id="openingCard" title="Kliknij, aby zobaczyć godziny otwarcia">
+        <div class="opening-status">
+          <span class="status-dot" id="openDot"></span>
+          <span id="openText">Sprawdzam status...</span>
+        </div>
+        <div class="opening-hint" id="openHint">Kliknij, aby zobaczyć godziny otwarcia</div>
+        <div class="opening-hours" id="openingHours"></div>
+      </div>
+
+      <div class="points-hero">
+        <div>
+          <div class="tiny">Twoje punkty</div>
+          <div class="points-count" id="pointsCount">0</div>
+          <div class="points-sub">
+            <div class="chip"><i class="fa-solid fa-receipt"></i> 10 zł = 1 pkt</div>
+          </div>
+        </div>
+
+        <button class="btn btn-ghost btn-small" id="showCodeBtn">
+          <i class="fa-solid fa-id-card"></i> Pokaż kod
+        </button>
+      </div>
+
+      <div class="progress"><div id="pointsProgress"></div></div>
+
+      <div class="card">
+        <div class="subtitle">Szybkie akcje</div>
+        <div class="quick-grid">
+          <button class="quick" data-go="rewards">
+            <i class="fa-solid fa-gift"></i>
+            <b>Nagrody</b>
+            <span>Wymień punkty</span>
+          </button>
+
+          <button class="quick" data-go="order">
+            <i class="fa-solid fa-bag-shopping"></i>
+            <b>Zamów i odbierz</b>
+            <span>Płatność na miejscu</span>
+          </button>
+
+          <button class="quick" data-go="res">
+            <i class="fa-solid fa-calendar-check"></i>
+            <b>Rezerwuj</b>
+            <span>Stolik w 10s</span>
+          </button>
+        </div>
+
+        <!-- EATMI BAR -->
+        <a class="eatmi-banner" href="https://www.eatmi.pl" target="_blank" rel="noopener">
+          <div class="eatmi-left">
+            <div class="eatmi-logo">
+              <img src="https://i.imgur.com/XrTPEHC.png" alt="Eatmi logo">
+            </div>
+            <div class="eatmi-text">
+              <b>Eatmi</b>
+              <span>Zamawiaj online szybciej i wygodniej</span>
+            </div>
+          </div>
+          <div class="eatmi-cta">
+            Przejdź <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </div>
+        </a>
+      </div>
+
+      <div class="card">
+        <div class="subtitle">Historia punktów</div>
+        <div id="pointsHistory" class="muted"></div>
+      </div>
+    </section>
+
+    <!-- TAB: NAGRODY -->
+    <section id="tab-rewards" class="tab">
+      <div class="card">
+        <div class="title">Nagrody</div>
+        <p class="muted">Kliknij „Wymień”, a pokażemy Ci kod do odbioru w lokalu.</p>
+      </div>
+      <div class="card" id="rewardsList"></div>
+    </section>
+
+    <!-- TAB: ZAMÓW I ODBIERZ -->
+    <section id="tab-order" class="tab">
+      <div class="card">
+        <div class="title">Zamów i odbierz</div>
+        <p class="muted">
+          Złóż zamówienie w aplikacji, odbierz w lokalu. <b>Płatność na miejscu</b> (gotówka/karta).
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="subtitle">Menu</div>
+        <div id="menuList" class="menu-list"></div>
+      </div>
+
+      <div class="card stack">
+        <div class="subtitle">Koszyk</div>
+        <div id="cartList" class="stack"></div>
+        <div class="divider"></div>
+        <div style="display:flex;justify-content:space-between;font-weight:900;font-size:1.05rem">
+          <span>Razem</span><span id="cartTotal">0 zł</span>
+        </div>
+
+        <div class="row" style="margin-top:6px">
+          <div>
+            <label>Godzina odbioru</label>
+            <input type="time" id="pickupTime" required>
+          </div>
+          <div>
+            <label>Lokal</label>
+            <select id="pickupLocation">
+              <option>Słupsk</option>
+              <option>Rowy</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label>Uwagi (opcjonalnie)</label>
+          <textarea id="orderNotes" placeholder="np. bez bitej śmietany, alergie, itp."></textarea>
+        </div>
+
+        <button class="btn btn-primary btn-wide" id="submitOrderBtn">
+          Złóż zamówienie <i class="fa-solid fa-check"></i>
+        </button>
+        <div class="tiny" style="text-align:center">
+          Płatność na miejscu przy odbiorze.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="subtitle">Twoje zamówienia</div>
+        <div id="ordersList" class="muted"></div>
+      </div>
+    </section>
+
+    <!-- TAB: REZERWACJE -->
+    <section id="tab-res" class="tab">
+      <div class="card">
+        <div class="title">Rezerwacje</div>
+        <p class="muted">Zarezerwuj stolik w kilka sekund. Potwierdzenie dostaniesz SMS lub telefonicznie.</p>
+      </div>
+
+      <div class="card">
+        <div class="subtitle">Formularz rezerwacji</div>
+        <form id="reservationForm" class="stack">
+          <div>
+            <label>Imię i nazwisko</label>
+            <input name="name" required placeholder="Jan Kowalski">
+          </div>
+
+          <div>
+            <label>Telefon</label>
+            <input name="phone" required placeholder="+48 700 000 000">
+          </div>
+
+          <div class="row">
+            <div>
+              <label>Data</label>
+              <input type="date" name="date" required>
+            </div>
+            <div>
+              <label>Godzina</label>
+              <input type="time" name="time" required>
+            </div>
+          </div>
+
+          <div class="row">
+            <div>
+              <label>Ilość osób</label>
+              <select name="guests" required>
+                <option value="1">1 osoba</option>
+                <option value="2" selected>2 osoby</option>
+                <option value="3">3 osoby</option>
+                <option value="4">4 osoby</option>
+                <option value="5+">5+ osób</option>
+              </select>
+            </div>
+            <div>
+              <label>Strefa</label>
+              <select name="room" required>
+                <option>Sala frontowa</option>
+                <option>Sala główna</option>
+                <option>Kącik dla dzieci</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label>Uwagi (opcjonalnie)</label>
+            <textarea name="notes" placeholder="np. urodziny, alergie"></textarea>
+          </div>
+
+          <button class="btn btn-primary btn-wide">
+            Zarezerwuj <i class="fa-solid fa-check"></i>
+          </button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="subtitle">Twoje rezerwacje</div>
+        <div id="reservationsList" class="muted"></div>
+      </div>
+    </section>
+
+    <!-- TAB: KONTO -->
+    <section id="tab-account" class="tab">
+      <div id="accountLoggedOut" class="stack">
+        <div class="card">
+          <div class="title">Konto</div>
+          <p class="muted">Zaloguj się, aby synchronizować punkty, nagrody i rezerwacje na wszystkich urządzeniach.</p>
+        </div>
+
+        <div class="card auth-wrap">
+          <div class="subtitle">Zaloguj się</div>
+
+          <button class="btn auth-btn google" id="loginGoogle">
+            <i class="fa-brands fa-google"></i> Kontynuuj z Google
+          </button>
+
+          <div class="auth-sep"><span>lub</span></div>
+
+          <form id="loginEmailForm" class="stack">
+            <div>
+              <label>Email</label>
+              <input type="email" name="email" placeholder="np. klient@mail.com" required>
+            </div>
+            <div>
+              <label>Hasło</label>
+              <input type="password" name="password" placeholder="••••••••" required>
+            </div>
+            <button class="btn btn-primary btn-wide">
+              Zaloguj się <i class="fa-solid fa-right-to-bracket"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div id="accountLoggedIn" class="stack" style="display:none">
+        <div class="card account-hero">
+          <div class="avatar" id="avatar">MK</div>
+          <div>
+            <div class="account-name" id="accName">Użytkownik</div>
+            <div class="account-mail" id="accEmail">user@mail.com</div>
+            <div class="tiny" style="margin-top:2px">Zalogowano</div>
+          </div>
+          <div style="margin-left:auto">
+            <button class="btn btn-ghost btn-small" id="logoutBtn">Wyloguj</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="subtitle">Ustawienia</div>
+          <div class="list">
+            <div class="list-item" data-open="personal">
+              <div class="list-left">
+                <div class="li-ico"><i class="fa-solid fa-user"></i></div>
+                <div>
+                  <div class="li-title">Dane osobowe</div>
+                  <div class="li-sub">Imię, telefon, email</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right" style="opacity:.6"></i>
+            </div>
+
+            <div class="list-item" data-open="language">
+              <div class="list-left">
+                <div class="li-ico"><i class="fa-solid fa-language"></i></div>
+                <div>
+                  <div class="li-title">Język</div>
+                  <div class="li-sub">Polski / English</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right" style="opacity:.6"></i>
+            </div>
+
+            <div class="list-item" data-open="about">
+              <div class="list-left">
+                <div class="li-ico"><i class="fa-solid fa-circle-info"></i></div>
+                <div>
+                  <div class="li-title">O nas</div>
+                  <div class="li-sub">MilkShake Bar Słupsk & Rowy</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right" style="opacity:.6"></i>
+            </div>
+
+            <div class="list-item" data-open="help">
+              <div class="list-left">
+                <div class="li-ico"><i class="fa-solid fa-life-ring"></i></div>
+                <div>
+                  <div class="li-title">Pomoc</div>
+                  <div class="li-sub">Kontakt i informacje</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-right" style="opacity:.6"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- SUBPAGES -->
+  <section class="subpage" id="page-personal">
+    <div class="sub-top">
+      <button class="back-btn" data-back><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="sub-title">Dane osobowe</div>
+    </div>
+    <div class="container stack">
+      <div class="card stack">
+        <div>
+          <label>Imię i nazwisko</label>
+          <input id="personalName" placeholder="Jan Kowalski">
+        </div>
+        <div>
+          <label>Telefon</label>
+          <input id="personalPhone" placeholder="+48 700 000 000">
+        </div>
+        <div>
+          <label>Email</label>
+          <input id="personalEmail" placeholder="mail@adres.com">
+        </div>
+        <button class="btn btn-primary btn-wide" id="savePersonalBtn">Zapisz zmiany</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="subpage" id="page-language">
+    <div class="sub-top">
+      <button class="back-btn" data-back><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="sub-title">Język</div>
+    </div>
+    <div class="container stack">
+      <div class="card stack">
+        <button class="btn btn-ghost btn-wide" data-lang="pl">🇵🇱 Polski</button>
+        <button class="btn btn-ghost btn-wide" data-lang="en">🇬🇧 English</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="subpage" id="page-about">
+    <div class="sub-top">
+      <button class="back-btn" data-back><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="sub-title">O nas</div>
+    </div>
+    <div class="container stack">
+      <div class="card">
+        <div class="subtitle">MilkShake Bar</div>
+        <p class="muted">
+          Kremowe milkshake’i, desery i burgery w Słupsku oraz Rowach.
+          Tworzymy miejsce pełne energii i słodkich wspomnień.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="subpage" id="page-help">
+    <div class="sub-top">
+      <button class="back-btn" data-back><i class="fa-solid fa-arrow-left"></i></button>
+      <div class="sub-title">Pomoc</div>
+    </div>
+    <div class="container stack">
+      <div class="card stack">
+        <div class="subtitle">Developer aplikacji</div>
+        <p class="muted">Aplikacja została wykonana przez <b>Velorie Design</b>.</p>
+        <a class="btn btn-primary btn-wide" href="https://www.desing.velorie.pl" target="_blank" rel="noopener">
+          www.desing.velorie.pl <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Bottom nav -->
+  <nav class="bottom-nav" aria-label="Dolne menu">
+    <div class="nav-wrap">
+      <button class="nav-btn active" data-tab="points">
+        <i class="fa-solid fa-star"></i><div class="lbl">Punkty</div>
+      </button>
+      <button class="nav-btn" data-tab="rewards">
+        <i class="fa-solid fa-gift"></i><div class="lbl">Nagrody</div>
+      </button>
+      <button class="nav-btn" data-tab="order">
+        <i class="fa-solid fa-bag-shopping"></i><div class="lbl">Zamów</div>
+      </button>
+      <button class="nav-btn" data-tab="res">
+        <i class="fa-solid fa-calendar-check"></i><div class="lbl">Rezerwuj</div>
+      </button>
+      <button class="nav-btn" data-tab="account">
+        <i class="fa-solid fa-user"></i><div class="lbl">Konto</div>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Toast -->
+  <div id="toast" class="toast">
+    <i class="fa-solid fa-check-circle"></i><span id="toastText"></span>
+  </div>
+
+  <!-- MODAL: KOD LOJALNOŚCIOWY -->
+  <div id="codeModal" class="modal">
+    <div class="modal-backdrop" data-close></div>
+
+    <div class="modal-sheet" role="dialog" aria-modal="true" aria-labelledby="codeTitle">
+      <div class="modal-handle"></div>
+
+      <div class="modal-header">
+        <div>
+          <div class="tiny">Twój kod lojalnościowy</div>
+          <div id="codeTitle" class="modal-title">Milk ID</div>
+        </div>
+        <button class="modal-close" data-close aria-label="Zamknij">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="modal-code-box">
+        <div class="modal-code" id="loyaltyCode">000000</div>
+        <div class="tiny" style="opacity:.9;text-align:center;margin-top:6px;">
+          Pokaż obsłudze przy kasie
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost btn-wide" id="copyCodeBtn">
+          <i class="fa-solid fa-copy"></i> Kopiuj kod
+        </button>
+      </div>
+
+      <p class="tiny" style="text-align:center;margin-top:8px;">
+        Kod jest stały i zawsze przypisany do Twojego konta.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // ---------- PWA ----------
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+    }
+
+    // ---------- Tabs ----------
+    const tabs = {
+      points: document.getElementById("tab-points"),
+      rewards: document.getElementById("tab-rewards"),
+      order: document.getElementById("tab-order"),
+      res: document.getElementById("tab-res"),
+      account: document.getElementById("tab-account"),
+    };
+    const navButtons = document.querySelectorAll(".nav-btn");
+    function openTab(name){
+      Object.entries(tabs).forEach(([k, el]) => el.classList.toggle("active", k===name));
+      navButtons.forEach(b => b.classList.toggle("active", b.dataset.tab===name));
+      window.scrollTo({top:0, behavior:"smooth"});
+    }
+    navButtons.forEach(btn => btn.addEventListener("click", () => openTab(btn.dataset.tab)));
+    document.querySelectorAll("[data-go]").forEach(b=> b.addEventListener("click", ()=> openTab(b.dataset.go)));
+
+    // ---------- Toast ----------
+    const toast = document.getElementById("toast");
+    const toastText = document.getElementById("toastText");
+    function showToast(msg, danger=false){
+      toastText.textContent = msg;
+      toast.classList.toggle("danger", danger);
+      toast.classList.add("show");
+      setTimeout(()=>toast.classList.remove("show"), 3200);
+    }
+
+    // ---------- Storage ----------
+    const store = {
+      get(key, fallback){
+        try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+        catch { return fallback; }
+      },
+      set(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+    };
+
+    // ---------- Opening hours / status ----------
+    const openingCardEl = document.getElementById("openingCard");
+    const openDotEl   = document.getElementById("openDot");
+    const openTextEl  = document.getElementById("openText");
+    const openHoursEl = document.getElementById("openingHours");
+    const openHintEl  = document.getElementById("openHint");
+
+    const openingSchedule = {
+      0: { label: "niedziela", open: "09:00", close: "21:00" },
+      1: { label: "poniedziałek", open: "08:00", close: "21:00" },
+      2: { label: "wtorek", open: "08:00", close: "21:00" },
+      3: { label: "środa", open: "08:00", close: "21:00" },
+      4: { label: "czwartek", open: "08:00", close: "21:00" },
+      5: { label: "piątek", open: "08:00", close: "22:00" },
+      6: { label: "sobota", open: "09:00", close: "22:00" },
+    };
+
+    function toMinutes(hhmm){
+      const [h,m] = hhmm.split(":").map(Number);
+      return h*60 + m;
+    }
+
+    function renderOpeningHours(){
+      const now = new Date();
+      const day = now.getDay(); // 0=niedz, 1=pon, ...
+      const minutesNow = now.getHours()*60 + now.getMinutes();
+
+      const today = openingSchedule[day];
+      const openM  = toMinutes(today.open);
+      const closeM = toMinutes(today.close);
+
+      const isOpen = minutesNow >= openM && minutesNow < closeM;
+
+      openDotEl.classList.remove("open","closed");
+      openDotEl.classList.add(isOpen ? "open" : "closed");
+      openTextEl.textContent = isOpen ? "Jesteśmy Otwarci" : "Jesteśmy Zamknięci";
+
+      const order = [1,2,3,4,5,6,0];
+      openHoursEl.innerHTML = order.map(d=>{
+        const s = openingSchedule[d];
+        const isToday = d === day;
+        return `
+          <div class="${isToday ? "today" : ""}">
+            <b>${s.label}</b> ${s.open}–${s.close}
+          </div>
+        `;
+      }).join("");
+    }
+
+    openingCardEl.addEventListener("click", ()=>{
+      openingCardEl.classList.toggle("expanded");
+      const expanded = openingCardEl.classList.contains("expanded");
+      openHintEl.textContent = expanded
+        ? "Kliknij, aby ukryć godziny otwarcia"
+        : "Kliknij, aby zobaczyć godziny otwarcia";
+    });
+
+    renderOpeningHours();
+    setInterval(renderOpeningHours, 60*1000);
+
+    // ---------- Clear points history once ----------
+    (function clearHistoryOnce(){
+      const didClear = store.get("didClearHistoryOnce", false);
+      if(!didClear){
+        store.set("pointsHistory", []);
+        store.set("didClearHistoryOnce", true);
+      }
+    })();
+
+    // ---------- Loyalty code modal ----------
+    const loyaltyCodeEl = document.getElementById("loyaltyCode");
+    const showCodeBtn   = document.getElementById("showCodeBtn");
+    const copyCodeBtn   = document.getElementById("copyCodeBtn");
+    const codeModal     = document.getElementById("codeModal");
+
+    function generate6DigitCode(){
+      return String(Math.floor(100000 + Math.random() * 900000));
+    }
+    function getOrCreateLoyaltyCode(){
+      let code = store.get("loyaltyCode", null);
+      if(!code || String(code).length !== 6){
+        code = generate6DigitCode();
+        store.set("loyaltyCode", code);
+      }
+      return String(code);
+    }
+    function renderLoyaltyCode(){
+      loyaltyCodeEl.textContent = getOrCreateLoyaltyCode();
+    }
+    function openCodeModal(){
+      renderLoyaltyCode();
+      codeModal.classList.add("show");
+      document.body.style.overflow = "hidden";
+    }
+    function closeCodeModal(){
+      codeModal.classList.remove("show");
+      document.body.style.overflow = "";
+    }
+    showCodeBtn?.addEventListener("click", openCodeModal);
+    codeModal?.querySelectorAll("[data-close]").forEach(el=> el.addEventListener("click", closeCodeModal));
+
+    copyCodeBtn?.addEventListener("click", async ()=>{
+      const code = loyaltyCodeEl.textContent;
+      try{
+        await navigator.clipboard.writeText(code);
+        showToast("Kod skopiowany ✅");
+      }catch{
+        showToast("Nie udało się skopiować 🤏", true);
+      }
+    });
+
+    // ---------- Points ----------
+    const pointsCountEl = document.getElementById("pointsCount");
+    const pointsPillEl  = document.getElementById("pointsPill");
+    const pointsProgressEl = document.getElementById("pointsProgress");
+    const historyEl = document.getElementById("pointsHistory");
+
+    function renderPoints(){
+      const pts = store.get("points", 0);
+      pointsCountEl.textContent = pts;
+      pointsPillEl.textContent = pts + " pkt";
+      const pct = Math.min(100, (pts % 100));
+      pointsProgressEl.style.width = pct + "%";
+
+      const hist = store.get("pointsHistory", []);
+      historyEl.innerHTML = hist.length
+        ? hist.map(h => `<div style="padding:8px 0;border-bottom:1px dashed rgba(0,0,0,.06)">
+              <b>${h.text}</b><div class="tiny">${h.date}</div>
+           </div>`).join("")
+        : `<div class="empty">
+            <div class="icon"><i class="fa-solid fa-clock"></i></div>
+            <div>
+              <b>Historia punktów jest pusta</b>
+              <div class="tiny">Punkty pojawią się po pierwszym naliczeniu.</div>
+            </div>
+           </div>`;
+    }
+
+    // ---------- Rewards ----------
+    const rewards = [
+      { id:"shake_small", title:"Milkshake mały", cost:80, icon:"fa-ice-cream", desc:"Dowolny smak" },
+      { id:"shake_big", title:"Milkshake duży", cost:120, icon:"fa-glass-whiskey", desc:"Z dodatkami" },
+      { id:"dessert", title:"Dowolny deser", cost:150, icon:"fa-cookie-bite", desc:"Z gabloty" },
+      { id:"breakfast", title:"Śniadanie", cost:200, icon:"fa-egg", desc:"Na miejscu" },
+    ];
+    const rewardsListEl = document.getElementById("rewardsList");
+
+    function renderRewards(){
+      const pts = store.get("points", 0);
+      rewardsListEl.innerHTML = rewards.map(r => {
+        const disabled = pts < r.cost;
+        return `
+          <div class="reward">
+            <div class="reward-left">
+              <div class="reward-ico"><i class="fa-solid ${r.icon}"></i></div>
+              <div>
+                <div class="reward-title">${r.title}</div>
+                <div class="tiny">${r.desc}</div>
+                <div class="muted">Koszt: <b>${r.cost} pkt</b></div>
+              </div>
+            </div>
+            <div style="text-align:right;min-width:88px">
+              <div style="font-weight:900">${r.cost} pkt</div>
+              <button class="btn btn-primary btn-small"
+                ${disabled ? "disabled style='opacity:.5;cursor:not-allowed'" : ""}
+                data-redeem="${r.id}">
+                Wymień
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+      rewardsListEl.querySelectorAll("[data-redeem]").forEach(btn=>{
+        btn.addEventListener("click", ()=> redeemReward(btn.dataset.redeem));
+      });
+    }
+
+    function redeemReward(id){
+      const r = rewards.find(x=>x.id===id);
+      if(!r) return;
+      const pts = store.get("points", 0);
+      if(pts < r.cost){ showToast("Masz za mało punktów 😅", true); return; }
+      store.set("points", pts - r.cost);
+
+      const hist = store.get("pointsHistory", []);
+      hist.unshift({ text: `Wymieniono: -${r.cost} pkt (${r.title})`, date: new Date().toLocaleString("pl-PL") });
+      store.set("pointsHistory", hist);
+
+      renderPoints(); renderRewards();
+      showToast(`Nagroda odebrana: ${r.title} 🎁`);
+      openTab("rewards");
+    }
+
+    // ---------- Order & pickup ----------
+    const menuItems = [
+      { id:"m1", title:"Milkshake klasyczny", price:18, icon:"fa-ice-cream", desc:"Dowolny smak" },
+      { id:"m2", title:"Milkshake premium", price:24, icon:"fa-glass-whiskey", desc:"Z dodatkami" },
+      { id:"m3", title:"Deser dnia", price:16, icon:"fa-cookie-bite", desc:"Z gabloty" },
+      { id:"m4", title:"Burger Milk", price:29, icon:"fa-burger", desc:"Wołowina / kurczak" },
+      { id:"m5", title:"Frytki", price:10, icon:"fa-potato", desc:"Klasyczne" },
+    ];
+
+    const menuListEl = document.getElementById("menuList");
+    const cartListEl = document.getElementById("cartList");
+    const cartTotalEl = document.getElementById("cartTotal");
+    const submitOrderBtn = document.getElementById("submitOrderBtn");
+    const ordersListEl = document.getElementById("ordersList");
+
+    function getCart(){ return store.get("orderCart", []); }
+    function setCart(c){ store.set("orderCart", c); }
+
+    function addToCart(id){
+      const item = menuItems.find(x=>x.id===id);
+      if(!item) return;
+      const cart = getCart();
+      const existing = cart.find(c=>c.id===id);
+      if(existing) existing.qty++;
+      else cart.push({ id, qty:1 });
+      setCart(cart);
+      renderCart();
+      showToast(`Dodano: ${item.title}`);
+    }
+
+    function changeQty(id, delta){
+      const cart = getCart();
+      const line = cart.find(c=>c.id===id);
+      if(!line) return;
+      line.qty += delta;
+      if(line.qty<=0){
+        const idx = cart.findIndex(c=>c.id===id);
+        cart.splice(idx,1);
+      }
+      setCart(cart);
+      renderCart();
+    }
+
+    function renderMenu(){
+      menuListEl.innerHTML = menuItems.map(m=>`
+        <div class="menu-item">
+          <div class="menu-left">
+            <div class="menu-ico"><i class="fa-solid ${m.icon}"></i></div>
+            <div>
+              <div class="menu-title">${m.title}</div>
+              <div class="menu-desc">${m.desc}</div>
+            </div>
+          </div>
+          <div style="text-align:right;min-width:88px">
+            <div class="menu-price">${m.price} zł</div>
+            <button class="btn btn-primary btn-small" data-add="${m.id}">Dodaj</button>
+          </div>
+        </div>
+      `).join("");
+
+      menuListEl.querySelectorAll("[data-add]").forEach(btn=>{
+        btn.addEventListener("click", ()=> addToCart(btn.dataset.add));
+      });
+    }
+
+    function renderCart(){
+      const cart = getCart();
+      if(!cart.length){
+        cartListEl.innerHTML = `
+          <div class="empty">
+            <div class="icon"><i class="fa-solid fa-bag-shopping"></i></div>
+            <div>
+              <b>Koszyk jest pusty</b>
+              <div class="tiny">Dodaj coś z menu.</div>
+            </div>
+          </div>`;
+        cartTotalEl.textContent = "0 zł";
+        submitOrderBtn.disabled = true;
+        return;
+      }
+
+      submitOrderBtn.disabled = false;
+
+      let total = 0;
+      cartListEl.innerHTML = cart.map(c=>{
+        const m = menuItems.find(x=>x.id===c.id);
+        const lineTotal = m.price * c.qty;
+        total += lineTotal;
+        return `
+          <div class="cart-line">
+            <div>
+              <b>${m.title}</b>
+              <div class="tiny">${m.price} zł x ${c.qty} = ${lineTotal} zł</div>
+            </div>
+            <div class="cart-actions">
+              <button class="qty-btn" data-qty="${c.id}" data-d="-1">−</button>
+              <b>${c.qty}</b>
+              <button class="qty-btn" data-qty="${c.id}" data-d="1">+</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      cartTotalEl.textContent = total + " zł";
+
+      cartListEl.querySelectorAll("[data-qty]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const id = btn.dataset.qty;
+          const d = Number(btn.dataset.d);
+          changeQty(id, d);
+        });
+      });
+    }
+
+    function submitOrder(){
+      const cart = getCart();
+      if(!cart.length){ showToast("Koszyk pusty 😅", true); return; }
+
+      const pickupTime = document.getElementById("pickupTime").value;
+      const pickupLocation = document.getElementById("pickupLocation").value;
+      const notes = document.getElementById("orderNotes").value;
+
+      if(!pickupTime){
+        showToast("Ustaw godzinę odbioru ⏰", true);
+        return;
+      }
+
+      const items = cart.map(c=>{
+        const m = menuItems.find(x=>x.id===c.id);
+        return { title:m.title, qty:c.qty, price:m.price };
+      });
+
+      const total = items.reduce((s,i)=>s+i.price*i.qty,0);
+
+      const orders = store.get("orders", []);
+      orders.unshift({
+        id: crypto.randomUUID(),
+        items,
+        total,
+        pickupTime,
+        pickupLocation,
+        notes,
+        date: new Date().toLocaleString("pl-PL"),
+        status: "Przyjęte"
+      });
+      store.set("orders", orders);
+
+      setCart([]);
+      document.getElementById("orderNotes").value = "";
+      renderCart();
+      renderOrders();
+      showToast("Zamówienie złożone ✅");
+      openTab("order");
+    }
+
+    function renderOrders(){
+      const orders = store.get("orders", []);
+      ordersListEl.innerHTML = orders.length
+        ? orders.map(o=>`
+            <div class="res-item">
+              <b>${o.pickupLocation} • ${o.pickupTime}</b>
+              <div class="tiny">Złożono: ${o.date}</div>
+              <div class="tiny">Status: <b>${o.status}</b></div>
+              <div style="margin-top:6px">
+                ${o.items.map(i=>`• ${i.qty}x ${i.title}`).join("<br>")}
+              </div>
+              <div class="divider"></div>
+              <div style="display:flex;justify-content:space-between;font-weight:900">
+                <span>Razem</span><span>${o.total} zł</span>
+              </div>
+              <div class="tiny" style="margin-top:4px">
+                Płatność na miejscu przy odbiorze.
+              </div>
+            </div>
+          `).join("")
+        : `<div class="empty">
+            <div class="icon"><i class="fa-solid fa-bag-shopping"></i></div>
+            <div>
+              <b>Brak zamówień</b>
+              <div class="tiny">Twoje zamówienia pojawią się tutaj.</div>
+            </div>
+           </div>`;
+    }
+
+    submitOrderBtn.addEventListener("click", submitOrder);
+
+    // ---------- Reservations ----------
+    const resForm = document.getElementById("reservationForm");
+    const resListEl = document.getElementById("reservationsList");
+
+    function renderReservations(){
+      const list = store.get("reservations", []);
+      resListEl.innerHTML = list.length
+        ? list.map(r => `
+            <div class="res-item">
+              <b>${r.date} • ${r.time}</b>
+              <div>${r.guests} os. • ${r.room}</div>
+              <div class="tiny">${r.name}, ${r.phone}</div>
+              ${r.notes ? `<div class="tiny">Uwagi: ${r.notes}</div>` : ""}
+              <div class="divider"></div>
+              <div class="res-actions">
+                <button class="btn btn-ghost btn-small" data-del="${r.id}">Usuń</button>
+              </div>
+            </div>
+          `).join("")
+        : `<div class="empty">
+            <div class="icon"><i class="fa-solid fa-calendar-check"></i></div>
+            <div>
+              <b>Brak rezerwacji</b>
+              <div class="tiny">Zarezerwuj stolik — zajmie to chwilkę.</div>
+            </div>
+           </div>`;
+
+      resListEl.querySelectorAll("[data-del]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const id = btn.dataset.del;
+          const newList = store.get("reservations", []).filter(x=>x.id!==id);
+          store.set("reservations", newList);
+          renderReservations();
+          showToast("Rezerwacja usunięta");
+        });
+      });
+    }
+
+    resForm.addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      const fd = new FormData(resForm);
+      const data = Object.fromEntries(fd.entries());
+      const list = store.get("reservations", []);
+      list.unshift({ ...data, id: crypto.randomUUID() });
+      store.set("reservations", list);
+      resForm.reset();
+      renderReservations();
+      showToast("Rezerwacja zapisana 🧡");
+      openTab("res");
+    });
+
+    (() => {
+      const dateInput = resForm.querySelector("input[name='date']");
+      const iso = new Date().toISOString().split("T")[0];
+      dateInput.min = iso;
+    })();
+
+    // ---------- Account / Auth ----------
+    const loggedOutEl = document.getElementById("accountLoggedOut");
+    const loggedInEl  = document.getElementById("accountLoggedIn");
+    const avatarEl = document.getElementById("avatar");
+    const accNameEl = document.getElementById("accName");
+    const accEmailEl = document.getElementById("accEmail");
+
+    function setUser(user){ store.set("user", user); renderAccount(); }
+    function renderAccount(){
+      const user = store.get("user", null);
+      const isLogged = !!user;
+      loggedOutEl.style.display = isLogged ? "none" : "flex";
+      loggedInEl.style.display  = isLogged ? "flex" : "none";
+      if(isLogged){
+        const initials = (user.name || "Milk User").split(" ").map(w=>w[0]).slice(0,2).join("").toUpperCase();
+        avatarEl.textContent = initials;
+        accNameEl.textContent = user.name || "Użytkownik";
+        accEmailEl.textContent = user.email || "";
+      }
+    }
+
+    document.getElementById("loginGoogle").addEventListener("click", ()=>{
+      setUser({ provider:"google", name:"Użytkownik Google", email:"google@user.com" });
+      showToast("Zalogowano przez Google ✅");
+      openTab("account");
+    });
+
+    document.getElementById("loginEmailForm").addEventListener("submit", (e)=>{
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const email = fd.get("email");
+      setUser({ provider:"email", name: email.split("@")[0], email });
+      showToast("Zalogowano ✅");
+      openTab("account");
+      e.target.reset();
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", ()=>{
+      store.set("user", null);
+      renderAccount();
+      showToast("Wylogowano");
+    });
+
+    // ---------- Subpages ----------
+    const subpages = {
+      personal: document.getElementById("page-personal"),
+      language: document.getElementById("page-language"),
+      about: document.getElementById("page-about"),
+      help: document.getElementById("page-help")
+    };
+    function openSubpage(name){
+      closeSubpages();
+      subpages[name]?.classList.add("active");
+    }
+    function closeSubpages(){
+      Object.values(subpages).forEach(p=>p.classList.remove("active"));
+    }
+    document.querySelectorAll("[data-back]").forEach(b=>b.addEventListener("click", closeSubpages));
+    document.querySelectorAll(".list-item[data-open]").forEach(item=>{
+      item.addEventListener("click", ()=> openSubpage(item.dataset.open));
+    });
+
+    document.getElementById("savePersonalBtn").addEventListener("click", ()=>{
+      const user = store.get("user", {}) || {};
+      user.name = document.getElementById("personalName").value || user.name;
+      user.phone = document.getElementById("personalPhone").value || user.phone;
+      user.email = document.getElementById("personalEmail").value || user.email;
+      setUser(user);
+      showToast("Dane zapisane");
+      closeSubpages();
+    });
+    document.querySelectorAll("[data-lang]").forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        store.set("lang", btn.dataset.lang);
+        showToast("Zapisano język");
+        closeSubpages();
+      });
+    });
+
+    // ---------- PWA install guide logic (OBOWIĄZKOWE) ----------
+    const installGuideEl = document.getElementById("installGuide");
+    const guideTabs = document.querySelectorAll("[data-guide-tab]");
+    const guidePanes = document.querySelectorAll("[data-guide-pane]");
+    const androidInstallBtn = document.getElementById("androidInstallBtn");
+
+    function isStandaloneMode(){
+      const standaloneDisplay = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+      const iosStandalone = (typeof navigator !== "undefined" && "standalone" in navigator) ? navigator.standalone : false;
+      return !!(standaloneDisplay || iosStandalone);
+    }
+
+    function isIOS(){
+      return /iphone|ipad|ipod/i.test(navigator.userAgent);
+    }
+
+    function showInstallGuide(){
+      installGuideEl?.classList.add("show");
+      installGuideEl?.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+    }
+
+    function hideInstallGuide(){
+      installGuideEl?.classList.remove("show");
+      installGuideEl?.setAttribute("aria-hidden", "true");
+      document.body.style.overflow = "";
+    }
+
+    guideTabs.forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const name = btn.dataset.guideTab;
+        guideTabs.forEach(b=> b.classList.toggle("active", b===btn));
+        guidePanes.forEach(p=> p.classList.toggle("active", p.dataset.guidePane===name));
+      });
+    });
+
+    (function initGuideDefaultTab(){
+      const initial = isIOS() ? "ios" : "android";
+      guideTabs.forEach(b=> b.classList.toggle("active", b.dataset.guideTab===initial));
+      guidePanes.forEach(p=> p.classList.toggle("active", p.dataset.guidePane===initial));
+    })();
+
+    let deferredPrompt = null;
+    window.addEventListener("beforeinstallprompt", (e)=>{
+      e.preventDefault();
+      deferredPrompt = e;
+      if(androidInstallBtn){
+        androidInstallBtn.style.display = "inline-flex";
+        androidInstallBtn.disabled = false;
+      }
+    });
+
+    androidInstallBtn?.addEventListener("click", async ()=>{
+      if(!deferredPrompt) return;
+      androidInstallBtn.disabled = true;
+      deferredPrompt.prompt();
+      try{ await deferredPrompt.userChoice; }catch{}
+      deferredPrompt = null;
+      androidInstallBtn.style.display = "none";
+    });
+
+    // WYMUSZAMY: w przeglądarce zawsze poradnik, w PWA zawsze aplikacja
+    (function gateAppWithInstallGuide(){
+      const inStandalone = isStandaloneMode();
+      if(!inStandalone){
+        showInstallGuide();
+      } else {
+        hideInstallGuide();
+      }
+    })();
+
+    // ---------- Init ----------
+    renderPoints();
+    renderRewards();
+    renderMenu();
+    renderCart();
+    renderOrders();
+    renderReservations();
+    renderAccount();
+    openTab("points");
+  </script>
+</body>
+</html>

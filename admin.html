@@ -1,2142 +1,1454 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>MilkShake Bar — Panel Administratora</title>
-  <meta name="theme-color" content="#FF6A00"/>
-  <link rel="icon" href="/favicon.png"/>
 
-  <!-- PWA -->
-  <link rel="manifest" href="/manifest.webmanifest"/>
-
+  <meta name="theme-color" content="#FF6A00" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 
   <style>
-    :root {
-      --primary-color: #FF6A00;
-      --secondary-color: #FF9100;
-      --accent-color: #FFE0B2;
-      --background-light: #FFF6EC;
-      --background-dark: #22110A;
-      --text-color-dark: #2B1300;
-      --text-color-light: #FFFFFF;
-      --gradient-bg: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-      --shadow: 0px 10px 30px rgba(0, 0, 0, 0.12);
-      --border-radius: 20px;
-      --success-color: #16A34A;
-      --error-color: #DC2626;
-      --muted: #8a7c73;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Poppins', sans-serif;
-      color: var(--text-color-dark);
-      background: var(--background-light);
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-    .container { max-width: 1280px; margin: 0 auto; padding: 0 25px; }
-
-    /* elevated-only pre-login hide */
-    .owner-only { display: none; }
-    .milk-only { display: none; }
-
-    /* Header */
-    .header {
-      position: sticky; top: 0; z-index: 10;
-      background: rgba(255,246,236,0.9);
-      backdrop-filter: blur(8px);
-      padding: 14px 0;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    }
-    .navbar {
-      display:flex; align-items:center; justify-content:space-between;
-      gap: 16px;
-    }
-    .logo {
-      display:flex; align-items:center; gap:12px; text-decoration:none;
-      font-weight: 900; font-size: 1.4rem; color: var(--primary-color);
-    }
-    .logo img {
-      width: 44px; height: 44px; border-radius:50%;
-      box-shadow: var(--shadow);
-    }
-    .header-actions { display:flex; align-items:center; gap:10px; }
-    .pill {
-      padding: 8px 12px; border-radius:999px; font-weight:700;
-      background:#fff; box-shadow: var(--shadow); font-size:0.9rem;
-      display:flex; align-items:center; gap:8px;
+    :root{
+      --primary:#FF6A00;
+      --secondary:#FF9100;
+      --bg:#FFF6EC;
+      --text:#2B1300;
+      --white:#fff;
+      --grad:linear-gradient(135deg,var(--primary),var(--secondary));
+      --shadow:0 14px 40px rgba(0,0,0,.12);
+      --shadow-soft:0 8px 22px rgba(0,0,0,.08);
+      --radius:20px;
+      --glass:rgba(255,255,255,.88);
+      --glass-strong:rgba(255,255,255,.96);
+      --line:rgba(0,0,0,.06);
+      --success:#16A34A;
+      --danger:#DC2626;
+      --muted:rgba(43,19,0,.70);
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
-    /* Buttons */
-    .btn {
-      padding: 12px 18px; border-radius: 999px; font-weight: 700;
-      border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px;
-      transition: all .25s ease; text-decoration:none;
-    }
-    .btn-primary {
-      background: var(--gradient-bg); color:#fff;
-      box-shadow: 0 6px 18px rgba(255,106,0,0.45);
-    }
-    .btn-primary:hover { transform: translateY(-2px); }
-    .btn-ghost {
-      background:#fff; color: var(--text-color-dark);
-      box-shadow: var(--shadow);
-    }
-    .btn-ghost:hover { transform: translateY(-2px); }
-    .btn-danger {
-      background: #fff; color: var(--error-color);
-      box-shadow: var(--shadow);
-      border: 2px solid rgba(220,38,38,0.15);
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:Poppins,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      -webkit-font-smoothing:antialiased;
+      min-height:100vh;
+      overflow-x:hidden;
     }
 
-    /* Tabs */
-    .tabs {
-      display:flex; gap:8px; flex-wrap:wrap;
-      margin: 18px 0 8px;
-    }
-    .tab-btn{
-      padding: 10px 16px; border-radius:999px; font-weight:800;
-      background:#fff; box-shadow: var(--shadow); border:none; cursor:pointer;
-      display:inline-flex; align-items:center; gap:8px;
-      transition:.2s ease;
-    }
-    .tab-btn.active{
-      background: var(--gradient-bg); color:#fff;
-      box-shadow: 0 8px 22px rgba(255,106,0,0.45);
-      transform: translateY(-1px);
-    }
-    .tab-panel{ display:none; }
-    .tab-panel.active{ display:block; }
-
-    /* Layout */
-    .grid {
+    .app{
       display:grid;
       grid-template-columns: 320px 1fr;
-      gap: 18px;
-      padding: 10px 0 40px;
-    }
-    @media (max-width: 992px){
-      .grid{ grid-template-columns: 1fr; }
+      min-height:100vh;
     }
 
     /* Sidebar */
-    .card {
-      background:#fff; border-radius: var(--border-radius);
+    .sidebar{
+      position:sticky; top:0;
+      height:100vh;
+      padding: calc(12px + var(--safe-top)) 12px 12px;
+      border-right:1px solid var(--line);
+      background: rgba(255,246,236,.95);
+      backdrop-filter: blur(12px);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      padding:12px;
+      border-radius:22px;
+      background: var(--glass);
+      border:1px solid rgba(255,255,255,.98);
+      box-shadow: var(--shadow-soft);
+    }
+    .logo{
+      width:46px;height:46px;border-radius:16px;
+      background: var(--grad);
+      color:#fff;
+      display:grid;place-items:center;
+      box-shadow:0 10px 24px rgba(255,106,0,.30);
+      flex:0 0 auto;
+    }
+    .brand h1{
+      font-size:1.02rem;
+      line-height:1.1;
+      font-weight:900;
+    }
+    .brand p{
+      font-size:.82rem;
+      opacity:.75;
+      font-weight:800;
+      margin-top:2px;
+    }
+
+    .who{
+      padding:12px;
+      border-radius:22px;
+      background: var(--glass);
+      border:1px solid rgba(255,255,255,.98);
+      box-shadow: var(--shadow-soft);
+      display:grid; gap:8px;
+    }
+    .pill{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+      background: rgba(255,255,255,.92);
+      border:1px solid rgba(0,0,0,.05);
+      border-radius:16px;
+      padding:10px 12px;
+      font-weight:900;
+    }
+    .pill small{ opacity:.75; font-weight:800; }
+
+    .nav{
+      display:flex; flex-direction:column; gap:8px;
+      padding:10px;
+      border-radius:22px;
+      background: var(--glass);
+      border:1px solid rgba(255,255,255,.98);
+      box-shadow: var(--shadow-soft);
+    }
+    .navbtn{
+      border:none;
+      cursor:pointer;
+      width:100%;
+      text-align:left;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:12px 12px;
+      border-radius:16px;
+      background: rgba(255,255,255,.92);
+      border:1px solid rgba(0,0,0,.05);
+      transition:.15s;
+      color: var(--text);
+      font-weight:900;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .navbtn .left{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .navbtn i{
+      width:38px;height:38px;border-radius:14px;
+      display:grid;place-items:center;
+      background: rgba(0,0,0,.05);
+      flex:0 0 auto;
+    }
+    .navbtn .label{ display:grid; min-width:0; }
+    .navbtn .label span{
+      font-size:.95rem;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .navbtn .label small{
+      font-size:.78rem; opacity:.7; font-weight:800;
+      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    }
+    .navbtn.active{
+      background: var(--grad);
+      color:#fff;
+      border-color: rgba(255,255,255,.18);
+      box-shadow:0 12px 26px rgba(255,106,0,.26);
+    }
+    .navbtn.active i{ background: rgba(255,255,255,.20); color:#fff; }
+
+    .side-actions{
+      margin-top:auto;
+      display:grid;
+      gap:8px;
+    }
+
+    /* Main */
+    .main{
+      padding: calc(14px + var(--safe-top)) 16px calc(16px + var(--safe-bottom));
+    }
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:14px 16px;
+      border-radius:24px;
+      background: var(--glass);
+      border:1px solid rgba(255,255,255,.98);
       box-shadow: var(--shadow);
-      padding: 18px;
+      margin-bottom:14px;
+      flex-wrap:wrap;
     }
-    .sidebar .section-title {
-      font-size: 1.2rem; font-weight: 900;
-      margin-bottom: 12px;
-      background: var(--gradient-bg);
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    .topbar .title{
+      display:grid;
+      gap:2px;
+      min-width: 220px;
     }
-    .section-title {
-      font-size: 1.2rem; font-weight: 900;
-      margin-bottom: 12px;
-      background: var(--gradient-bg);
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    .topbar .title h2{
+      font-size:1.25rem;
+      font-weight:900;
+      background: var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      line-height:1.15;
     }
-    .stat {
-      display:flex; align-items:center; justify-content:space-between;
-      padding:12px; border-radius:14px; background: #fff7ef; margin-bottom:10px;
-      font-weight:700;
-    }
-    .stat small { font-weight:600; color: var(--muted); }
-
-    /* Content header */
-    .content-header {
-      display:flex; align-items:center; justify-content:space-between;
-      gap: 12px; margin-bottom: 12px;
-    }
-    .content-header h2{
-      font-size: clamp(1.6rem, 3vw, 2.2rem);
-      font-weight: 900;
+    .topbar .title p{
+      font-size:.86rem;
+      opacity:.78;
+      font-weight:800;
     }
 
-    /* Reservations list */
-    .reservations {
-      display:grid; gap: 12px;
+    .btn{
+      border:none; cursor:pointer;
+      font-weight:900;
+      border-radius:16px;
+      padding:12px 14px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      transition:.15s;
+      text-decoration:none;
+      user-select:none;
+      -webkit-tap-highlight-color: transparent;
+      justify-content:center;
+      color: var(--text);
+      background: rgba(255,255,255,.92);
+      border:1px solid rgba(0,0,0,.06);
     }
-    .reservation-item{
-      border-radius: 16px; padding: 14px;
-      background:#fff; box-shadow: var(--shadow);
-      display:grid; grid-template-columns: 1fr auto; gap: 10px;
-      border-left: 6px solid transparent;
-      touch-action: pan-y;
+    .btn-primary{
+      background: var(--grad);
+      color:#fff;
+      border-color: rgba(255,255,255,.18);
+      box-shadow:0 10px 24px rgba(255,106,0,.30);
     }
-    .reservation-item.new { border-left-color: var(--primary-color); }
-    .reservation-meta{
-      display:flex; flex-wrap:wrap; gap: 8px 12px; font-size:0.95rem;
+    .btn-danger{
+      background: linear-gradient(135deg, #ff3b3b, #ff7a3b);
+      color:#fff;
+      border-color: rgba(255,255,255,.18);
+      box-shadow:0 10px 24px rgba(255,59,59,.18);
     }
-    .tag{
-      display:inline-flex; align-items:center; gap:6px;
-      background:#fff6ec; padding:6px 10px; border-radius:999px;
-      font-weight:700; font-size:0.85rem;
-    }
-    .reservation-notes{
-      margin-top:6px; color:#4a2b15; line-height:1.5;
-    }
-    .reservation-actions{
-      display:flex; flex-direction:column; gap:8px; align-items:flex-end;
-    }
-    .small { font-size:0.85rem; color: var(--muted); font-weight:600; }
+    .btn-small{ padding:9px 10px; border-radius:14px; font-size:.92rem; }
 
-    /* Info bar editor */
-    .info-editor textarea{
-      width:100%; min-height:120px; resize: vertical;
-      padding: 14px; border:2px solid #eee; border-radius:14px;
-      font-family:'Poppins',sans-serif; font-size:1rem;
-      transition:.2s ease;
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:12px;
+    }
+    .card{
+      background: var(--glass);
+      border:1px solid rgba(255,255,255,.98);
+      border-radius:24px;
+      box-shadow: var(--shadow);
+      padding:16px;
+      overflow:hidden;
+    }
+    .muted{ opacity:.82; color: var(--muted); font-weight:700; line-height:1.55; }
+    .section-title{
+      font-size:1.05rem;
+      font-weight:900;
+      background: var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      margin-bottom:10px;
+    }
+
+    /* Forms */
+    label{ font-size:.9rem; font-weight:900; margin:8px 0 6px; display:block; }
+    input,select,textarea{
+      width:100%;
+      padding:12px 14px;
+      border-radius:14px;
+      border:2px solid #eee;
+      background: var(--white);
+      font-size:1rem;
       outline:none;
+      transition:.15s;
+      font-family:inherit;
     }
-    .info-editor textarea:focus{
-      border-color: var(--primary-color);
-      box-shadow: 0 6px 18px rgba(255,106,0,0.08);
+    input:focus,select:focus,textarea:focus{
+      border-color: var(--primary);
+      box-shadow:0 8px 20px rgba(255,106,0,.10);
     }
-    .info-hint{
-      margin-top:8px; color: var(--muted); line-height:1.6;
-      font-weight:600; font-size:0.95rem;
-    }
-    .info-actions{
-      display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;
-    }
+    textarea{ min-height: 96px; resize: vertical; }
+    .row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .row3{ display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; }
 
-    /* Empty state */
-    .empty {
-      text-align:center; padding: 30px 12px; color: var(--muted);
-      font-weight:700; background:#fff; border-radius:16px; box-shadow: var(--shadow);
+    /* Table */
+    .table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      overflow:hidden;
+      border-radius:18px;
+      border:1px solid rgba(0,0,0,.06);
+      background: rgba(255,255,255,.94);
     }
+    .table th, .table td{
+      padding:12px 12px;
+      text-align:left;
+      font-size:.92rem;
+      border-bottom:1px solid rgba(0,0,0,.06);
+      vertical-align:top;
+    }
+    .table th{
+      font-weight:900;
+      background: rgba(255,106,0,.08);
+    }
+    .table tr:last-child td{ border-bottom:none; }
+    .right{ text-align:right; }
+    .mono{ font-variant-numeric: tabular-nums; font-feature-settings:"tnum"; }
 
-    /* Lock screen */
-    .lockscreen{
-      position: fixed; inset:0; z-index: 999;
-      background: radial-gradient(1200px circle at top, #fff 0%, #fff2e5 40%, #ffe9d5 100%);
-      display:flex; align-items:center; justify-content:center;
-      padding: 20px;
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:.78rem;
+      background: rgba(0,0,0,.06);
+      white-space:nowrap;
     }
-    .lock-card{
-      width:min(520px, 100%);
-      background:#fff; border-radius: 24px; box-shadow: var(--shadow);
-      padding: 26px;
-      text-align:center;
+    .tag.ok{ background: rgba(22,163,74,.12); color: #0e6b2f; }
+    .tag.pending{ background: rgba(255,106,0,.12); color: #8a3d00; }
+    .tag.bad{ background: rgba(220,38,38,.12); color: #8a1010; }
+
+    /* Modal / overlay */
+    .overlay{
+      position:fixed; inset:0; z-index:90;
+      display:none;
+      background: rgba(0,0,0,.32);
+      backdrop-filter: blur(2px);
+      padding: calc(14px + var(--safe-top)) 14px calc(14px + var(--safe-bottom));
     }
-    .lock-card .logo-big{
-      display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:12px;
-      font-size:1.6rem; font-weight:900; color: var(--primary-color);
+    .overlay.show{ display:grid; place-items:center; }
+    .modal{
+      width:min(860px, 100%);
+      background: var(--glass-strong);
+      border-radius:26px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.28);
+      border:1px solid rgba(255,255,255,.98);
+      overflow:hidden;
     }
-    .lock-card img{ width:64px; height:64px; border-radius:50%; }
-    .lock-card p{ color: var(--muted); margin-bottom:14px; }
-    .code-input{
-      display:flex; gap: 8px; justify-content:center; margin: 10px 0 16px;
+    .modal-head{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:14px 16px;
+      background: rgba(255,246,236,.94);
+      border-bottom:1px solid rgba(0,0,0,.06);
     }
-    .code-input input{
-      width: 56px; height: 62px; text-align:center; font-size:1.6rem; font-weight:900;
-      border:2px solid #eee; border-radius:12px; outline:none;
-      transition: .2s ease;
+    .modal-head h3{
+      font-size:1.1rem;
+      font-weight:900;
+      background: var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
     }
-    .code-input input:focus{ border-color: var(--primary-color); box-shadow: 0 6px 18px rgba(255,106,0,0.12); }
-    .lock-error{
-      color: var(--error-color); font-weight:800; min-height: 1.2em;
+    .modal-body{ padding:16px; display:grid; gap:12px; }
+    .close{
+      width:42px;height:42px;border-radius:14px;
+      border:none; cursor:pointer;
+      background:#fff;
+      box-shadow: var(--shadow-soft);
+      display:grid;place-items:center;
     }
 
     /* Toast */
-    .toast {
-      position: fixed; bottom: 18px; right: 18px; z-index: 9999;
-      background: var(--success-color); color:#fff; font-weight:800;
-      padding: 12px 16px; border-radius: 999px; box-shadow: 0 10px 25px rgba(0,0,0,.25);
-      display:flex; align-items:center; gap:8px; opacity:0; transform: translateY(8px);
-      transition: .25s ease; pointer-events:none;
-    }
-    .toast.visible { opacity:1; transform: translateY(0); }
-    .toast.error { background: var(--error-color); }
-
-    /* =========================
-       MOBILE / TABLET FIXES
-       ========================= */
-    @media (max-width: 768px) {
-      .container { padding: 0 14px; }
-      .navbar{ flex-wrap: wrap; align-items: center; gap: 10px; }
-      .logo{ font-size: 1.1rem; }
-      .logo img{ width: 36px; height: 36px; }
-      .header-actions{ width: 100%; flex-wrap: wrap; justify-content: flex-start; gap: 8px; }
-      .header-actions .btn,
-      .header-actions .pill{ width: 100%; justify-content: center; }
-      .tabs{ gap: 6px; }
-      .tab-btn{ flex: 1 1 auto; justify-content: center; padding: 9px 12px; font-size: 0.95rem; }
-      .grid{ grid-template-columns: 1fr; gap: 12px; }
-      .sidebar{ order: 2; }
-      .reservation-item{ grid-template-columns: 1fr; }
-      .reservation-actions{ flex-direction: row; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 8px; }
-      .reservation-actions .btn{ flex: 1 1 0; justify-content: center; padding: 10px 12px; font-size: 0.9rem; }
-      .tag{ font-size: 0.78rem; padding: 5px 8px; }
-    }
-
-    @media (max-width: 420px){
-      .content-header{ flex-direction: column; align-items: flex-start; }
-      .content-header h2{ font-size: 1.4rem; }
-      .code-input input{ width: 46px; height: 54px; font-size: 1.4rem; }
-    }
-
-    /* =========================
-       MODAL (DODAJ / EDYTUJ)
-       ========================= */
-    .modal-backdrop{
-      position: fixed; inset:0; z-index: 1000;
-      background: rgba(0,0,0,0.35);
-      display:none; align-items:center; justify-content:center;
-      padding: 18px;
-    }
-    .modal-backdrop.show{ display:flex; }
-
-    .modal-card{
-      width:min(560px, 100%);
-      animation: modalIn .18s ease;
-    }
-    @keyframes modalIn{
-      from{ transform: translateY(8px); opacity:0; }
-      to{ transform: translateY(0); opacity:1; }
-    }
-
-    .input{
-      width:100%;
-      padding: 12px 14px;
-      border:2px solid #eee;
-      border-radius:12px;
-      font-family:'Poppins',sans-serif;
-      font-size:1rem;
-      outline:none;
-      transition:.2s ease;
-    }
-    .input:focus{
-      border-color: var(--primary-color);
-      box-shadow: 0 6px 18px rgba(255,106,0,0.08);
-    }
-
-    /* =========================
-       FULLSCREEN ALERT (NOWA REZ.)
-       ========================= */
-    .new-res-overlay{
-      position: fixed; inset:0; z-index: 10000;
-      display:none; align-items:center; justify-content:center;
-      padding: 20px;
-      animation: flashBg .8s infinite alternate;
-    }
-    .new-res-overlay.show{ display:flex; }
-
-    @keyframes flashBg{
-      0%   { background: #fff; }
-      100% { background: #FF6A00; }
-    }
-
-    .new-res-card{
-      width: min(760px, 100%);
-      background: rgba(255,255,255,0.97);
-      border-radius: 28px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
-      padding: 32px 26px;
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom: 18px;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--success);
+      color:#fff;
+      font-weight:900;
+      padding:10px 14px;
+      border-radius:999px;
+      box-shadow:0 14px 34px rgba(0,0,0,.25);
+      opacity:0;
+      pointer-events:none;
+      transition:.2s;
+      z-index:200;
+      display:flex; gap:8px; align-items:center;
+      max-width: calc(100% - 28px);
       text-align:center;
-      animation: popIn .2s ease;
-      border: 3px solid rgba(255,106,0,0.15);
     }
-    @keyframes popIn{
-      from{ transform: scale(.96); opacity:0; }
-      to{ transform: scale(1); opacity:1; }
-    }
+    .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
+    .toast.danger{ background: var(--danger); }
 
-    .new-res-title{
-      font-size: clamp(2rem, 5vw, 3rem);
-      font-weight: 900;
-      letter-spacing: 1px;
-      color: #FF6A00;
-      text-shadow: 0 3px 0 rgba(0,0,0,0.05);
-      display:flex;
-      align-items:center;
-      justify-content:center;
+    /* Lockscreen */
+    .lock{
+      position:fixed; inset:0; z-index:5000;
+      display:grid; place-items:center;
+      padding: calc(18px + var(--safe-top)) 16px calc(18px + var(--safe-bottom));
+      background:
+        radial-gradient(900px 600px at 10% 10%, rgba(255,106,0,.12), transparent 60%),
+        radial-gradient(900px 600px at 90% 90%, rgba(255,145,0,.14), transparent 60%),
+        linear-gradient(180deg, rgba(255,246,236,.98), rgba(255,246,236,.985));
+    }
+    .lock-card{
+      width:min(520px, 100%);
+      border-radius:28px;
+      background: rgba(255,255,255,.88);
+      border:1px solid rgba(255,255,255,.98);
+      box-shadow: var(--shadow);
+      padding:18px;
+      display:grid;
       gap:12px;
     }
-    .new-res-title i{ color:#FF6A00; font-size: 1.9rem; }
-
-    .new-res-name{
-      margin-top: 8px;
-      font-size: clamp(1.6rem, 4vw, 2.4rem);
-      font-weight: 900;
-      color: #22110A;
+    .lock-head{
+      display:flex; align-items:center; gap:12px;
+    }
+    .lock-badge{
+      width:54px;height:54px;border-radius:20px;
+      background: var(--grad);
+      color:#fff; display:grid; place-items:center;
+      box-shadow:0 12px 26px rgba(255,106,0,.35);
+      font-size:1.2rem;
+      flex:0 0 auto;
+    }
+    .lock-title{
+      display:grid; gap:2px;
+      min-width:0;
+    }
+    .lock-title b{
+      font-weight:900;
+      font-size:1.15rem;
+      background: var(--grad);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      line-height:1.1;
+    }
+    .lock-title small{
+      font-weight:800;
+      opacity:.78;
+    }
+    .pin-row{
+      display:grid;
+      gap:8px;
+    }
+    .pin{
+      letter-spacing: 10px;
+      font-size: 1.35rem;
+      text-align:center;
+      font-weight:900;
     }
 
-    .new-res-meta{
-      margin-top: 12px;
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: #4a2b15;
-      display:flex; flex-wrap:wrap; gap:10px; justify-content:center;
+    /* FULLSCREEN: new reservation / new order */
+    .full-overlay{
+      position:fixed; inset:0; z-index:9998;
+      display:none;
+      padding: calc(14px + var(--safe-top)) 14px calc(14px + var(--safe-bottom));
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(2px);
     }
-
-    .new-res-meta .pillish{
-      background: #fff;
-      border: 2px solid rgba(255,106,0,0.15);
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-weight: 800;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
-      color: #2B1300;
+    .full-overlay.show{ display:grid; place-items:center; }
+    .full-card{
+      width:min(620px, 100%);
+      background:rgba(255,255,255,.96);
+      border-radius:26px;
+      box-shadow:0 18px 60px rgba(0,0,0,.28);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.98);
     }
-    .new-res-meta .pillish i{ color: #FF6A00; font-size: 1rem; }
-
-    .new-res-accept{
-      margin-top: 18px;
-      font-size: 1.1rem;
-      padding: 14px 24px;
-      letter-spacing:.2px;
+    .full-head{
+      padding:14px 16px;
+      background: var(--grad);
+      color:#fff;
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
     }
+    .full-head b{ font-weight:900; font-size:1.15rem; }
+    .full-head small{ display:block; opacity:.95; font-weight:800; margin-top:4px; }
+    .full-body{ padding:14px 16px; display:grid; gap:10px; }
+    .full-actions{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:6px; }
 
-    /* ===== Swipe -> pokaż "Edytuj" ===== */
-    .reservation-actions .edit-btn { display:none; }
-    .reservation-item.swiped .mark-read-btn{ display:none; }
-    .reservation-item.swiped .edit-btn{ display:inline-flex; }
-    .reservation-item.swiped{
-      border-left-color: #11182710;
-      box-shadow: 0 12px 30px rgba(0,0,0,0.14);
-      transform: translateX(-6px);
-      transition: transform .15s ease;
+    @media (max-width: 980px){
+      .app{ grid-template-columns: 1fr; }
+      .sidebar{
+        position:relative;
+        height:auto;
+        border-right:none;
+        border-bottom:1px solid var(--line);
+      }
     }
-
-    /* ===== Aplikacja Milk ===== */
-    .milk-panel{ display:none; }
-    .milk-panel.active{ display:block; }
-    .milk-subtabs .tab-btn{ font-size:0.95rem; }
-
-    .milk-list-item{
-      border-radius: 16px; padding: 14px;
-      background:#fff; box-shadow: var(--shadow);
-      display:grid; grid-template-columns: 1fr auto; gap: 10px;
+    @media (max-width: 560px){
+      .row{ grid-template-columns: 1fr; }
+      .row3{ grid-template-columns: 1fr; }
+      .topbar{ flex-direction:column; align-items:stretch; }
+      .full-actions{ grid-template-columns: 1fr; }
     }
-    .milk-list-actions{ display:flex; gap:8px; align-items:center; }
-    .milk-muted{ color: var(--muted); font-weight:700; }
   </style>
 </head>
 
 <body>
+
   <!-- LOCKSCREEN -->
-  <div class="lockscreen" id="lockscreen" aria-live="polite">
+  <section class="lock" id="lock">
     <div class="lock-card">
-      <div class="logo-big">
-        <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="MilkShake Bar">
-        <span>Panel Administratora</span>
-      </div>
-      <p>Wpisz kod dostępu, aby przejść do panelu.</p>
-
-      <div class="code-input" id="codeInput">
-        <input inputmode="numeric" maxlength="1" aria-label="cyfra 1">
-        <input inputmode="numeric" maxlength="1" aria-label="cyfra 2">
-        <input inputmode="numeric" maxlength="1" aria-label="cyfra 3">
-        <input inputmode="numeric" maxlength="1" aria-label="cyfra 4">
+      <div class="lock-head">
+        <div class="lock-badge"><i class="fa-solid fa-lock"></i></div>
+        <div class="lock-title">
+          <b>Panel Administratora</b>
+          <small>Wpisz PIN (4 cyfry)</small>
+        </div>
       </div>
 
-      <div class="lock-error" id="lockError"></div>
-
-      <button class="btn btn-primary" id="unlockBtn">
-        Zaloguj <i class="fas fa-unlock"></i>
-      </button>
+      <div class="pin-row">
+        <input id="pinInput" class="pin" inputmode="numeric" autocomplete="off" placeholder="••••" maxlength="4" />
+        <button class="btn btn-primary" id="loginBtn"><i class="fa-solid fa-right-to-bracket"></i> Zaloguj</button>
+        <div class="muted" id="loginInfo">—</div>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <!-- HEADER -->
-  <header class="header">
-    <div class="container">
-      <nav class="navbar">
-        <a class="logo" href="/admin.html">
-          <img src="https://i.imgur.com/Twr2Rms.jpeg" alt="Logo">
-          <span>MilkShake Bar — Admin</span>
+  <div class="app" id="app" style="display:none;">
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo"><i class="fa-solid fa-crown"></i></div>
+        <div>
+          <h1>Milk — Admin</h1>
+          <p>rezerwacje • produkty • info</p>
+        </div>
+      </div>
+
+      <div class="who">
+        <div class="pill">
+          <span><i class="fa-solid fa-user"></i> <span id="whoName">—</span></span>
+          <small id="whoRole">—</small>
+        </div>
+        <div class="pill">
+          <span><i class="fa-solid fa-key"></i> PIN</span>
+          <small id="whoPin">—</small>
+        </div>
+      </div>
+
+      <div class="nav" id="nav">
+        <button class="navbtn active" data-tab="new">
+          <div class="left">
+            <i class="fa-solid fa-bell"></i>
+            <div class="label">
+              <span>Nowe rezerwacje</span>
+              <small>na żywo</small>
+            </div>
+          </div>
+        </button>
+
+        <button class="navbtn" data-tab="all">
+          <div class="left">
+            <i class="fa-solid fa-list"></i>
+            <div class="label">
+              <span>Wszystkie rezerwacje</span>
+              <small>lista</small>
+            </div>
+          </div>
+        </button>
+
+        <button class="navbtn" data-tab="happy">
+          <div class="left">
+            <i class="fa-solid fa-bullhorn"></i>
+            <div class="label">
+              <span>Pasek info</span>
+              <small>HappyBar</small>
+            </div>
+          </div>
+        </button>
+
+        <button class="navbtn" data-tab="staff" id="staffTabBtn" style="display:none;">
+          <div class="left">
+            <i class="fa-solid fa-user-gear"></i>
+            <div class="label">
+              <span>Pracownicy</span>
+              <small>konta PIN</small>
+            </div>
+          </div>
+        </button>
+
+        <a class="navbtn" href="/appadmin" style="text-decoration:none;">
+          <div class="left">
+            <i class="fa-solid fa-mobile-screen-button"></i>
+            <div class="label">
+              <span>Panel Aplikacji</span>
+              <small>zamówienia • punkty</small>
+            </div>
+          </div>
+          <i class="fa-solid fa-arrow-up-right-from-square" style="opacity:.6"></i>
         </a>
-
-        <div class="header-actions">
-          <div class="pill">
-            <i class="fa-solid fa-circle" id="liveDot" style="color:#16A34A"></i>
-            <span id="liveText">LIVE</span>
-          </div>
-
-          <button class="btn btn-ghost" id="enableSoundBtn">
-            <i class="fa-solid fa-volume-high"></i> Dźwięk
-          </button>
-
-          <button class="btn btn-ghost" id="enableNotifBtn">
-            <i class="fa-regular fa-bell"></i> Powiadomienia
-          </button>
-
-          <button class="btn btn-primary" id="refreshBtn">
-            <i class="fa-solid fa-rotate"></i> Odśwież
-          </button>
-        </div>
-      </nav>
-
-      <!-- Tabs -->
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="tab-res-new">
-          <i class="fa-regular fa-clipboard"></i> Nowe rezerwacje
-        </button>
-
-        <button class="tab-btn" data-tab="tab-res-all">
-          <i class="fa-solid fa-layer-group"></i> Wszystkie rezerwacje
-        </button>
-
-        <button class="tab-btn" data-tab="tab-bar">
-          <i class="fa-solid fa-bullhorn"></i> Pasek informacji
-        </button>
-
-        <!-- owner/manager only -->
-        <button class="tab-btn owner-only" data-tab="tab-staff" id="staffTabBtn">
-          <i class="fa-solid fa-users"></i> Pracownicy
-        </button>
-
-        <!-- milk app only for pin 0051 -->
-        <button class="tab-btn milk-only" data-tab="tab-milk-app" id="milkTabBtn" style="display:none;">
-          <i class="fa-solid fa-mobile-screen"></i> Aplikacja Milk
-        </button>
       </div>
-    </div>
-  </header>
 
-  <!-- MAIN -->
-  <main class="container">
-    <div class="grid">
-      <!-- SIDEBAR -->
-      <aside class="sidebar card">
-        <div class="section-title">Podsumowanie</div>
+      <div class="side-actions">
+        <button class="btn btn-small" id="refreshBtn"><i class="fa-solid fa-rotate"></i> Odśwież</button>
+        <button class="btn btn-small" id="soundBtn"><i class="fa-solid fa-volume-high"></i> Dźwięk: ON</button>
+        <button class="btn btn-danger btn-small" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Wyloguj</button>
+      </div>
+    </aside>
 
-        <div class="stat">
-          <div>
-            Wszystkie rezerwacje<br>
-            <small>od początku</small>
-          </div>
-          <div id="statTotal">0</div>
+    <!-- MAIN -->
+    <main class="main">
+      <header class="topbar">
+        <div class="title">
+          <h2 id="pageTitle">Nowe rezerwacje</h2>
+          <p id="pageSub">Na żywo (Socket.IO + polling)</p>
         </div>
-
-        <div class="stat">
-          <div>
-            Nowe rezerwacje<br>
-            <small>nieobsłużone</small>
-          </div>
-          <div id="statNew">0</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-small" id="manualAddBtn"><i class="fa-solid fa-plus"></i> Dodaj ręcznie</button>
+          <button class="btn btn-small" id="exportBtn"><i class="fa-solid fa-file-export"></i> Eksport</button>
         </div>
+      </header>
 
-        <div class="stat">
-          <div>
-            Dzisiaj<br>
-            <small>(lokalnie)</small>
-          </div>
-          <div id="statToday">0</div>
-        </div>
-
-        <p class="small" style="margin-top:12px;line-height:1.5">
-          Panel działa jako PWA (można dodać na ekran główny).  
-          Dźwięk na telefonie wymaga jednorazowego kliknięcia „Dźwięk”.
-          W tle działa tylko powiadomienie push i wibracja.
-        </p>
-      </aside>
-
-      <!-- CONTENT -->
-      <section>
-
-        <!-- TAB: NOWE REZERWACJE -->
-        <div class="tab-panel active" id="tab-res-new">
-          <div class="content-header">
-            <h2>Nowe rezerwacje</h2>
-
-            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-              <button class="btn btn-primary" id="addReservationBtn">
-                <i class="fa-solid fa-plus"></i> Dodaj rezerwację
-              </button>
-              <div class="small" id="lastSync">Ostatnia synchronizacja: —</div>
-            </div>
-          </div>
-
-          <div class="reservations" id="newReservationsList">
-            <div class="empty">Ładuję rezerwacje...</div>
+      <!-- TAB: NEW -->
+      <section class="tab" id="tab-new">
+        <div class="grid">
+          <div class="card" style="grid-column: span 12;">
+            <div class="section-title">Nowe rezerwacje</div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Data utworzenia</th>
+                  <th>Imię</th>
+                  <th>Telefon</th>
+                  <th>Termin</th>
+                  <th>Osoby</th>
+                  <th>Strefa</th>
+                  <th>Uwagi</th>
+                  <th class="right">Akcja</th>
+                </tr>
+              </thead>
+              <tbody id="newResBody">
+                <tr><td colspan="8" class="muted">Ładowanie…</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
-
-        <!-- TAB: WSZYSTKIE REZERWACJE -->
-        <div class="tab-panel" id="tab-res-all">
-          <div class="content-header">
-            <h2>Wszystkie rezerwacje</h2>
-            <div class="small">Tutaj są również przeczytane.</div>
-          </div>
-
-          <div class="reservations" id="allReservationsList">
-            <div class="empty">Ładuję rezerwacje...</div>
-          </div>
-        </div>
-
-        <!-- TAB: INFO BAR -->
-        <div class="tab-panel" id="tab-bar">
-          <div class="content-header">
-            <h2>Pasek informacji</h2>
-            <div class="small" id="barStatus">Status: —</div>
-          </div>
-
-          <div class="card info-editor">
-            <textarea id="infoBarText" placeholder="Np. Dziś -15% przy zakupach od 100 zł"></textarea>
-            <div class="info-hint">
-              Ten tekst wyświetli się jako cienki pasek na samej górze strony głównej.  
-              Zostaw puste i zapisz, aby pasek zniknął.
-            </div>
-
-            <div class="info-actions">
-              <button class="btn btn-primary" id="saveInfoBarBtn">
-                <i class="fa-solid fa-floppy-disk"></i> Zapisz
-              </button>
-              <button class="btn btn-danger" id="clearInfoBarBtn">
-                <i class="fa-solid fa-trash"></i> Usuń pasek
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- TAB: PRACOWNICY (owner/manager only) -->
-        <div class="tab-panel owner-only" id="tab-staff">
-          <div class="content-header">
-            <h2>Pracownicy</h2>
-            <div class="small">Dostępne tylko dla Właściciela / Menagera</div>
-          </div>
-
-          <div class="card" style="display:grid; gap:12px;">
-            <form id="addEmployeeForm" style="display:grid; gap:10px;">
-              <label>
-                <div class="small" style="margin-bottom:4px;">Imię i nazwisko</div>
-                <input required name="empName" class="input" placeholder="Np. Anna Nowak">
-              </label>
-
-              <label>
-                <div class="small" style="margin-bottom:4px;">Login (4 cyfry)</div>
-                <input required name="empPin" class="input" inputmode="numeric" maxlength="4" placeholder="Np. 0043">
-              </label>
-
-              <label>
-                <div class="small" style="margin-bottom:4px;">Stanowisko</div>
-                <select required name="empRole" class="input">
-                  <option value="manager">Właściciel / Menager</option>
-                  <option value="employee" selected>Pracownik</option>
-                </select>
-              </label>
-
-              <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
-                <button type="submit" class="btn btn-primary">
-                  <i class="fa-solid fa-user-plus"></i> Dodaj konto
-                </button>
-              </div>
-              <div class="small" id="empHint" style="color:var(--muted); font-weight:700;"></div>
-            </form>
-
-            <div>
-              <div class="small" style="margin-bottom:8px;">Lista kont</div>
-              <div class="reservations" id="employeesList">
-                <div class="empty">Ładuję konta...</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- TAB: APLIKACJA MILK (tylko pin 0051) -->
-        <div class="tab-panel milk-only" id="tab-milk-app" style="display:none;">
-          <div class="content-header">
-            <h2>Aplikacja Milk (Proszę Nic Nie Klikać w Tej sekcji : Gracjan)</h2>
-            <div class="small" id="milkStatus">Status: Offline/div>
-          </div>
-
-          <!-- Subtabs -->
-          <div class="tabs milk-subtabs" style="margin-top:0">
-            <button class="tab-btn active" data-milk-tab="milk-home">
-              <i class="fa-solid fa-house"></i> Strona główna
-            </button>
-            <button class="tab-btn" data-milk-tab="milk-points">
-              <i class="fa-solid fa-coins"></i> Punkty (Milkosy)
-            </button>
-            <button class="tab-btn" data-milk-tab="milk-rewards">
-              <i class="fa-solid fa-gift"></i> Nagrody
-            </button>
-            <button class="tab-btn" data-milk-tab="milk-users">
-              <i class="fa-solid fa-users"></i> Użytkownicy
-            </button>
-            <button class="tab-btn" data-milk-tab="milk-pickup">
-              <i class="fa-solid fa-ticket"></i> Odbiór nagrody
-            </button>
-          </div>
-
-          <!-- Subpanel: HOME -->
-          <div class="milk-panel active" id="milk-home">
-            <div class="grid" style="grid-template-columns: 1fr 1fr; padding-top:0;">
-              <div class="card">
-                <div class="section-title">Statystyki aplikacji</div>
-                <div class="stat"><div>Użytkownicy zarejestrowani</div><div id="milkStatUsers">0</div></div>
-                <div class="stat"><div>Łącznie Milkosów</div><div id="milkStatPoints">0</div></div>
-                <div class="stat"><div>Wymiany nagród</div><div id="milkStatRedeems">0</div></div>
-                <button class="btn btn-primary" id="milkRefreshStats" style="margin-top:8px;">
-                  <i class="fa-solid fa-rotate"></i> Odśwież statystyki
-                </button>
-              </div>
-
-              <div class="card">
-                <div class="section-title">Szybkie akcje</div>
-                <p class="small" style="line-height:1.6; margin-bottom:10px;">
-                  Milkosy: 10 zł = 1 Milkos.  
-                  Punkty dodajesz po identyfikatorze użytkownika.
-                </p>
-                <button class="btn btn-ghost" id="milkOpenAddPoints">
-                  <i class="fa-solid fa-plus"></i> Dodaj Milkosy
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Subpanel: POINTS -->
-          <div class="milk-panel" id="milk-points">
-            <div class="card" style="display:grid; gap:10px;">
-              <div class="section-title">Dodaj Milkosy</div>
-
-              <form id="milkAddPointsForm" style="display:grid; gap:10px;">
-                <label>
-                  <div class="small" style="margin-bottom:4px;">Identyfikator użytkownika</div>
-                  <input required name="userId" class="input" placeholder="Np. 2f8a-91ab...">
-                </label>
-
-                <label>
-                  <div class="small" style="margin-bottom:4px;">Kwota wydana (zł)</div>
-                  <input required name="amount" class="input" type="number" min="0" step="0.01" placeholder="Np. 50">
-                </label>
-
-                <div class="small" id="milkPointsPreview">Milkosy do dodania: —</div>
-
-                <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
-                  <button type="submit" class="btn btn-primary">
-                    <i class="fa-solid fa-coins"></i> Dodaj punkty
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <!-- Subpanel: REWARDS -->
-          <div class="milk-panel" id="milk-rewards">
-            <div class="grid" style="grid-template-columns: 360px 1fr; padding-top:0;">
-              <div class="card">
-                <div class="section-title">Dodaj nagrodę</div>
-
-                <form id="milkAddRewardForm" style="display:grid; gap:10px;">
-                  <label>
-                    <div class="small" style="margin-bottom:4px;">Nazwa nagrody</div>
-                    <input required name="title" class="input" placeholder="Np. Voucher 100 zł">
-                  </label>
-
-                  <label>
-                    <div class="small" style="margin-bottom:4px;">Koszt (Milkosy)</div>
-                    <input required name="cost" class="input" type="number" min="1" step="1" placeholder="Np. 10">
-                  </label>
-
-                  <label>
-                    <div class="small" style="margin-bottom:4px;">Opis (opcjonalnie)</div>
-                    <textarea name="desc" class="input" style="min-height:80px; resize:vertical;" placeholder="Opis nagrody"></textarea>
-                  </label>
-
-                  <button class="btn btn-primary" type="submit">
-                    <i class="fa-solid fa-gift"></i> Dodaj nagrodę
-                  </button>
-                  <div class="small" id="milkRewardHint"></div>
-                </form>
-              </div>
-
-              <div class="card">
-                <div class="section-title">Lista nagród</div>
-                <div class="reservations" id="milkRewardsList">
-                  <div class="empty">Ładuję nagrody...</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Subpanel: USERS -->
-          <div class="milk-panel" id="milk-users">
-            <div class="card">
-              <div class="section-title">Użytkownicy</div>
-              <div class="small" style="margin-bottom:8px;">Kliknij użytkownika, aby zobaczyć ostatnie wymiany nagród.</div>
-              <div class="reservations" id="milkUsersList">
-                <div class="empty">Ładuję użytkowników...</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Subpanel: PICKUP -->
-          <div class="milk-panel" id="milk-pickup">
-            <div class="card" style="display:grid; gap:10px;">
-              <div class="section-title">Odbiór nagrody po kodzie</div>
-
-              <form id="milkPickupForm" style="display:grid; gap:10px;">
-                <label>
-                  <div class="small" style="margin-bottom:4px;">Kod nagrody</div>
-                  <input required name="code" class="input" placeholder="Np. ABCD-100">
-                </label>
-
-                <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
-                  <button class="btn btn-primary" type="submit">
-                    <i class="fa-solid fa-check"></i> Sprawdź / Odbierz
-                  </button>
-                </div>
-
-                <div class="small" id="milkPickupResult"></div>
-              </form>
-            </div>
-          </div>
-        </div>
-
       </section>
-    </div>
-  </main>
 
-  <!-- MODAL: szczegóły użytkownika -->
-  <div id="milkUserModal" class="modal-backdrop" aria-hidden="true">
-    <div class="modal-card card">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-        <h3 style="font-size:1.4rem; font-weight:900;">Użytkownik</h3>
-        <button class="btn btn-ghost" id="milkCloseUserModal" aria-label="Zamknij">
+      <!-- TAB: ALL -->
+      <section class="tab" id="tab-all" style="display:none;">
+        <div class="grid">
+          <div class="card" style="grid-column: span 12;">
+            <div class="section-title">Wszystkie rezerwacje</div>
+            <div class="row">
+              <div>
+                <label>Szukaj</label>
+                <input id="searchRes" placeholder="imię, telefon, data..." autocomplete="off" />
+              </div>
+              <div>
+                <label>Sortowanie</label>
+                <select id="sortRes">
+                  <option value="new">Najnowsze</option>
+                  <option value="old">Najstarsze</option>
+                </select>
+              </div>
+            </div>
+            <div style="height:10px"></div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Data utworzenia</th>
+                  <th>Imię</th>
+                  <th>Telefon</th>
+                  <th>Termin</th>
+                  <th>Osoby</th>
+                  <th>Strefa</th>
+                  <th>Uwagi</th>
+                  <th class="right">Akcja</th>
+                </tr>
+              </thead>
+              <tbody id="allResBody">
+                <tr><td colspan="8" class="muted">Ładowanie…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: HAPPY -->
+      <section class="tab" id="tab-happy" style="display:none;">
+        <div class="grid">
+          <div class="card" style="grid-column: span 12;">
+            <div class="section-title">Pasek informacji (HappyBar)</div>
+            <label>Treść paska</label>
+            <textarea id="happyInput" placeholder="np. Happy Hours: -20% 16:00–18:00"></textarea>
+            <div style="height:10px"></div>
+            <button class="btn btn-primary" id="saveHappyBtn"><i class="fa-solid fa-floppy-disk"></i> Zapisz</button>
+            <div class="muted" style="margin-top:10px" id="happyStatus">—</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: STAFF -->
+      <section class="tab" id="tab-staff" style="display:none;">
+        <div class="grid">
+          <div class="card" style="grid-column: span 7;">
+            <div class="section-title">Pracownicy</div>
+
+            <div class="row">
+              <div>
+                <label>Szukaj</label>
+                <input id="staffSearch" placeholder="imię / pin / rola" autocomplete="off" />
+              </div>
+              <div>
+                <label>—</label>
+                <button class="btn btn-primary" id="openAddStaff"><i class="fa-solid fa-user-plus"></i> Dodaj konto</button>
+              </div>
+            </div>
+
+            <div style="height:10px"></div>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Imię</th>
+                  <th>PIN</th>
+                  <th>Rola</th>
+                  <th class="right">Akcja</th>
+                </tr>
+              </thead>
+              <tbody id="staffBody">
+                <tr><td colspan="4" class="muted">Ładowanie…</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card" style="grid-column: span 5;">
+            <div class="section-title">Info</div>
+            <div class="muted">
+              • PIN <b>0051</b> = właściciel (zawsze)<br>
+              • role: <b>manager</b> lub <b>employee</b><br>
+              • konta są w MongoDB (kolekcja employees)
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL (uniwersalny) -->
+  <div class="overlay" id="overlay">
+    <div class="modal">
+      <div class="modal-head">
+        <h3 id="modalTitle">Szczegóły</h3>
+        <button class="close" id="modalClose" aria-label="Zamknij"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- FULLSCREEN: NOWA REZERWACJA -->
+  <div class="full-overlay" id="resOverlay">
+    <div class="full-card">
+      <div class="full-head">
+        <div>
+          <b>Nowa rezerwacja</b>
+          <small id="resOverlayMeta">—</small>
+        </div>
+        <button class="btn btn-small" id="resOverlayClose" style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.22);color:#fff;">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
-
-      <div id="milkUserModalBody" style="margin-top:10px; display:grid; gap:10px;">
-        <!-- wypełnia JS -->
+      <div class="full-body">
+        <div id="resOverlayBody" class="muted">—</div>
+        <div class="full-actions">
+          <button class="btn" id="resOverlayDismiss"><i class="fa-solid fa-check"></i> OK</button>
+          <button class="btn btn-primary" id="resOverlayGoAll"><i class="fa-solid fa-list"></i> Otwórz listę</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- FULLSCREEN ALERT: NOWA REZERWACJA -->
-  <div id="newResOverlay" class="new-res-overlay" aria-hidden="true">
-    <div class="new-res-card">
-      <div class="new-res-title">
-        <i class="fa-solid fa-bell"></i>
-        NOWA REZERWACJA
-      </div>
-      <div class="new-res-name" id="newResName">—</div>
-      <div class="new-res-meta" id="newResMeta">—</div>
-
-      <button class="btn btn-primary new-res-accept" id="acceptNewResBtn">
-        Akceptuj <i class="fa-solid fa-check"></i>
-      </button>
-    </div>
-  </div>
-
-  <!-- toast -->
-  <div class="toast" id="toast">
-    <i class="fa-solid fa-bell"></i>
-    <span id="toastText">Nowa rezerwacja!</span>
-  </div>
-
-  <!-- MODAL: ręczne dodanie rezerwacji -->
-  <div id="addReservationModal" class="modal-backdrop" aria-hidden="true">
-    <div class="modal-card card">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-        <h3 style="font-size:1.4rem; font-weight:900;">Dodaj rezerwację</h3>
-        <button class="btn btn-ghost" id="closeAddReservationModal" aria-label="Zamknij">
+  <!-- FULLSCREEN: NOWE ZAMÓWIENIE -->
+  <div class="full-overlay" id="orderOverlay">
+    <div class="full-card">
+      <div class="full-head">
+        <div>
+          <b>Nowe zamówienie z odbiorem</b>
+          <small id="orderOverlayMeta">—</small>
+        </div>
+        <button class="btn btn-small" id="orderOverlayClose" style="background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.22);color:#fff;">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
-
-      <form id="addReservationForm" style="margin-top:12px; display:grid; gap:10px;">
-        <label>
-          <div class="small" style="margin-bottom:4px;">Imię i nazwisko</div>
-          <input required name="name" class="input" placeholder="Np. Jan Kowalski">
-        </label>
-
-        <label>
-          <div class="small" style="margin-bottom:4px;">Telefon</div>
-          <input required name="phone" class="input" placeholder="Np. 500600700">
-        </label>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <label>
-            <div class="small" style="margin-bottom:4px;">Data</div>
-            <input required name="date" type="date" class="input">
-          </label>
-
-          <label>
-            <div class="small" style="margin-bottom:4px;">Godzina</div>
-            <input required name="time" type="time" class="input">
-          </label>
+      <div class="full-body">
+        <div id="orderOverlayItems" class="muted">—</div>
+        <div style="display:flex;justify-content:space-between;font-weight:900;">
+          <span>Razem</span><span id="orderOverlayTotal">—</span>
         </div>
+        <div id="orderOverlayNotes" class="muted"></div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <label>
-            <div class="small" style="margin-bottom:4px;">Liczba osób</div>
-            <input required name="guests" type="number" min="1" class="input" placeholder="Np. 4">
-          </label>
-
-          <label>
-            <div class="small" style="margin-bottom:4px;">Sala / strefa</div>
-            <input required name="room" class="input" placeholder="Np. Sala główna / VIP">
-          </label>
+        <div class="full-actions">
+          <button class="btn" id="orderOverlayDismiss"><i class="fa-solid fa-check"></i> OK</button>
+          <button class="btn btn-primary" id="orderOverlayGoApp"><i class="fa-solid fa-arrow-up-right-from-square"></i> Otwórz zamówienia</button>
         </div>
-
-        <label>
-          <div class="small" style="margin-bottom:4px;">Uwagi (opcjonalnie)</div>
-          <textarea name="notes" class="input" style="min-height:80px; resize:vertical;" placeholder="Np. tort urodzinowy"></textarea>
-        </label>
-
-        <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:6px;">
-          <button type="button" class="btn btn-danger" id="cancelAddReservation">
-            Anuluj
-          </button>
-          <button type="submit" class="btn btn-primary">
-            <i class="fa-solid fa-floppy-disk"></i> Zapisz rezerwację
-          </button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- MODAL: edycja rezerwacji -->
-  <div id="editReservationModal" class="modal-backdrop" aria-hidden="true">
-    <div class="modal-card card">
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
-        <h3 style="font-size:1.4rem; font-weight:900;">Edytuj rezerwację</h3>
-        <button class="btn btn-ghost" id="closeEditReservationModal" aria-label="Zamknij">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
       </div>
-
-      <form id="editReservationForm" style="margin-top:12px; display:grid; gap:10px;">
-        <input type="hidden" name="id">
-
-        <label>
-          <div class="small" style="margin-bottom:4px;">Imię i nazwisko</div>
-          <input required name="name" class="input">
-        </label>
-
-        <label>
-          <div class="small" style="margin-bottom:4px;">Telefon</div>
-          <input required name="phone" class="input">
-        </label>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <label>
-            <div class="small" style="margin-bottom:4px;">Data</div>
-            <input required name="date" type="date" class="input">
-          </label>
-
-          <label>
-            <div class="small" style="margin-bottom:4px;">Godzina</div>
-            <input required name="time" type="time" class="input">
-          </label>
-        </div>
-
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-          <label>
-            <div class="small" style="margin-bottom:4px;">Liczba osób</div>
-            <input required name="guests" type="number" min="1" class="input">
-          </label>
-
-          <label>
-            <div class="small" style="margin-bottom:4px;">Sala / strefa</div>
-            <input required name="room" class="input">
-          </label>
-        </div>
-
-        <label>
-          <div class="small" style="margin-bottom:4px;">Uwagi (opcjonalnie)</div>
-          <textarea name="notes" class="input" style="min-height:80px; resize:vertical;"></textarea>
-        </label>
-
-        <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; margin-top:6px;">
-          <button type="button" class="btn btn-danger" id="cancelEditReservation">
-            Anuluj
-          </button>
-          <button type="submit" class="btn btn-primary">
-            <i class="fa-solid fa-floppy-disk"></i> Zapisz zmiany
-          </button>
-        </div>
-      </form>
     </div>
   </div>
 
-  <!-- socket.io -->
+  <!-- TOAST -->
+  <div class="toast" id="toast"><i class="fa-solid fa-check-circle"></i><span id="toastText"></span></div>
+
+  <!-- Socket.IO client -->
   <script src="/socket.io/socket.io.js"></script>
+
   <script>
-    // =========================
-    //  Tabs
-    // =========================
-    const tabBtns = document.querySelectorAll(".tab-btn[data-tab]");
-    const tabPanels = document.querySelectorAll(".tab-panel");
-    tabBtns.forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        tabBtns.forEach(b=>b.classList.remove("active"));
-        tabPanels.forEach(p=>p.classList.remove("active"));
-        btn.classList.add("active");
-        document.getElementById(btn.dataset.tab).classList.add("active");
-      });
-    });
+    const $ = (q, el=document) => el.querySelector(q);
+    const $$ = (q, el=document) => Array.from(el.querySelectorAll(q));
 
-    // =========================
-    //  PWA / Service Worker
-    // =========================
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js").catch(console.error);
-      });
-    }
-
-    // =========================
-    //  Lock screen (API login)
-    // =========================
-    const lockscreen = document.getElementById("lockscreen");
-    const lockError = document.getElementById("lockError");
-    const unlockBtn = document.getElementById("unlockBtn");
-    const codeBoxes = [...document.querySelectorAll("#codeInput input")];
-
-    let currentRole = null; // "owner" | "manager" | "employee"
-    let currentEmployee = null;
-
-    function getTypedPin(){
-      return codeBoxes.map(b => b.value.trim()).join("");
-    }
-    function clearPin(){
-      codeBoxes.forEach(b => b.value="");
-      codeBoxes[0].focus();
-    }
-
-    function applyRoleVisibility(){
-      const elevated = (currentRole === "owner" || currentRole === "manager");
-      const elevatedEls = document.querySelectorAll(".owner-only");
-      const staffTabBtn = document.getElementById("staffTabBtn");
-      const staffPanel = document.getElementById("tab-staff");
-
-      if(elevated){
-        elevatedEls.forEach(el => el.style.display = "");
-        staffTabBtn && (staffTabBtn.style.display = "");
-        staffPanel && (staffPanel.style.display = "");
-      } else {
-        elevatedEls.forEach(el => el.style.display = "none");
-        staffTabBtn && (staffTabBtn.style.display = "none");
-        staffPanel && (staffPanel.style.display = "none");
-        document.querySelector('[data-tab="tab-res-new"]')?.click();
-      }
-
-      // ===== Milk App access: tylko PIN 0051 =====
-      const milkAccess = String(currentEmployee?.pin || "") === "0051";
-      document.querySelectorAll(".milk-only").forEach(el=>{
-        el.style.display = milkAccess ? "" : "none";
-      });
-      if(!milkAccess){
-        if(document.getElementById("tab-milk-app")?.classList.contains("active")){
-          document.querySelector('[data-tab="tab-res-new"]')?.click();
-        }
-      }
-    }
-
-    async function tryUnlock(){
-      const typed = getTypedPin();
-      if(typed.length !== 4) return;
-
-      try{
-        const res = await fetch("/api/login", {
-          method: "POST",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify({ pin: typed })
-        });
-        const data = await res.json().catch(()=> ({}));
-        if(!res.ok || !data.ok){
-          lockError.textContent = data.message || "Niepoprawny kod.";
-          clearPin();
-          return;
-        }
-
-        currentRole = data.role; // owner/manager/employee
-        currentEmployee = data.user || null;
-
-        lockscreen.style.display = "none";
-        showToast(`Zalogowano: ${currentEmployee?.name || "OK"} ✅`);
-        requestNotificationPermission();
-        fetchInfoBar();
-        applyRoleVisibility();
-        if(currentRole !== "employee") renderEmployees();
-      }catch(e){
-        console.error(e);
-        lockError.textContent = "Błąd logowania (sieć).";
-        clearPin();
-      }
-    }
-
-    unlockBtn.addEventListener("click", tryUnlock);
-    codeBoxes.forEach((box, i) => {
-      box.addEventListener("input", ()=>{
-        lockError.textContent = "";
-        box.value = box.value.replace(/\D/g,"").slice(0,1);
-        if(box.value && codeBoxes[i+1]) codeBoxes[i+1].focus();
-        if(getTypedPin().length === 4) tryUnlock();
-      });
-      box.addEventListener("keydown",(e)=>{
-        if(e.key==="Backspace" && !box.value && codeBoxes[i-1]) codeBoxes[i-1].focus();
-      });
-    });
-    clearPin();
-
-    // =========================
-    //  Toast helper
-    // =========================
-    const toast = document.getElementById("toast");
-    const toastText = document.getElementById("toastText");
-    function showToast(msg, isError=false){
+    // Toast
+    const toastEl = $("#toast");
+    const toastText = $("#toastText");
+    function toast(msg, danger=false){
       toastText.textContent = msg;
-      toast.classList.toggle("error", isError);
-      toast.classList.add("visible");
-      setTimeout(()=>toast.classList.remove("visible"), 3500);
+      toastEl.classList.toggle("danger", danger);
+      toastEl.classList.add("show");
+      clearTimeout(toastEl._t);
+      toastEl._t = setTimeout(()=>toastEl.classList.remove("show"), 2800);
     }
 
-    // =========================
-    //  Sound enable (MOBILE FIX)
-    // =========================
-    let audioCtx;
-    let soundEnabled = localStorage.getItem("soundEnabled") === "1";
+    // Modal
+    const overlay = $("#overlay");
+    const modalTitle = $("#modalTitle");
+    const modalBody = $("#modalBody");
+    $("#modalClose").addEventListener("click", ()=> overlay.classList.remove("show"));
+    overlay.addEventListener("click", (e)=>{ if(e.target === overlay) overlay.classList.remove("show"); });
+    function openModal(title, html){
+      modalTitle.textContent = title;
+      modalBody.innerHTML = html;
+      overlay.classList.add("show");
+    }
 
-    async function enableSound(){
+    // Sound
+    let soundOn = true;
+    const soundBtn = $("#soundBtn");
+    function beep(){
+      if(!soundOn) return;
       try{
-        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-        if(audioCtx.state === "suspended") await audioCtx.resume();
-        soundEnabled = true;
-        localStorage.setItem("soundEnabled","1");
-        showToast("Dźwięk włączony 🔊");
-      }catch(e){
-        console.warn(e);
-        showToast("Nie udało się włączyć dźwięku", true);
-      }
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = "sine";
+        o.frequency.value = 880;
+        g.gain.value = 0.05;
+        o.connect(g); g.connect(ctx.destination);
+        o.start();
+        setTimeout(()=>{ o.stop(); ctx.close(); }, 120);
+      }catch{}
     }
-    document.getElementById("enableSoundBtn").addEventListener("click", enableSound);
-
-    // =========================
-    //  Bell sound (10s)
-    // =========================
-    function playBellFor10s(){
-      if(!soundEnabled) return;
-
-      try{
-        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-        if(audioCtx.state === "suspended"){
-          audioCtx.resume();
-        }
-
-        const now = audioCtx.currentTime;
-        const duration = 10;
-        const freqs = [880, 1320, 1760];
-
-        const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(0.001, now);
-        gain.gain.exponentialRampToValueAtTime(0.9, now + 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.25, now + duration * 0.6);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-        gain.connect(audioCtx.destination);
-
-        freqs.forEach(f=>{
-          const o = audioCtx.createOscillator();
-          o.type="sine";
-          o.frequency.setValueAtTime(f, now);
-          o.connect(gain);
-          o.start(now);
-          o.stop(now + duration);
-        });
-      }catch(e){
-        console.warn("Audio failed", e);
-      }
-    }
-
-    // =========================
-    //  Notifications (PWA)
-    // =========================
-    async function requestNotificationPermission(){
-      if(!("Notification" in window)) return;
-      if(Notification.permission === "granted") return;
-      try{ await Notification.requestPermission(); }catch(e){}
-    }
-
-    async function fireNotification(reservation){
-      if(!("Notification" in window)) return;
-      if(Notification.permission !== "granted") return;
-
-      const title = "Nowa rezerwacja!";
-      const body = `${reservation.name} • ${reservation.date} ${reservation.time} • ${reservation.guests} os. • ${reservation.room}`;
-      const options = {
-        body,
-        icon: "/favicon.png",
-        badge: "/favicon.png",
-        data: reservation,
-        vibrate: [250, 200, 250, 200, 250],
-        tag: "new-reservation"
-      };
-
-      const reg = await navigator.serviceWorker.getRegistration();
-      if(reg) reg.showNotification(title, options);
-      else new Notification(title, options);
-    }
-
-    document.getElementById("enableNotifBtn").addEventListener("click", async ()=>{
-      await requestNotificationPermission();
-      if(Notification.permission==="granted") showToast("Powiadomienia włączone ✅");
-      else showToast("Nie udało się włączyć powiadomień", true);
+    soundBtn.addEventListener("click", ()=>{
+      soundOn = !soundOn;
+      soundBtn.innerHTML = soundOn
+        ? '<i class="fa-solid fa-volume-high"></i> Dźwięk: ON'
+        : '<i class="fa-solid fa-volume-xmark"></i> Dźwięk: OFF';
+      toast(soundOn ? "Dźwięk włączony" : "Dźwięk wyłączony");
     });
 
-    // =========================
-    //  FULLSCREEN ALERT logic
-    // =========================
-    const newResOverlay = document.getElementById("newResOverlay");
-    const newResName = document.getElementById("newResName");
-    const newResMeta = document.getElementById("newResMeta");
-    const acceptNewResBtn = document.getElementById("acceptNewResBtn");
-
-    let overlayQueue = [];
-    let overlayActive = false;
-
-    function formatOverlayMeta(r){
-      const parts = [
-        r.date ? `<span class="pillish"><i class="fa-regular fa-calendar"></i> ${r.date}</span>` : "",
-        r.time ? `<span class="pillish"><i class="fa-regular fa-clock"></i> ${r.time}</span>` : "",
-        r.guests ? `<span class="pillish"><i class="fa-solid fa-user-group"></i> ${r.guests} os.</span>` : "",
-        r.room ? `<span class="pillish"><i class="fa-solid fa-door-open"></i> ${r.room}</span>` : "",
-        r.phone ? `<span class="pillish"><i class="fa-solid fa-phone"></i> ${r.phone}</span>` : ""
-      ].filter(Boolean);
-      return parts.join("");
+    // Utils
+    function esc(s){
+      return String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+    function formatDateTime(dt){
+      if(!dt) return "—";
+      try{ return new Date(dt).toLocaleString("pl-PL"); }
+      catch{ return String(dt); }
     }
 
-    function showNewReservationOverlay(r){
-      overlayQueue.push(r);
-      if(overlayActive) return;
-      overlayActive = true;
-
-      const next = overlayQueue.shift();
-      if(!next){
-        overlayActive = false;
-        return;
+    // Robust JSON fetch (eliminuje "Unexpected token <")
+    async function fetchJSON(url, options){
+      const r = await fetch(url, options);
+      const ct = (r.headers.get("content-type") || "").toLowerCase();
+      if(!ct.includes("application/json")){
+        const t = await r.text().catch(()=> "");
+        // jeżeli backend zwrócił HTML (np. 404 -> index.html), pokaż sensowny błąd
+        throw new Error(`Serwer nie zwrócił JSON (${r.status}). Sprawdź endpoint: ${url}`);
       }
-
-      newResName.textContent = next.name || "—";
-      newResMeta.innerHTML = formatOverlayMeta(next);
-
-      newResOverlay.classList.add("show");
-      newResOverlay.setAttribute("aria-hidden","false");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-
-    function hideNewReservationOverlay(){
-      newResOverlay.classList.remove("show");
-      newResOverlay.setAttribute("aria-hidden","true");
-      overlayActive = false;
-
-      if(overlayQueue.length){
-        showNewReservationOverlay(overlayQueue[0]);
-        overlayQueue.shift();
+      const data = await r.json();
+      if(!r.ok){
+        throw new Error(data?.message || `Błąd ${r.status}`);
       }
-    }
-
-    acceptNewResBtn?.addEventListener("click", hideNewReservationOverlay);
-    newResOverlay?.addEventListener("click", (e)=>{
-      if(e.target === newResOverlay) hideNewReservationOverlay();
-    });
-
-    // =========================
-    //  Reservations logic
-    // =========================
-    const newListEl = document.getElementById("newReservationsList");
-    const allListEl = document.getElementById("allReservationsList");
-    const statTotal = document.getElementById("statTotal");
-    const statNew = document.getElementById("statNew");
-    const statToday = document.getElementById("statToday");
-    const lastSync = document.getElementById("lastSync");
-
-    let reservations = [];
-    let seenIds = new Set(JSON.parse(localStorage.getItem("seenReservationIds") || "[]"));
-
-    function saveSeen(){
-      localStorage.setItem("seenReservationIds", JSON.stringify([...seenIds]));
-    }
-
-    function isToday(dateStr){
-      const today = new Date().toISOString().split("T")[0];
-      return dateStr === today;
-    }
-
-    function normalizeRes(r){
-      return {
-        id: r.id || r._id || (r.createdAt + "|" + r.phone + "|" + r.date + "|" + r.time),
-        createdAt: r.createdAt || r.created_at || r.created || Date.now(),
-        ...r
-      };
-    }
-
-    function getNotes(r){
-      return (r.notes || r.note || r.uwagi || r.message || "").trim();
-    }
-
-    function sortByNewest(arr){
-      return arr.slice().sort((a,b)=>{
-        const ta = new Date(a.createdAt || 0).getTime();
-        const tb = new Date(b.createdAt || 0).getTime();
-        return tb - ta;
-      });
-    }
-
-    function reservationCardHTML(r, highlightNew){
-      const isNew = !seenIds.has(r.id);
-      const notes = getNotes(r);
-
-      return `
-        <article class="reservation-item ${highlightNew && isNew ? "new" : ""}" data-id="${r.id}">
-          <div>
-            <div style="font-size:1.15rem;font-weight:900;margin-bottom:6px">
-              ${r.name || "—"}
-            </div>
-            <div class="reservation-meta">
-              <span class="tag"><i class="fa-regular fa-calendar"></i> ${r.date || "—"}</span>
-              <span class="tag"><i class="fa-regular fa-clock"></i> ${r.time || "—"}</span>
-              <span class="tag"><i class="fa-solid fa-user-group"></i> ${r.guests || "—"} os.</span>
-              <span class="tag"><i class="fa-solid fa-door-open"></i> ${r.room || "—"}</span>
-              <span class="tag"><i class="fa-solid fa-phone"></i> ${r.phone || "—"}</span>
-            </div>
-            ${notes ? `<div class="reservation-notes"><b>Uwagi:</b> ${notes}</div>` : ""}
-            <div class="small" style="margin-top:6px">
-              ID: ${r.id || "—"} • dodano: ${r.createdAt ? new Date(r.createdAt).toLocaleString() : "—"}
-            </div>
-          </div>
-
-          <div class="reservation-actions">
-            <button class="btn btn-ghost mark-read-btn">
-              <i class="fa-solid fa-check"></i> Przeczytane
-            </button>
-
-            <button class="btn btn-ghost edit-btn">
-              <i class="fa-solid fa-pen-to-square"></i> Edytuj
-            </button>
-
-            <button class="btn btn-primary call-btn">
-              <i class="fa-solid fa-phone"></i> Zadzwoń
-            </button>
-          </div>
-        </article>
-      `;
-    }
-
-    function bindReservationActions(root){
-      // mark as read
-      root.querySelectorAll(".mark-read-btn").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          const card = btn.closest(".reservation-item");
-          const id = card.dataset.id;
-          seenIds.add(id);
-          saveSeen();
-          render();
-        });
-      });
-
-      // call
-      root.querySelectorAll(".call-btn").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          const card = btn.closest(".reservation-item");
-          const id = card.dataset.id;
-          const r = reservations.find(x=>x.id===id);
-          if(r?.phone) window.location.href = `tel:${r.phone}`;
-        });
-      });
-
-      // edit
-      root.querySelectorAll(".edit-btn").forEach(btn=>{
-        btn.addEventListener("click", ()=>{
-          const card = btn.closest(".reservation-item");
-          const id = card.dataset.id;
-          const r = reservations.find(x=>x.id===id);
-          if(r) openEditReservationModal(r);
-        });
-      });
-
-      // ===== SWIPE/DRAG LEFT to reveal edit =====
-      root.querySelectorAll(".reservation-item").forEach(card=>{
-        let startX = 0;
-        let startY = 0;
-        let dragging = false;
-        let moved = false;
-
-        const onDown = (e)=>{
-          if(e.target.closest("button")) return;
-          dragging = true;
-          moved = false;
-          const p = e.touches ? e.touches[0] : e;
-          startX = p.clientX;
-          startY = p.clientY;
-        };
-
-        const onMove = (e)=>{
-          if(!dragging) return;
-          const p = e.touches ? e.touches[0] : e;
-          const dx = p.clientX - startX;
-          const dy = p.clientY - startY;
-
-          if(Math.abs(dy) > 18 && Math.abs(dy) > Math.abs(dx)){
-            dragging = false;
-            return;
-          }
-
-          if(dx < -60){
-            card.classList.add("swiped");
-            moved = true;
-            dragging = false;
-          }
-
-          if(dx > 40){
-            card.classList.remove("swiped");
-            moved = true;
-            dragging = false;
-          }
-
-          if(moved) e.preventDefault?.();
-        };
-
-        const onUp = ()=>{ dragging = false; };
-
-        card.addEventListener("touchstart", onDown, {passive:true});
-        card.addEventListener("touchmove", onMove, {passive:false});
-        card.addEventListener("touchend", onUp);
-
-        card.addEventListener("pointerdown", onDown);
-        card.addEventListener("pointermove", onMove);
-        card.addEventListener("pointerup", onUp);
-        card.addEventListener("pointercancel", onUp);
-      });
-    }
-
-    function render(){
-      const sorted = sortByNewest(reservations);
-
-      const total = sorted.length;
-      const newCount = sorted.filter(r => !seenIds.has(r.id)).length;
-      const todayCount = sorted.filter(r => isToday(r.date)).length;
-
-      statTotal.textContent = total;
-      statNew.textContent = newCount;
-      statToday.textContent = todayCount;
-
-      const onlyNew = sorted.filter(r => !seenIds.has(r.id));
-      if(!onlyNew.length){
-        newListEl.innerHTML = `<div class="empty">Brak nowych rezerwacji ✅</div>`;
-      } else {
-        newListEl.innerHTML = onlyNew.map(r => reservationCardHTML(r, true)).join("");
-      }
-
-      if(!sorted.length){
-        allListEl.innerHTML = `<div class="empty">Brak rezerwacji.</div>`;
-      } else {
-        allListEl.innerHTML = sorted.map(r => reservationCardHTML(r, false)).join("");
-      }
-
-      bindReservationActions(newListEl);
-      bindReservationActions(allListEl);
-      lastSync.textContent = "Ostatnia synchronizacja: " + new Date().toLocaleString();
-    }
-
-    async function fetchReservationsRaw(){
-      const res = await fetch("/api/rezerwacje", { cache:"no-store" });
-      if(!res.ok) throw new Error(res.status);
-      const data = await res.json();
-      return (data || []).map(normalizeRes);
-    }
-
-    async function fetchReservationsAndMerge({notifyNew=false} = {}){
-      try{
-        const incoming = await fetchReservationsRaw();
-        const prevIds = new Set(reservations.map(r=>r.id));
-        const newOnes = incoming.filter(r=>!prevIds.has(r.id));
-
-        reservations = incoming;
-        render();
-
-        if(notifyNew && newOnes.length){
-          newOnes.forEach(r=>{
-            playBellFor10s();
-            showToast("Nowa rezerwacja 🔔");
-            fireNotification(r);
-            showNewReservationOverlay(r);
-          });
-        }
-      }catch(e){
-        console.error(e);
-        newListEl.innerHTML = `<div class="empty" style="color:#b00000">Nie udało się pobrać rezerwacji.</div>`;
-        allListEl.innerHTML = `<div class="empty" style="color:#b00000">Nie udało się pobrać rezerwacji.</div>`;
-      }
-    }
-
-    function onNewReservation(r){
-      const nr = normalizeRes(r);
-      const exists = reservations.some(x=>x.id === nr.id);
-      if(!exists){
-        reservations.push(nr);
-        render();
-      }
-      playBellFor10s();
-      showToast("Nowa rezerwacja 🔔");
-      fireNotification(nr);
-      showNewReservationOverlay(nr);
-    }
-
-    document.getElementById("refreshBtn").addEventListener("click", ()=>fetchReservationsAndMerge());
-    fetchReservationsAndMerge();
-
-    try{
-      if(window.io){
-        const socket = io();
-        socket.on("connect", ()=> {
-          document.getElementById("liveText").textContent = "LIVE";
-          document.getElementById("liveDot").style.color = "#16A34A";
-        });
-        socket.on("disconnect", ()=> {
-          document.getElementById("liveText").textContent = "OFFLINE";
-          document.getElementById("liveDot").style.color = "#DC2626";
-        });
-
-        socket.on("reservation:new", onNewReservation);
-        socket.on("new-reservation", onNewReservation);
-      }
-    }catch(e){}
-
-    setInterval(()=>fetchReservationsAndMerge({notifyNew:true}), 5000);
-
-    // =========================
-    //  INFO BAR
-    // =========================
-    const infoBarText = document.getElementById("infoBarText");
-    const barStatus = document.getElementById("barStatus");
-    const saveInfoBarBtn = document.getElementById("saveInfoBarBtn");
-    const clearInfoBarBtn = document.getElementById("clearInfoBarBtn");
-
-    async function fetchInfoBar(){
-      try{
-        const res = await fetch("/api/data", { cache:"no-store" });
-        if(!res.ok) throw new Error(res.status);
-        const db = await res.json();
-        const happy = (db.happy || "").trim();
-        infoBarText.value = happy;
-        barStatus.textContent = happy ? "Status: aktywny" : "Status: wyłączony";
-      }catch(e){
-        console.error(e);
-        barStatus.textContent = "Status: błąd pobierania";
-      }
-    }
-
-    async function saveInfoBar(text){
-      const payload = { happy: text };
-      try{
-        const res = await fetch("/api/happy", {
-          method: "POST",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify(payload)
-        });
-        return res.ok;
-      }catch(e){
-        return false;
-      }
-    }
-
-    saveInfoBarBtn.addEventListener("click", async ()=>{
-      const text = infoBarText.value.trim();
-      const ok = await saveInfoBar(text);
-      if(ok){
-        showToast(text ? "Pasek zapisany ✅" : "Pasek wyłączony ✅");
-        barStatus.textContent = text ? "Status: aktywny" : "Status: wyłączony";
-      }else{
-        showToast("Nie udało się zapisać paska", true);
-        barStatus.textContent = "Status: błąd zapisu";
-      }
-    });
-
-    clearInfoBarBtn.addEventListener("click", async ()=>{
-      infoBarText.value = "";
-      const ok = await saveInfoBar("");
-      if(ok){
-        showToast("Pasek usunięty ✅");
-        barStatus.textContent = "Status: wyłączony";
-      }else{
-        showToast("Nie udało się usunąć paska", true);
-        barStatus.textContent = "Status: błąd zapisu";
-      }
-    });
-
-    // =========================
-    //  MANUAL ADD RESERVATION
-    // =========================
-    const addReservationBtn = document.getElementById("addReservationBtn");
-    const addReservationModal = document.getElementById("addReservationModal");
-    const closeAddReservationModal = document.getElementById("closeAddReservationModal");
-    const cancelAddReservation = document.getElementById("cancelAddReservation");
-    const addReservationForm = document.getElementById("addReservationForm");
-
-    function openAddReservationModal(){
-      addReservationModal.classList.add("show");
-      addReservationModal.setAttribute("aria-hidden","false");
-      const dateInput = addReservationForm.querySelector('[name="date"]');
-      if(!dateInput.value){
-        dateInput.value = new Date().toISOString().split("T")[0];
-      }
-    }
-
-    function closeAddReservation(){
-      addReservationModal.classList.remove("show");
-      addReservationModal.setAttribute("aria-hidden","true");
-      addReservationForm.reset();
-    }
-
-    addReservationBtn?.addEventListener("click", openAddReservationModal);
-    closeAddReservationModal?.addEventListener("click", closeAddReservation);
-    cancelAddReservation?.addEventListener("click", closeAddReservation);
-
-    addReservationModal?.addEventListener("click", (e)=>{
-      if(e.target === addReservationModal) closeAddReservation();
-    });
-
-    addReservationForm?.addEventListener("submit", async (e)=>{
-      e.preventDefault();
-
-      const fd = new FormData(addReservationForm);
-      const payload = {
-        name: fd.get("name"),
-        phone: fd.get("phone"),
-        date: fd.get("date"),
-        time: fd.get("time"),
-        guests: String(fd.get("guests")),
-        room: fd.get("room"),
-        notes: fd.get("notes") || ""
-      };
-
-      try{
-        const res = await fetch("/api/rezerwacje", {
-          method: "POST",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json().catch(()=> ({}));
-
-        if(!res.ok){
-          showToast(data?.message || "Nie udało się dodać rezerwacji", true);
-          return;
-        }
-
-        showToast("Rezerwacja dodana ✅");
-        closeAddReservation();
-        await fetchReservationsAndMerge();
-
-      }catch(err){
-        console.error(err);
-        showToast("Błąd sieci przy dodawaniu rezerwacji", true);
-      }
-    });
-
-    // =========================
-    //  EDIT RESERVATION MODAL
-    // =========================
-    const editReservationModal = document.getElementById("editReservationModal");
-    const closeEditReservationModal = document.getElementById("closeEditReservationModal");
-    const cancelEditReservation = document.getElementById("cancelEditReservation");
-    const editReservationForm = document.getElementById("editReservationForm");
-
-    function openEditReservationModal(r){
-      editReservationModal.classList.add("show");
-      editReservationModal.setAttribute("aria-hidden","false");
-
-      editReservationForm.elements.id.value = r.id;
-      editReservationForm.elements.name.value = r.name || "";
-      editReservationForm.elements.phone.value = r.phone || "";
-      editReservationForm.elements.date.value = r.date || new Date().toISOString().split("T")[0];
-      editReservationForm.elements.time.value = r.time || "19:30";
-      editReservationForm.elements.guests.value = r.guests || 1;
-      editReservationForm.elements.room.value = r.room || "";
-      editReservationForm.elements.notes.value = getNotes(r) || "";
-    }
-
-    function closeEditReservation(){
-      editReservationModal.classList.remove("show");
-      editReservationModal.setAttribute("aria-hidden","true");
-      editReservationForm.reset();
-    }
-
-    closeEditReservationModal?.addEventListener("click", closeEditReservation);
-    cancelEditReservation?.addEventListener("click", closeEditReservation);
-
-    editReservationModal?.addEventListener("click", (e)=>{
-      if(e.target === editReservationModal) closeEditReservation();
-    });
-
-    editReservationForm?.addEventListener("submit", async (e)=>{
-      e.preventDefault();
-
-      const fd = new FormData(editReservationForm);
-      const id = fd.get("id");
-      const payload = {
-        name: fd.get("name"),
-        phone: fd.get("phone"),
-        date: fd.get("date"),
-        time: fd.get("time"),
-        guests: String(fd.get("guests")),
-        room: fd.get("room"),
-        notes: fd.get("notes") || ""
-      };
-
-      try{
-        const res = await fetch(`/api/rezerwacje/${id}`, {
-          method: "PUT",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify(payload)
-        });
-
-        const data = await res.json().catch(()=> ({}));
-
-        if(!res.ok || data?.ok === false){
-          showToast(data?.message || "Nie udało się zapisać zmian", true);
-          return;
-        }
-
-        await fetchReservationsAndMerge();
-        showToast("Zapisano zmiany ✅");
-        closeEditReservation();
-
-      }catch(err){
-        console.error(err);
-        showToast("Błąd sieci przy edycji", true);
-      }
-    });
-
-    // =========================
-    //  STAFF / EMPLOYEES (API)
-    // =========================
-    const addEmployeeForm = document.getElementById("addEmployeeForm");
-    const employeesListEl = document.getElementById("employeesList");
-    const empHint = document.getElementById("empHint");
-
-    function roleLabel(role){
-      if(role === "manager") return "Właściciel / Menager";
-      return "Pracownik";
-    }
-
-    async function fetchEmployees(){
-      const res = await fetch("/api/pracownicy", { cache:"no-store" });
-      if(!res.ok) throw new Error(res.status);
-      return await res.json();
-    }
-
-    async function renderEmployees(){
-      if(!employeesListEl) return;
-      employeesListEl.innerHTML = `<div class="empty">Ładuję konta...</div>`;
-
-      try{
-        const employees = await fetchEmployees();
-
-        if(!employees.length){
-          employeesListEl.innerHTML = `<div class="empty">Brak kont</div>`;
-          return;
-        }
-
-        employeesListEl.innerHTML = employees.map(e => `
-          <article class="reservation-item" data-id="${e._id}">
-            <div>
-              <div style="font-size:1.05rem;font-weight:900;margin-bottom:6px">
-                ${e.name}
-              </div>
-              <div class="reservation-meta">
-                <span class="tag"><i class="fa-solid fa-key"></i> Login: ${e.pin}</span>
-                <span class="tag"><i class="fa-solid fa-user-tag"></i> ${roleLabel(e.role)}</span>
-                <span class="tag"><i class="fa-regular fa-clock"></i> Dodano: ${new Date(e.createdAt).toLocaleString()}</span>
-              </div>
-            </div>
-
-            <div class="reservation-actions">
-              <button class="btn btn-danger remove-emp-btn">
-                <i class="fa-solid fa-trash"></i> Usuń
-              </button>
-            </div>
-          </article>
-        `).join("");
-
-        employeesListEl.querySelectorAll(".remove-emp-btn").forEach(btn=>{
-          btn.addEventListener("click", async ()=>{
-            const card = btn.closest(".reservation-item");
-            const id = card.dataset.id;
-
-            try{
-              const res = await fetch(`/api/pracownicy/${id}`, { method:"DELETE" });
-              const data = await res.json().catch(()=> ({}));
-              if(!res.ok || !data.ok){
-                showToast(data.message || "Nie udało się usunąć konta", true);
-                return;
-              }
-              showToast("Usunięto konto ✅");
-              renderEmployees();
-            }catch(e){
-              showToast("Błąd sieci przy usuwaniu", true);
-            }
-          });
-        });
-
-      }catch(e){
-        console.error(e);
-        employeesListEl.innerHTML = `<div class="empty" style="color:#b00000">Nie udało się pobrać kont.</div>`;
-      }
-    }
-
-    function normalizePin(pin){
-      return String(pin).replace(/\D/g,"").padStart(4,"0").slice(0,4);
-    }
-
-    addEmployeeForm?.addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      const elevated = (currentRole === "owner" || currentRole === "manager");
-      if(!elevated){
-        showToast("Brak dostępu", true);
-        return;
-      }
-
-      const fd = new FormData(addEmployeeForm);
-      const name = String(fd.get("empName") || "").trim();
-      let pin = normalizePin(fd.get("empPin"));
-      const role = String(fd.get("empRole") || "employee");
-
-      empHint.textContent = "";
-
-      try{
-        const res = await fetch("/api/pracownicy", {
-          method: "POST",
-          headers: {"Content-Type":"application/json"},
-          body: JSON.stringify({ name, pin, role })
-        });
-        const data = await res.json().catch(()=> ({}));
-
-        if(!res.ok || !data.ok){
-          empHint.textContent = data.message || "Błąd dodawania konta.";
-          showToast(data.message || "Nie udało się dodać konta", true);
-          return;
-        }
-
-        showToast("Dodano konto ✅");
-        addEmployeeForm.reset();
-        renderEmployees();
-      }catch(err){
-        console.error(err);
-        showToast("Błąd sieci przy dodawaniu", true);
-      }
-    });
-
-    // na starcie: ukryj elevated-only/milk-only
-    applyRoleVisibility();
-
-    // =========================
-    //  MILK APP (pin 0051 only)
-    // =========================
-    const milkStatus = document.getElementById("milkStatus");
-
-    // milk subtabs switch
-    const milkSubtabBtns = document.querySelectorAll("[data-milk-tab]");
-    const milkPanels = document.querySelectorAll(".milk-panel");
-    milkSubtabBtns.forEach(btn=>{
-      btn.addEventListener("click", ()=>{
-        milkSubtabBtns.forEach(b=>b.classList.remove("active"));
-        milkPanels.forEach(p=>p.classList.remove("active"));
-        btn.classList.add("active");
-        document.getElementById(btn.dataset.milkTab).classList.add("active");
-      });
-    });
-
-    async function milkFetch(url, opts={}){
-      const res = await fetch(url, { cache:"no-store", ...opts });
-      const data = await res.json().catch(()=> ({}));
-      if(!res.ok) throw new Error(data?.message || res.status);
       return data;
     }
 
-    // ---------- STATS ----------
-    const milkStatUsers = document.getElementById("milkStatUsers");
-    const milkStatPoints = document.getElementById("milkStatPoints");
-    const milkStatRedeems = document.getElementById("milkStatRedeems");
+    // API
+    const API = {
+      login: (pin) => fetchJSON("/api/login", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ pin })
+      }),
 
-    async function milkLoadStats(){
+      data: () => fetchJSON("/api/data", { cache:"no-store" }),
+      reservations: () => fetchJSON("/api/rezerwacje", { cache:"no-store" }),
+      deleteRes: (id) => fetchJSON(`/api/rezerwacje/${encodeURIComponent(id)}`, { method:"DELETE" }),
+
+      saveHappy: (happy) => fetchJSON("/api/happy", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ happy })
+      }),
+
+      staffList: () => fetchJSON("/api/pracownicy", { cache:"no-store" }),
+      staffAdd: ({name,pin,role}) => fetchJSON("/api/pracownicy", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ name, pin, role })
+      }),
+      staffDel: (id) => fetchJSON(`/api/pracownicy/${encodeURIComponent(id)}`, { method:"DELETE" }),
+
+      // zamówienia są w appadmin — tu tylko podgląd eventów/overlay
+      adminOrders: () => fetchJSON("/api/admin/orders", { cache:"no-store" }).catch(()=>[])
+    };
+
+    // Auth state
+    const lockEl = $("#lock");
+    const appEl  = $("#app");
+    const pinInput = $("#pinInput");
+    const loginBtn = $("#loginBtn");
+    const loginInfo = $("#loginInfo");
+    const logoutBtn = $("#logoutBtn");
+
+    const whoName = $("#whoName");
+    const whoRole = $("#whoRole");
+    const whoPin  = $("#whoPin");
+    const staffTabBtn = $("#staffTabBtn");
+
+    let session = { ok:false, role:"", user:null };
+
+    function showApp(){
+      lockEl.style.display = "none";
+      appEl.style.display  = "grid";
+    }
+    function showLock(){
+      lockEl.style.display = "grid";
+      appEl.style.display  = "none";
+    }
+
+    async function doLogin(){
+      loginInfo.textContent = "Logowanie…";
+      const pin = (pinInput.value || "").trim();
       try{
-        milkStatus.textContent = "Status: ładowanie...";
-        const stats = await milkFetch("/api/milk/stats");
-        milkStatUsers.textContent = stats.users ?? 0;
-        milkStatPoints.textContent = stats.pointsTotal ?? 0;
-        milkStatRedeems.textContent = stats.redeems ?? 0;
-        milkStatus.textContent = "Status: OK";
+        const res = await API.login(pin);
+        session = res;
+        whoName.textContent = res.user?.name || "—";
+        whoRole.textContent = res.role || "—";
+        whoPin.textContent  = res.user?.pin || "—";
+
+        // owner i manager widzą pracowników
+        const canStaff = (res.role === "owner" || res.role === "manager");
+        staffTabBtn.style.display = canStaff ? "block" : "none";
+
+        showApp();
+        toast("Zalogowano");
+        await refreshAll();
       }catch(e){
-        console.error(e);
-        milkStatus.textContent = "Status: błąd stats";
+        loginInfo.textContent = "Błąd: " + e.message;
+        toast(e.message, true);
       }
     }
-    document.getElementById("milkRefreshStats")?.addEventListener("click", milkLoadStats);
 
-    // ---------- ADD POINTS (10 zł = 1 Milkos) ----------
-    const milkAddPointsForm = document.getElementById("milkAddPointsForm");
-    const milkOpenAddPoints = document.getElementById("milkOpenAddPoints");
-    const milkPointsPreview = document.getElementById("milkPointsPreview");
+    loginBtn.addEventListener("click", doLogin);
+    pinInput.addEventListener("keydown", (e)=>{ if(e.key==="Enter") doLogin(); });
 
-    milkOpenAddPoints?.addEventListener("click", ()=>{
-      document.querySelector('[data-milk-tab="milk-points"]')?.click();
-      milkAddPointsForm?.elements.userId?.focus();
+    logoutBtn.addEventListener("click", ()=>{
+      session = { ok:false, role:"", user:null };
+      pinInput.value = "";
+      loginInfo.textContent = "—";
+      showLock();
+      toast("Wylogowano");
     });
 
-    milkAddPointsForm?.elements.amount?.addEventListener("input", ()=>{
-      const amount = parseFloat(milkAddPointsForm.elements.amount.value || "0");
-      const milkosy = Math.floor(amount / 10);
-      milkPointsPreview.textContent = `Milkosy do dodania: ${milkosy}`;
+    // Tabs
+    const tabEls = {
+      new: $("#tab-new"),
+      all: $("#tab-all"),
+      happy: $("#tab-happy"),
+      staff: $("#tab-staff"),
+    };
+    const titleMap = {
+      new: { t:"Nowe rezerwacje", s:"Na żywo (Socket.IO + polling)" },
+      all: { t:"Wszystkie rezerwacje", s:"Szukaj i zarządzaj" },
+      happy: { t:"Pasek informacji", s:"HappyBar (index.html)" },
+      staff: { t:"Pracownicy", s:"Konta PIN (MongoDB)" },
+    };
+    let activeTab = "new";
+    function setTab(name){
+      activeTab = name;
+      $$("#nav .navbtn").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+      Object.entries(tabEls).forEach(([k,el])=>{
+        if(!el) return;
+        el.style.display = (k===name) ? "block" : "none";
+      });
+      $("#pageTitle").textContent = titleMap[name]?.t || "Panel";
+      $("#pageSub").textContent   = titleMap[name]?.s || "";
+      window.scrollTo({ top:0, behavior:"smooth" });
+    }
+    $$("#nav .navbtn[data-tab]").forEach(btn => btn.addEventListener("click", ()=> setTab(btn.dataset.tab)));
+
+    // Reservation overlay (fullscreen)
+    const resOverlay = $("#resOverlay");
+    const resOverlayMeta = $("#resOverlayMeta");
+    const resOverlayBody = $("#resOverlayBody");
+    $("#resOverlayClose").addEventListener("click", ()=> resOverlay.classList.remove("show"));
+    $("#resOverlayDismiss").addEventListener("click", ()=> resOverlay.classList.remove("show"));
+    $("#resOverlayGoAll").addEventListener("click", ()=>{
+      resOverlay.classList.remove("show");
+      setTab("all");
     });
 
-    milkAddPointsForm?.addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      const fd = new FormData(milkAddPointsForm);
-      const userId = String(fd.get("userId")||"").trim();
-      const amount = parseFloat(fd.get("amount")||"0");
-      const milkosy = Math.floor(amount / 10);
+    function openResOverlay(r){
+      resOverlayMeta.textContent = `${r.date} • ${r.time} • ${r.guests} os. • ${r.room}`;
+      resOverlayBody.innerHTML = `
+        <div><b>${esc(r.name)}</b> • ${esc(r.phone)}</div>
+        ${r.notes ? `<div>Uwagi: ${esc(r.notes)}</div>` : `<div>Uwagi: —</div>`}
+        <div class="muted" style="margin-top:6px;">Dodano: ${esc(formatDateTime(r.createdAt))}</div>
+      `;
+      resOverlay.classList.add("show");
+      beep();
+      toast("Nowa rezerwacja");
+    }
 
-      if(!milkosy){
-        showToast("Kwota za mała na Milkosy", true);
+    // Order overlay (fullscreen)
+    const orderOverlay = $("#orderOverlay");
+    const orderOverlayMeta = $("#orderOverlayMeta");
+    const orderOverlayItems = $("#orderOverlayItems");
+    const orderOverlayTotal = $("#orderOverlayTotal");
+    const orderOverlayNotes = $("#orderOverlayNotes");
+    $("#orderOverlayClose").addEventListener("click", ()=> orderOverlay.classList.remove("show"));
+    $("#orderOverlayDismiss").addEventListener("click", ()=> orderOverlay.classList.remove("show"));
+    $("#orderOverlayGoApp").addEventListener("click", ()=>{
+      // przeniesienie do panelu aplikacji na zakładkę zamówień
+      window.location.href = "/appadmin#orders";
+    });
+
+    function openOrderOverlay(o){
+      const loc = o.pickupLocation || "—";
+      const time = o.pickupTime || "—";
+      const milkId = o.milkId ? ` • MilkID: ${o.milkId}` : "";
+      orderOverlayMeta.textContent = `${loc} • ${time}${milkId}`;
+
+      const items = Array.isArray(o.items) ? o.items : [];
+      orderOverlayItems.innerHTML = items.length
+        ? items.map(i => `• ${esc(i.qty)}× ${esc(i.title)} (${esc(i.price)} zł)`).join("<br>")
+        : "Brak pozycji.";
+
+      orderOverlayTotal.textContent = `${esc(o.total ?? 0)} zł`;
+      const notes = String(o.notes || "").trim();
+      orderOverlayNotes.textContent = notes ? `Uwagi: ${notes}` : "";
+      orderOverlay.classList.add("show");
+      beep();
+      toast("Nowe zamówienie");
+    }
+
+    // Render reservations
+    let reservations = [];
+    const newResBody = $("#newResBody");
+    const allResBody = $("#allResBody");
+    const searchRes = $("#searchRes");
+    const sortRes = $("#sortRes");
+
+    // “Nowe” = po prostu najnowsze X sztuk
+    const NEW_LIMIT = 20;
+
+    function renderNew(){
+      const list = [...reservations].sort((a,b)=> new Date(b.createdAt||0)-new Date(a.createdAt||0)).slice(0, NEW_LIMIT);
+      if(!list.length){
+        newResBody.innerHTML = `<tr><td colspan="8" class="muted">Brak rezerwacji.</td></tr>`;
         return;
       }
+      newResBody.innerHTML = list.map(r => rowRes(r)).join("");
+      wireResActions(newResBody);
+    }
 
-      try{
-        await milkFetch("/api/milk/points/add", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ userId, amount, points: milkosy })
+    function renderAll(){
+      const q = (searchRes.value || "").trim().toLowerCase();
+      const mode = sortRes.value;
+
+      let list = [...reservations];
+      if(q){
+        list = list.filter(r => {
+          const blob = [r.name, r.phone, r.date, r.time, r.guests, r.room, r.notes].join(" ").toLowerCase();
+          return blob.includes(q);
         });
-        showToast(`Dodano ${milkosy} Milkosów ✅`);
-        milkAddPointsForm.reset();
-        milkPointsPreview.textContent = "Milkosy do dodania: —";
-        milkLoadStats();
-        milkLoadUsers();
-      }catch(err){
-        showToast("Nie udało się dodać Milkosów", true);
       }
-    });
+      list.sort((a,b)=>{
+        const A = new Date(a.createdAt||0);
+        const B = new Date(b.createdAt||0);
+        return mode === "old" ? (A-B) : (B-A);
+      });
 
-    // ---------- REWARDS ----------
-    const milkAddRewardForm = document.getElementById("milkAddRewardForm");
-    const milkRewardsList = document.getElementById("milkRewardsList");
-    const milkRewardHint = document.getElementById("milkRewardHint");
+      if(!list.length){
+        allResBody.innerHTML = `<tr><td colspan="8" class="muted">Brak wyników.</td></tr>`;
+        return;
+      }
+      allResBody.innerHTML = list.map(r => rowRes(r)).join("");
+      wireResActions(allResBody);
+    }
 
-    function rewardCardHTML(r){
+    function rowRes(r){
+      const id = r._id || r.id || "";
       return `
-        <article class="milk-list-item" data-id="${r.id || r._id}">
-          <div>
-            <div style="font-weight:900; font-size:1.05rem;">${r.title}</div>
-            <div class="reservation-meta" style="margin-top:6px;">
-              <span class="tag"><i class="fa-solid fa-coins"></i> ${r.cost} Milkosów</span>
-              ${r.desc ? `<span class="tag"><i class="fa-regular fa-note-sticky"></i> ${r.desc}</span>` : ""}
-            </div>
-          </div>
-          <div class="milk-list-actions">
-            <button class="btn btn-danger milk-remove-reward">
-              <i class="fa-solid fa-trash"></i> Usuń
-            </button>
-          </div>
-        </article>
+        <tr>
+          <td>${esc(formatDateTime(r.createdAt))}</td>
+          <td><b>${esc(r.name)}</b></td>
+          <td class="mono">${esc(r.phone)}</td>
+          <td>${esc(r.date)} • ${esc(r.time)}</td>
+          <td>${esc(r.guests)}</td>
+          <td>${esc(r.room)}</td>
+          <td>${r.notes ? esc(r.notes) : "—"}</td>
+          <td class="right">
+            <button class="btn btn-small" data-open="${esc(id)}"><i class="fa-solid fa-eye"></i></button>
+            <button class="btn btn-small" data-del="${esc(id)}"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
       `;
     }
 
-    async function milkLoadRewards(){
-      try{
-        milkRewardsList.innerHTML = `<div class="empty">Ładuję nagrody...</div>`;
-        const rewards = await milkFetch("/api/milk/rewards");
-        if(!rewards.length){
-          milkRewardsList.innerHTML = `<div class="empty">Brak nagród</div>`;
-          return;
-        }
-        milkRewardsList.innerHTML = rewards.map(rewardCardHTML).join("");
-
-        milkRewardsList.querySelectorAll(".milk-remove-reward").forEach(btn=>{
-          btn.addEventListener("click", async ()=>{
-            const card = btn.closest(".milk-list-item");
-            const id = card.dataset.id;
-            try{
-              await milkFetch(`/api/milk/rewards/${id}`, { method:"DELETE" });
-              showToast("Usunięto nagrodę ✅");
-              milkLoadRewards();
-            }catch(e){
-              showToast("Nie udało się usunąć nagrody", true);
-            }
-          });
+    function wireResActions(root){
+      root.querySelectorAll("[data-open]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          const id = btn.dataset.open;
+          const r = reservations.find(x => String(x._id||x.id) === String(id));
+          if(!r) return;
+          openModal("Szczegóły rezerwacji", `
+            <div class="card" style="box-shadow:none;border:1px solid rgba(0,0,0,.06);background:rgba(255,255,255,.94)">
+              <div style="display:grid;gap:8px">
+                <div><b>Imię:</b> ${esc(r.name)}</div>
+                <div><b>Telefon:</b> <span class="mono">${esc(r.phone)}</span></div>
+                <div><b>Termin:</b> ${esc(r.date)} • ${esc(r.time)}</div>
+                <div><b>Osoby:</b> ${esc(r.guests)}</div>
+                <div><b>Strefa:</b> ${esc(r.room)}</div>
+                <div><b>Uwagi:</b> ${r.notes ? esc(r.notes) : "—"}</div>
+                <div class="muted"><b>Dodano:</b> ${esc(formatDateTime(r.createdAt))}</div>
+              </div>
+            </div>
+          `);
         });
+      });
 
-      }catch(e){
-        console.error(e);
-        milkRewardsList.innerHTML = `<div class="empty" style="color:#b00000">Błąd pobierania nagród</div>`;
-      }
+      root.querySelectorAll("[data-del]").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
+          const id = btn.dataset.del;
+          if(!confirm("Usunąć rezerwację?")) return;
+          try{
+            await API.deleteRes(id);
+            toast("Usunięto");
+            await refreshReservations();
+          }catch(e){
+            toast("Błąd: " + e.message, true);
+          }
+        });
+      });
     }
 
-    milkAddRewardForm?.addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      milkRewardHint.textContent = "";
-      const fd = new FormData(milkAddRewardForm);
-      const payload = {
-        title: String(fd.get("title")||"").trim(),
-        cost: parseInt(fd.get("cost")||"0",10),
-        desc: String(fd.get("desc")||"").trim()
-      };
+    searchRes.addEventListener("input", renderAll);
+    sortRes.addEventListener("change", renderAll);
 
+    // HappyBar
+    const happyInput = $("#happyInput");
+    const happyStatus = $("#happyStatus");
+    $("#saveHappyBtn").addEventListener("click", async ()=>{
+      happyStatus.textContent = "Zapisywanie…";
       try{
-        await milkFetch("/api/milk/rewards", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify(payload)
-        });
-        showToast("Dodano nagrodę ✅");
-        milkAddRewardForm.reset();
-        milkLoadRewards();
+        const text = happyInput.value || "";
+        await API.saveHappy(text);
+        happyStatus.textContent = "Zapisano ✅";
+        toast("HappyBar zapisany");
       }catch(e){
-        milkRewardHint.textContent = "Błąd dodania nagrody.";
-        showToast("Nie udało się dodać nagrody", true);
+        happyStatus.textContent = "Błąd: " + e.message;
+        toast(e.message, true);
       }
     });
 
-    // ---------- USERS + HISTORY ----------
-    const milkUsersList = document.getElementById("milkUsersList");
-    const milkUserModal = document.getElementById("milkUserModal");
-    const milkCloseUserModal = document.getElementById("milkCloseUserModal");
-    const milkUserModalBody = document.getElementById("milkUserModalBody");
+    // Staff
+    const staffBody = $("#staffBody");
+    const staffSearch = $("#staffSearch");
+    let staff = [];
 
-    function userRowHTML(u){
-      return `
-        <article class="milk-list-item milk-user-row" data-id="${u.id}">
-          <div>
-            <div style="font-weight:900;">${u.username || u.name || "Użytkownik"}</div>
-            <div class="reservation-meta" style="margin-top:6px;">
-              <span class="tag"><i class="fa-solid fa-id-card"></i> ID: ${u.id}</span>
-              <span class="tag"><i class="fa-solid fa-coins"></i> ${u.points || 0} Milkosów</span>
-            </div>
-          </div>
-          <div class="milk-muted">Podgląd →</div>
-        </article>
-      `;
-    }
-
-    async function milkLoadUsers(){
-      try{
-        milkUsersList.innerHTML = `<div class="empty">Ładuję użytkowników...</div>`;
-        const users = await milkFetch("/api/milk/users");
-        if(!users.length){
-          milkUsersList.innerHTML = `<div class="empty">Brak użytkowników</div>`;
-          return;
-        }
-
-        milkUsersList.innerHTML = users.map(userRowHTML).join("");
-
-        milkUsersList.querySelectorAll(".milk-user-row").forEach(row=>{
-          row.addEventListener("click", async ()=>{
-            const id = row.dataset.id;
-            try{
-              const detail = await milkFetch(`/api/milk/users/${id}`);
-              openMilkUserModal(detail);
-            }catch(e){
-              showToast("Nie udało się pobrać użytkownika", true);
-            }
-          });
+    function renderStaff(){
+      const q = (staffSearch.value || "").trim().toLowerCase();
+      let list = [...staff];
+      if(q){
+        list = list.filter(s=>{
+          const blob = [s.name, s.pin, s.role].join(" ").toLowerCase();
+          return blob.includes(q);
         });
-
-      }catch(e){
-        milkUsersList.innerHTML = `<div class="empty" style="color:#b00000">Błąd pobierania użytkowników</div>`;
       }
+      if(!list.length){
+        staffBody.innerHTML = `<tr><td colspan="4" class="muted">Brak.</td></tr>`;
+        return;
+      }
+      staffBody.innerHTML = list.map(s=>`
+        <tr>
+          <td><b>${esc(s.name)}</b></td>
+          <td class="mono">${esc(s.pin)}</td>
+          <td>${esc(s.role)}</td>
+          <td class="right">
+            <button class="btn btn-small" data-del-staff="${esc(s._id)}"><i class="fa-solid fa-trash"></i></button>
+          </td>
+        </tr>
+      `).join("");
+
+      staffBody.querySelectorAll("[data-del-staff]").forEach(btn=>{
+        btn.addEventListener("click", async ()=>{
+          const id = btn.dataset.delStaff;
+          if(!confirm("Usunąć konto?")) return;
+          try{
+            await API.staffDel(id);
+            toast("Usunięto konto");
+            await refreshStaff();
+          }catch(e){
+            toast(e.message, true);
+          }
+        });
+      });
     }
+    staffSearch.addEventListener("input", renderStaff);
 
-    function openMilkUserModal(detail){
-      const u = detail.user || detail;
-      const history = detail.history || [];
+    $("#openAddStaff").addEventListener("click", ()=>{
+      openModal("Dodaj pracownika", `
+        <div class="row">
+          <div>
+            <label>Imię</label>
+            <input id="mName" placeholder="np. Kasia" autocomplete="off" />
+          </div>
+          <div>
+            <label>PIN (4 cyfry)</label>
+            <input id="mPin" placeholder="np. 1234" inputmode="numeric" autocomplete="off" />
+          </div>
+        </div>
+        <div>
+          <label>Rola</label>
+          <select id="mRole">
+            <option value="employee">employee</option>
+            <option value="manager">manager</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="mSave"><i class="fa-solid fa-user-plus"></i> Dodaj</button>
+        <div class="muted" id="mInfo">—</div>
+      `);
 
-      milkUserModalBody.innerHTML = `
-        <div class="stat">
-          <div>${u.username || u.name || "Użytkownik"}<br><small>ID: ${u.id}</small></div>
-          <div>${u.points || 0} Milkosów</div>
+      setTimeout(()=>{
+        $("#mSave")?.addEventListener("click", async ()=>{
+          $("#mInfo").textContent = "Zapisywanie…";
+          try{
+            const name = $("#mName").value;
+            const pin = $("#mPin").value;
+            const role = $("#mRole").value;
+            await API.staffAdd({ name, pin, role });
+            $("#mInfo").textContent = "Dodano ✅";
+            toast("Dodano konto");
+            await refreshStaff();
+          }catch(e){
+            $("#mInfo").textContent = "Błąd: " + e.message;
+            toast(e.message, true);
+          }
+        });
+      },0);
+    });
+
+    // Manual add reservation
+    $("#manualAddBtn").addEventListener("click", ()=>{
+      openModal("Dodaj rezerwację ręcznie", `
+        <div class="row">
+          <div>
+            <label>Imię i nazwisko</label>
+            <input id="mrName" placeholder="Jan Kowalski" autocomplete="off" />
+          </div>
+          <div>
+            <label>Telefon</label>
+            <input id="mrPhone" placeholder="+48 700 000 000" autocomplete="off" />
+          </div>
         </div>
 
-        <div class="section-title" style="font-size:1.05rem;">Ostatnie wymiany nagród</div>
-        ${
-          history.length
-            ? history.map(h=>`
-              <div class="reservation-item">
-                <div>
-                  <div style="font-weight:900;">${h.rewardTitle || "Nagroda"}</div>
-                  <div class="reservation-meta" style="margin-top:6px;">
-                    <span class="tag"><i class="fa-regular fa-clock"></i> ${new Date(h.createdAt||Date.now()).toLocaleString()}</span>
-                    <span class="tag"><i class="fa-solid fa-coins"></i> -${h.cost || 0} Milkosów</span>
-                    ${h.code ? `<span class="tag"><i class="fa-solid fa-ticket"></i> Kod: ${h.code}</span>` : ""}
-                  </div>
-                </div>
-              </div>
-            `).join("")
-            : `<div class="empty">Brak wymian</div>`
-        }
-      `;
-
-      milkUserModal.classList.add("show");
-      milkUserModal.setAttribute("aria-hidden","false");
-    }
-
-    function closeMilkUserModal(){
-      milkUserModal.classList.remove("show");
-      milkUserModal.setAttribute("aria-hidden","true");
-    }
-    milkCloseUserModal?.addEventListener("click", closeMilkUserModal);
-    milkUserModal?.addEventListener("click", (e)=>{
-      if(e.target === milkUserModal) closeMilkUserModal();
-    });
-
-    // ---------- PICKUP BY CODE ----------
-    const milkPickupForm = document.getElementById("milkPickupForm");
-    const milkPickupResult = document.getElementById("milkPickupResult");
-
-    milkPickupForm?.addEventListener("submit", async (e)=>{
-      e.preventDefault();
-      milkPickupResult.textContent = "Sprawdzam kod...";
-      const code = String(new FormData(milkPickupForm).get("code")||"").trim();
-
-      try{
-        const out = await milkFetch("/api/milk/redeems/verify", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ code })
-        });
-
-        milkPickupResult.innerHTML = `
-          <div class="stat">
-            <div>Nagroda</div>
-            <div>${out.rewardTitle || "—"}</div>
+        <div class="row">
+          <div>
+            <label>Data</label>
+            <input id="mrDate" type="date" />
           </div>
-          <div class="small">Użytkownik: ${out.userId || "—"}</div>
-          <div class="small">Status: ${out.used ? "JUŻ ODEBRANA" : "DO ODBIORU"}</div>
-        `;
+          <div>
+            <label>Godzina</label>
+            <input id="mrTime" type="time" />
+          </div>
+        </div>
 
-        if(!out.used){
-          showToast("Kod poprawny ✅ Można wydać nagrodę");
-        }else{
-          showToast("Kod już wykorzystany", true);
+        <div class="row">
+          <div>
+            <label>Ilość osób</label>
+            <select id="mrGuests">
+              <option value="1">1</option>
+              <option value="2" selected>2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5+">5+</option>
+            </select>
+          </div>
+          <div>
+            <label>Strefa</label>
+            <select id="mrRoom">
+              <option>Sala frontowa</option>
+              <option>Sala główna</option>
+              <option>Kącik dla dzieci</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label>Uwagi (opcjonalnie)</label>
+          <textarea id="mrNotes" placeholder="np. urodziny"></textarea>
+        </div>
+
+        <button class="btn btn-primary" id="mrSave"><i class="fa-solid fa-plus"></i> Dodaj</button>
+        <div class="muted" id="mrInfo">—</div>
+      `);
+
+      setTimeout(()=>{
+        $("#mrSave")?.addEventListener("click", async ()=>{
+          $("#mrInfo").textContent = "Zapisywanie…";
+          try{
+            const payload = {
+              name: $("#mrName").value,
+              phone: $("#mrPhone").value,
+              date: $("#mrDate").value,
+              time: $("#mrTime").value,
+              guests: $("#mrGuests").value,
+              room: $("#mrRoom").value,
+              notes: $("#mrNotes").value
+            };
+            // użyj Twojego endpointu /api/rezerwacje
+            const r = await fetch("/api/rezerwacje", {
+              method:"POST",
+              headers:{ "Content-Type":"application/json" },
+              body: JSON.stringify(payload)
+            });
+            if(!r.ok){
+              const e = await r.json().catch(()=>({}));
+              throw new Error(e.message || "Błąd dodawania");
+            }
+            $("#mrInfo").textContent = "Dodano ✅";
+            toast("Rezerwacja dodana");
+            await refreshReservations();
+          }catch(e){
+            $("#mrInfo").textContent = "Błąd: " + e.message;
+            toast(e.message, true);
+          }
+        });
+      },0);
+    });
+
+    // Export
+    $("#exportBtn").addEventListener("click", ()=>{
+      const payload = { reservations, happy: happyInput.value || "", staff };
+      const txt = JSON.stringify(payload, null, 2);
+      openModal("Eksport (JSON)", `
+        <textarea style="width:100%;min-height:280px;border-radius:18px;border:2px solid #eee;padding:12px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;">${esc(txt)}</textarea>
+        <button class="btn btn-primary" id="copyExport"><i class="fa-solid fa-copy"></i> Kopiuj</button>
+      `);
+      setTimeout(()=>{
+        $("#copyExport")?.addEventListener("click", async ()=>{
+          try{ await navigator.clipboard.writeText(txt); toast("Skopiowano"); }
+          catch{ toast("Nie udało się skopiować", true); }
+        });
+      },0);
+    });
+
+    // Refresh buttons
+    $("#refreshBtn").addEventListener("click", refreshAll);
+
+    // Socket.IO
+    const socket = io();
+
+    // Rezerwacje realtime (z server.js: io.emit("new-reservation", reservation))
+    socket.on("new-reservation", (r)=>{
+      // wczytaj listę, żeby mieć spójność
+      refreshReservations();
+      openResOverlay(r);
+    });
+
+    // Zamówienia realtime (Twoje appadmin powinno emitować order:new)
+    socket.on("order:new", (o)=>{
+      openOrderOverlay(o);
+    });
+
+    // Happy realtime
+    socket.on("happy-updated", (text)=>{
+      happyInput.value = text || "";
+      toast("HappyBar zaktualizowany");
+    });
+
+    // Polling fallback
+    let lastResId = null;
+    let lastOrderId = null;
+
+    async function pollFallback(){
+      // rezerwacje
+      try{
+        const list = await API.reservations();
+        if(Array.isArray(list) && list.length){
+          const newest = list[0];
+          const id = newest._id || newest.id;
+          if(!lastResId){ lastResId = id; }
+          else if(id && id !== lastResId){
+            lastResId = id;
+            openResOverlay(newest);
+          }
         }
+      }catch{}
 
-      }catch(err){
-        milkPickupResult.textContent = "Niepoprawny kod lub błąd serwera.";
-        showToast("Niepoprawny kod", true);
+      // zamówienia
+      try{
+        const orders = await API.adminOrders();
+        if(Array.isArray(orders) && orders.length){
+          const newest = orders[0];
+          const id = newest._id || newest.id;
+          if(!lastOrderId){ lastOrderId = id; }
+          else if(id && id !== lastOrderId){
+            lastOrderId = id;
+            openOrderOverlay(newest);
+          }
+        }
+      }catch{}
+    }
+    setInterval(pollFallback, 5000);
+
+    // Data refresh
+    async function refreshReservations(){
+      reservations = await API.reservations();
+      // update last id for polling init
+      if(Array.isArray(reservations) && reservations.length){
+        lastResId = reservations[0]._id || reservations[0].id || lastResId;
       }
-    });
+      renderNew();
+      renderAll();
+    }
 
-    // ---------- init when tab opened ----------
-    document.getElementById("milkTabBtn")?.addEventListener("click", ()=>{
-      milkLoadStats();
-      milkLoadRewards();
-      milkLoadUsers();
-    });
+    async function refreshHappy(){
+      const data = await API.data();
+      happyInput.value = data.happy || "";
+    }
+
+    async function refreshStaff(){
+      // jeśli brak uprawnień — nie ładuj
+      if(!(session.role === "owner" || session.role === "manager")) return;
+      staff = await API.staffList();
+      renderStaff();
+    }
+
+    async function refreshAll(){
+      try{
+        await refreshReservations();
+        await refreshHappy();
+        await refreshStaff();
+        toast("Odświeżono");
+      }catch(e){
+        toast("Błąd odświeżania: " + e.message, true);
+      }
+    }
+
+    // Init tab + lock
+    (function init(){
+      showLock();
+      setTab("new");
+      loginInfo.textContent = "—";
+    })();
   </script>
 </body>
 </html>
-

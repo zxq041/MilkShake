@@ -1,52 +1,68 @@
-// sw.js — Milk PWA (safe: never cache /api/*)
-
-const CACHE = "milk-v6"; // ZMIENIAJ NUMER przy każdej aktualizacji!
+// sw.js
+const CACHE_VERSION = "milk-pwa-v12"; // <-- ZWIĘKSZAJ przy każdej publikacji
+const APP_SHELL = [
+  "/",               // jeśli masz routing na /
+  "/app.html",
+  "/manifest.webmanifest",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+];
 
 self.addEventListener("install", (event) => {
-  self.skipWaiting();
-  event.waitUntil(caches.open(CACHE));
+  self.skipWaiting(); // nowy SW od razu aktywny
+  event.waitUntil(
+    caches.open(CACHE_VERSION).then((cache) => cache.addAll(APP_SHELL))
+  );
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
-    await self.clients.claim();
-  })());
+  event.waitUntil(
+    (async () => {
+      // usuń stare cache
+      const keys = await caches.keys();
+      await Promise.all(keys.map((k) => (k !== CACHE_VERSION ? caches.delete(k) : null)));
+      await self.clients.claim(); // przejmij kontrolę nad otwartymi kartami/PWA
+    })()
+  );
 });
 
+// Strategia: HTML zawsze z sieci (żeby aktualizacje wchodziły), reszta cache-first
 self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
+  const req = event.request;
+  const url = new URL(req.url);
 
-  // 🔥 NIE CACHE'UJ API
-  if (url.pathname.startsWith("/api/")) {
-    event.respondWith(fetch(event.request));
+  // tylko same-origin
+  if (url.origin !== location.origin) return;
+
+  // HTML: network-first (najważniejsze!)
+  if (req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html")) {
+    event.respondWith(
+      (async () => {
+        try {
+          const fresh = await fetch(req, { cache: "no-store" });
+          // zaktualizuj cache app shell
+          const cache = await caches.open(CACHE_VERSION);
+          cache.put(req, fresh.clone());
+          return fresh;
+        } catch {
+          const cached = await caches.match(req);
+          return cached || caches.match("/app.html");
+        }
+      })()
+    );
     return;
   }
 
-  // HTML: zawsze network-first (żeby aktualizacje wchodziły)
-  if (event.request.mode === "navigate") {
-    event.respondWith((async () => {
-      try {
-        const fresh = await fetch(event.request);
-        const cache = await caches.open(CACHE);
-        cache.put(event.request, fresh.clone());
-        return fresh;
-      } catch {
-        const cached = await caches.match(event.request);
-        return cached || Response.error();
-      }
-    })());
-    return;
-  }
+  // Pliki: cache-first, potem sieć
+  event.respondWith(
+    (async () => {
+      const cached = await caches.match(req);
+      if (cached) return cached;
 
-  // reszta: cache-first
-  event.respondWith((async () => {
-    const cached = await caches.match(event.request);
-    if (cached) return cached;
-    const fresh = await fetch(event.request);
-    const cache = await caches.open(CACHE);
-    cache.put(event.request, fresh.clone());
-    return fresh;
-  })());
+      const fresh = await fetch(req);
+      const cache = await caches.open(CACHE_VERSION);
+      cache.put(req, fresh.clone());
+      return fresh;
+    })()
+  );
 });

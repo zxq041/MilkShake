@@ -384,9 +384,10 @@
       display:flex;
       justify-content:center;
       align-items:center;
+      flex-direction:column; /* pozwala na tytuł nad telefonem w mobile */
+      gap:10px;
     }
 
-    /* ✅ telefon większy (desktop), skalowany niżej w media queries */
     .card {
       width: 300px;
       height: 600px;
@@ -404,7 +405,6 @@
       box-shadow: 0 22px 70px rgba(0,0,0,.40);
     }
 
-    /* ✅ ekran jaśniejszy */
     .card-int {
       background-image:
         linear-gradient(to bottom, rgba(255,255,255,.10), rgba(0,0,0,.22)),
@@ -441,7 +441,6 @@
       border-bottom-left-radius: 12px;
       border-bottom-right-radius: 12px;
     }
-
     .speaker {
       position: absolute;
       top: 3px;
@@ -452,7 +451,6 @@
       border-radius: 2px;
       background-color: rgb(20, 20, 20);
     }
-
     .camera {
       position: absolute;
       top: 7px;
@@ -463,7 +461,6 @@
       border-radius: 50%;
       background-color: rgba(255, 255, 255, 0.048);
     }
-
     .int {
       position: absolute;
       width: 3px;
@@ -475,42 +472,61 @@
       background-color: rgba(0, 0, 255, 0.212);
     }
 
-    .btn1, .btn2, .btn3, .btn4 {
-      position: absolute;
-      width: 2px;
-    }
-
+    .btn1, .btn2, .btn3, .btn4 { position: absolute; width: 2px; }
     .btn1, .btn2, .btn3 {
       height: 45px;
       top: 30%;
       right: -4px;
       background-image: linear-gradient(to right, #111111, #222222, #333333, #464646, #595959);
     }
-
-    .btn2, .btn3 {
-      transform: scale(-1);
-      left: -4px;
-    }
-
-    .btn2, .btn3 {
-      transform: scale(-1);
-      height: 30px;
-    }
-
+    .btn2, .btn3 { transform: scale(-1); left: -4px; }
+    .btn2, .btn3 { transform: scale(-1); height: 30px; }
     .btn2 { top: 26% }
     .btn3 { top: 36% }
 
     .hello { display:none; }
     .hidden { display:none; }
 
+    /* ------------------------------
+       MOBILE HERO TITLE (nad telefonem)
+       ------------------------------ */
+    .mobile-hero-title{display:none; text-align:center}
+    .mobile-pill{
+      width:max-content;
+      margin:0 auto 10px;
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+      padding:10px 14px;
+      border-radius:999px;
+      background:rgba(255,255,255,.78);
+      border:1px solid var(--line);
+      box-shadow:0 12px 30px rgba(0,0,0,.06);
+      font-weight:900;
+      color:rgba(43,19,0,.86);
+    }
+    .mobile-pill i{color:var(--primary)}
+    .mobile-h1{
+      margin:0 0 8px;
+      font-size:clamp(1.9rem, 8.5vw, 2.8rem);
+      line-height:1.08;
+      letter-spacing:-.4px;
+    }
+    .mobile-p{
+      margin:0 0 14px;
+      color:var(--muted);
+      line-height:1.65;
+      font-size:1rem;
+    }
+
     /* =========================
        RESPONSIVE (IMPROVED)
        ========================= */
 
-    /* Tablet / mobile menu */
     @media (max-width: 992px){
       .container{padding:0 16px}
 
+      /* menu mobilne */
       .nav-menu{
         position:fixed;top:0;right:-100%;
         width:min(82%, 360px);
@@ -526,55 +542,74 @@
       }
       .nav-menu.active{right:0}
       .nav-menu .nav-link{font-size:1.05rem}
-
       .hamburger{display:block}
 
-      .hero{padding-top:92px; min-height:auto}
-      .hero-inner{grid-template-columns:1fr; text-align:center}
-      .chip{margin:0 auto}
+      /* ✅ NA TELEFONIE: telefon ma być na górze, potem tekst */
+      .hero{padding-top:82px; min-height:auto}
+      .hero-inner{
+        display:flex;
+        flex-direction:column;
+        gap:18px;
+        text-align:center;
+      }
+      .hero-inner > div:first-child{order:2}   /* LEFT (tekst) niżej */
+      .hero-inner > .phone-holder{order:1}     /* phone na górze */
+
+      /* mobile tytuł pokazujemy */
+      .mobile-hero-title{display:block}
+
+      /* chip z desktopu chowamy, bo jest mobile-pill */
+      .chip{display:none}
+
+      /* CTA w hero i reszta */
       .cta{justify-content:center}
       .kpi-row{justify-content:center}
+
+      /* layout sekcji */
       .grid-3{grid-template-columns:1fr}
       .steps{grid-template-columns:1fr}
 
-      /* telefon preview sensownie mniejszy */
-      .phone-holder{margin-top:18px}
+      /* phone mniejszy */
       .card{width:260px;height:520px; transform:none}
+
+      /* przycisk w headerze trochę mniejszy */
       .navbar > .btn.btn-primary{
         padding:12px 14px !important;
         font-size:.95rem;
       }
+
+      /* nagłówek i lead czytelniejsze */
+      h1{font-size:clamp(2.1rem, 9vw, 3.2rem); line-height:1.08}
+      .lead{font-size:1.02rem; line-height:1.75; max-width:unset}
+      .section{padding:64px 0}
+      .section-sub{font-size:1rem; margin-bottom:26px}
     }
 
-    /* Telefon */
     @media (max-width: 560px){
       .header{padding:14px 0}
       .header.scrolled{padding:12px 0}
-
       .logo img{width:42px;height:42px}
 
-      h1{font-size:clamp(2.1rem, 9vw, 3.2rem); line-height:1.08}
-      .lead{font-size:1.02rem; line-height:1.75; max-width:unset}
-
-      .section{padding:64px 0}
-      .section-sub{font-size:1rem; margin-bottom:26px}
-
-      /* CTA: pełna szerokość, wygodne klikanie */
+      /* CTA: pełna szerokość */
       .cta{gap:10px}
       .btn{width:100%}
       .btn-xl{padding:16px 18px; font-size:1.02rem}
 
-      /* chip + kpi: czytelnie pod kciuk */
-      .chip{max-width:100%; text-align:left}
+      /* KPI pod kciuk */
       .kpi-row{gap:8px}
       .kpi{width:100%; justify-content:center}
 
-      /* karty i kroki ciaśniej */
+      /* karty ciaśniej */
       .cardx{padding:16px}
       .step{padding:16px}
 
       /* phone jeszcze mniejszy */
       .card{width:230px;height:460px}
+    }
+
+    @media (max-width: 420px){
+      .nav-menu{width:88%}
+      .card{width:215px;height:430px}
     }
 
     /* Sticky CTA na dole (mobile) */
@@ -591,13 +626,7 @@
         border-top:1px solid var(--line);
         z-index:1200;
       }
-      body{padding-bottom:86px} /* żeby treść nie wchodziła pod CTA */
-    }
-
-    /* bardzo małe telefony */
-    @media (max-width: 420px){
-      .nav-menu{width:88%}
-      .card{width:215px;height:430px}
+      body{padding-bottom:86px}
     }
   </style>
 </head>
@@ -635,7 +664,7 @@
     <section class="hero">
       <div class="container">
         <div class="hero-inner">
-          <!-- LEFT -->
+          <!-- LEFT (tekst na desktop, a na mobile idzie niżej) -->
           <div>
             <div class="chip fade-in">
               <i class="fas fa-id-card"></i>
@@ -669,8 +698,17 @@
             </div>
           </div>
 
-          <!-- RIGHT (PHONE) -->
+          <!-- RIGHT (PHONE) - NA MOBILE IDZIE NA GÓRĘ -->
           <div class="phone-holder fade-in" style="transition-delay:.10s">
+            <!-- mobile-only tytuł nad telefonem -->
+            <div class="mobile-hero-title">
+              <div class="mobile-pill">
+                <i class="fas fa-id-card"></i> Milk ID → punkty
+              </div>
+              <h1 class="mobile-h1"><span class="grad-text">Milk</span> w Twoim telefonie</h1>
+              <p class="mobile-p">Lojalność, rezerwacje i zamówienia z odbiorem — w jednym miejscu.</p>
+            </div>
+
             <div class="card" aria-label="Podgląd aplikacji Milk na telefonie">
               <div class="btn1"></div>
               <div class="btn2"></div>
@@ -691,7 +729,7 @@
       </div>
     </section>
 
-    <!-- FEATURES (premium cards) -->
+    <!-- FEATURES -->
     <section class="section">
       <div class="container">
         <h2 class="section-title fade-in">Co możesz robić w Milk</h2>
@@ -879,10 +917,8 @@
         if (e.key === 'Enter' || e.key === ' ') toggleMenu();
       });
 
-      // zamykanie menu po kliknięciu w link
       document.querySelectorAll('.nav-link').forEach(a => a.addEventListener('click', closeMenu));
 
-      // zamykanie menu po kliknięciu poza (super wygodne na telefonie)
       document.addEventListener('click', (e) => {
         if (!navMenu.classList.contains('active')) return;
         const target = e.target;

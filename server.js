@@ -115,14 +115,15 @@ const CodeSchema = new mongoose.Schema({
   redeemedAt: { type: Date, default: null },
 });
 
-const Product = mongoose.model("Product", ProductSchema);
-const Reservation = mongoose.model("Reservation", ReservationSchema);
-const HappyBar = mongoose.model("HappyBar", HappySchema);
-const Employee = mongoose.model("Employee", EmployeeSchema);
-const User = mongoose.model("User", UserSchema);
-const History = mongoose.model("History", HistorySchema);
-const Order = mongoose.model("Order", OrderSchema);
-const Code = mongoose.model("Code", CodeSchema);
+const User = mongoose.model("User", UserSchema, "users");
+const Order = mongoose.model("Order", OrderSchema, "orders");
+const History = mongoose.model("History", HistorySchema, "histories");
+const Code = mongoose.model("Code", CodeSchema, "codes");
+const Reservation = mongoose.model("Reservation", ReservationSchema, "reservations");
+const Product = mongoose.model("Product", ProductSchema, "products");
+const Employee = mongoose.model("Employee", EmployeeSchema, "employees");
+const HappyBar = mongoose.model("HappyBar", HappySchema, "happybars");
+
 
 // ==========================
 //  BASIC EXPRESS CONFIG
@@ -804,3 +805,4 @@ app.get("*", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "index.html")));
 server.listen(PORT, () => {
   console.log("MilkShake Bar server running on port:", PORT);
 });
+

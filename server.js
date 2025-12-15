@@ -1,5 +1,6 @@
 // server.js — MilkShake Bar backend (Express + Socket.IO + MongoDB)
 // Wersja: pełna (produkty, rezerwacje, happybar, pracownicy, konta PWA, zamówienia, punkty, kody, statystyki dla appadmin)
+// + REALTIME POINTS dla PWA (Socket.IO)
 
 const express = require("express");
 const http = require("http");
@@ -11,7 +12,11 @@ const mongoose = require("mongoose");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+
+// Socket.IO
+const io = new Server(server, {
+  cors: { origin: "*", methods: ["GET", "POST", "PUT", "DELETE"] },
+});
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = __dirname;
@@ -83,7 +88,7 @@ const UserSchema = new mongoose.Schema({
 // Historia (dla panelu + PWA)
 const HistorySchema = new mongoose.Schema({
   milkId: { type: String, required: true },
-  type: { type: String, default: "action" }, // points/order/code/reservation
+  type: { type: String, default: "action" }, // points/order/code/reservation/profile/account/redeem
   detail: { type: String, default: "" },
   ts: { type: Date, default: Date.now },
 });
@@ -155,9 +160,35 @@ app.post("/api/upload", upload.single("image"), (req, res) => {
 });
 
 // ==========================
-//  SOCKET.IO
+//  SOCKET.IO (Realtime)
 // ==========================
+function userRoom(milkId) {
+  return `user:${String(milkId || "").trim()}`;
+}
+function emitUserPoints(milkId, points) {
+  if (!milkId) return;
+  io.to(userRoom(milkId)).emit("user:points", { milkId: String(milkId), points: Number(points || 0) });
+}
+function emitUserProfile(milkId, user) {
+  if (!milkId) return;
+  io.to(userRoom(milkId)).emit("user:profile", {
+    milkId: user?.milkId || milkId,
+    email: user?.email || "",
+    name: user?.name || "",
+    phone: user?.phone || "",
+    points: user?.points ?? 0,
+  });
+}
+
 io.on("connection", (socket) => {
+  // PWA: dołącz do pokoju usera (po milkId)
+  socket.on("user:join", (payload) => {
+    const milkId = String(payload?.milkId || "").trim();
+    if (!milkId) return;
+    socket.join(userRoom(milkId));
+    socket.emit("user:joined", { ok: true, milkId });
+  });
+
   socket.on("disconnect", () => {});
 });
 
@@ -174,7 +205,6 @@ async function createHistory(milkId, type, detail) {
 }
 
 function generateMilkId6() {
-  // 6 cyfr: zawsze pasuje do UI
   const n = Math.floor(100000 + Math.random() * 900000);
   return String(n);
 }
@@ -293,13 +323,26 @@ app.post("/api/auth/login", async (req, res) => {
     if (!em) return res.status(400).json({ ok: false, message: "Podaj email" });
 
     let user = await User.findOne({ email: em });
+
+    // nowy user
     if (!user) {
       user = await User.create({
         email: em,
         milkId: await uniqueMilkId(),
+        points: 0,
       });
       await createHistory(user.milkId, "account", "Utworzono konto");
     }
+
+    // NAPRAWA dla starych userów bez milkId
+    if (!user.milkId) {
+      user.milkId = await uniqueMilkId();
+      await user.save();
+      await createHistory(user.milkId, "account", "Uzupełniono brakujące MilkID");
+    }
+
+    // realtime: podeślij profil (opcjonalnie)
+    // emitUserProfile(user.milkId, user);
 
     res.json({
       ok: true,
@@ -331,7 +374,17 @@ app.post("/api/user/profile", async (req, res) => {
     );
 
     if (!user) return res.status(404).json({ ok: false, message: "Nie znaleziono użytkownika" });
+
+    // napraw milkId jeśli brak
+    if (!user.milkId) {
+      user.milkId = await uniqueMilkId();
+      await user.save();
+    }
+
     await createHistory(user.milkId, "profile", "Zaktualizowano dane profilu");
+
+    // realtime: profil usera
+    emitUserProfile(user.milkId, user);
 
     res.json({
       ok: true,
@@ -356,6 +409,13 @@ app.get("/api/user", async (req, res) => {
     if (!em) return res.status(400).json({ ok: false });
     const user = await User.findOne({ email: em });
     if (!user) return res.status(404).json({ ok: false });
+
+    // napraw milkId jeśli brak
+    if (!user.milkId) {
+      user.milkId = await uniqueMilkId();
+      await user.save();
+    }
+
     res.json({
       ok: true,
       user: {
@@ -486,7 +546,11 @@ app.post("/api/rezerwacje", async (req, res) => {
     });
 
     if (reservation.milkId) {
-      await createHistory(reservation.milkId, "reservation", `Rezerwacja: ${reservation.date} ${reservation.time} (${reservation.guests} os.)`);
+      await createHistory(
+        reservation.milkId,
+        "reservation",
+        `Rezerwacja: ${reservation.date} ${reservation.time} (${reservation.guests} os.)`
+      );
     }
 
     io.emit("new-reservation", reservation);
@@ -530,6 +594,51 @@ app.post("/api/happy", async (req, res) => {
 //  API: ORDERS (PWA)
 // ==========================
 
+async function handleCreateOrder(req, res) {
+  try {
+    const o = req.body || {};
+    const email = String(o.email || "").trim().toLowerCase();
+    const milkId = String(o.milkId || "").trim();
+
+    if (!email || !milkId) return res.status(401).json({ ok: false, message: "Zaloguj się" });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ ok: false, message: "Zaloguj się" });
+
+    // napraw milkId jeśli brak
+    if (!user.milkId) {
+      user.milkId = await uniqueMilkId();
+      await user.save();
+    }
+
+    if (!o.id || !o.items || !Array.isArray(o.items) || !o.items.length) {
+      return res.status(400).json({ ok: false, message: "Brak pozycji" });
+    }
+
+    const order = await Order.create({
+      id: String(o.id),
+      email,
+      milkId: user.milkId, // bierzemy z usera jako źródło prawdy
+      customerName: String(o.customerName || user.name || ""),
+      customerPhone: String(o.customerPhone || user.phone || ""),
+      items: o.items,
+      total: Number(o.total || 0),
+      pickupTime: String(o.pickupTime || ""),
+      pickupLocation: String(o.pickupLocation || ""),
+      notes: String(o.notes || ""),
+      status: "Przyjęte",
+    });
+
+    await createHistory(user.milkId, "order", `Zamówienie: ${order.pickupLocation} ${order.pickupTime} • ${order.total} zł`);
+    io.emit("new-order", order);
+
+    res.json({ ok: true, order });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, message: "Błąd zamówienia" });
+  }
+}
+
 // lista zamówień usera
 app.get("/api/orders", async (req, res) => {
   try {
@@ -543,44 +652,8 @@ app.get("/api/orders", async (req, res) => {
   }
 });
 
-// tworzenie zamówienia
-app.post("/api/orders", async (req, res) => {
-  try {
-    const o = req.body || {};
-    const email = String(o.email || "").trim().toLowerCase();
-    const milkId = String(o.milkId || "").trim();
-    if (!email || !milkId) return res.status(401).json({ ok: false, message: "Zaloguj się" });
-
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ ok: false, message: "Zaloguj się" });
-
-    if (!o.id || !o.items || !Array.isArray(o.items) || !o.items.length) {
-      return res.status(400).json({ ok: false, message: "Brak pozycji" });
-    }
-
-    const order = await Order.create({
-      id: String(o.id),
-      email,
-      milkId,
-      customerName: String(o.customerName || user.name || ""),
-      customerPhone: String(o.customerPhone || user.phone || ""),
-      items: o.items,
-      total: Number(o.total || 0),
-      pickupTime: String(o.pickupTime || ""),
-      pickupLocation: String(o.pickupLocation || ""),
-      notes: String(o.notes || ""),
-      status: "Przyjęte",
-    });
-
-    await createHistory(milkId, "order", `Zamówienie: ${order.pickupLocation} ${order.pickupTime} • ${order.total} zł`);
-    io.emit("new-order", order);
-
-    res.json({ ok: true, order });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, message: "Błąd zamówienia" });
-  }
-});
+// tworzenie zamówienia (PWA)
+app.post("/api/orders", handleCreateOrder);
 
 // ==========================
 //  API: REWARDS -> tworzy KOD, odejmuje punkty (PWA)
@@ -593,6 +666,12 @@ app.post("/api/rewards/redeem", async (req, res) => {
 
     const user = await User.findOne({ email: em });
     if (!user) return res.status(401).json({ ok: false, message: "Zaloguj się" });
+
+    // napraw milkId jeśli brak
+    if (!user.milkId) {
+      user.milkId = await uniqueMilkId();
+      await user.save();
+    }
 
     const c = Number(cost || 0);
     if (!rewardId || !rewardTitle || c <= 0) {
@@ -618,6 +697,9 @@ app.post("/api/rewards/redeem", async (req, res) => {
 
     await createHistory(user.milkId, "code", `Wymieniono: -${c} pkt (${rewardTitle}) • Kod: ${code}`);
     io.emit("codes-updated");
+
+    // realtime punkty do PWA
+    emitUserPoints(user.milkId, user.points);
 
     res.json({
       ok: true,
@@ -686,7 +768,7 @@ app.get("/api/admin/orders", async (req, res) => {
   }
 });
 
-// add points (10 zł = 1 pkt) — used by appadmin
+// add points — used by appadmin
 app.post("/api/admin/add-points", async (req, res) => {
   try {
     const { milkId, amountPLN, points } = req.body || {};
@@ -702,6 +784,9 @@ app.post("/api/admin/add-points", async (req, res) => {
     await user.save();
 
     await createHistory(mid, "points", `Dodano +${pts} pkt (kwota: ${Number(amountPLN || 0).toFixed(2)} zł)`);
+
+    // ✅ REALTIME: punkty do PWA NATYCHMIAST
+    emitUserPoints(mid, user.points);
 
     res.json({ ok: true, points: user.points });
   } catch (e) {
@@ -767,12 +852,8 @@ app.post("/api/admin/codes/redeem", async (req, res) => {
   }
 });
 
-// ALIAS (żeby nie było błędu z app.html jeśli gdzieś zostało stare POST /api/admin/orders)
-app.post("/api/admin/orders", async (req, res) => {
-  // przekieruj wprost do /api/orders (ta sama logika)
-  req.url = "/api/orders";
-  return app._router.handle(req, res, () => {});
-});
+// ✅ ALIAS: żeby stare app.html z POST /api/admin/orders nie wywalało błędu
+app.post("/api/admin/orders", handleCreateOrder);
 
 // ==========================
 //  ROUTES (CLEAN URLS)
@@ -780,7 +861,6 @@ app.post("/api/admin/orders", async (req, res) => {
 app.get("/admin", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "admin.html")));
 app.get("/menu", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "menu.html")));
 
-// jeśli masz app.html jako PWA:
 app.get("/app", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "app.html")));
 app.get("/appadmin", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "appadmin.html")));
 

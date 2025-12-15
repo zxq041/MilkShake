@@ -1,5 +1,6 @@
 // server.js — MilkShake Bar backend (Express + Socket.IO + MongoDB)
 // FULL: produkty, rezerwacje, happybar, pracownicy, konta PWA, zamówienia, punkty realtime, kody, statystyki appadmin
+// WERSJA: wszystko zapisuje do nowych kolekcji: new_* (np. new_users, new_orders ...)
 
 const express = require("express");
 const http = require("http");
@@ -29,6 +30,12 @@ mongoose
   .connect(MONGO_URL, { dbName: "milkshakebar" })
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => console.error("MongoDB connect error:", err));
+
+// ==========================
+//  COLLECTION PREFIX (NOWE KOLEKCJE)
+// ==========================
+const COL_PREFIX = "new_";
+const col = (name) => `${COL_PREFIX}${name}`; // np. col("users") -> new_users
 
 // ==========================
 //  MODELS
@@ -68,8 +75,6 @@ const EmployeeSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-// UWAGA: milkId jest unique + sparse -> pozwala istnieć dokumentom bez milkId podczas starych migracji,
-// ale my i tak zawsze go ustawiamy w loginie.
 const UserSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   name: { type: String, default: "" },
@@ -115,15 +120,15 @@ const CodeSchema = new mongoose.Schema({
   redeemedAt: { type: Date, default: null },
 });
 
-const User = mongoose.model("User", UserSchema, "users");
-const Order = mongoose.model("Order", OrderSchema, "orders");
-const History = mongoose.model("History", HistorySchema, "histories");
-const Code = mongoose.model("Code", CodeSchema, "codes");
-const Reservation = mongoose.model("Reservation", ReservationSchema, "reservations");
-const Product = mongoose.model("Product", ProductSchema, "products");
-const Employee = mongoose.model("Employee", EmployeeSchema, "employees");
-const HappyBar = mongoose.model("HappyBar", HappySchema, "happybars");
-
+// ✅ WAŻNE: wszystkie modele zapisują do nowych kolekcji
+const User = mongoose.model("User", UserSchema, col("users"));
+const Order = mongoose.model("Order", OrderSchema, col("orders"));
+const History = mongoose.model("History", HistorySchema, col("histories"));
+const Code = mongoose.model("Code", CodeSchema, col("codes"));
+const Reservation = mongoose.model("Reservation", ReservationSchema, col("reservations"));
+const Product = mongoose.model("Product", ProductSchema, col("products"));
+const Employee = mongoose.model("Employee", EmployeeSchema, col("employees"));
+const HappyBar = mongoose.model("HappyBar", HappySchema, col("happybars"));
 
 // ==========================
 //  BASIC EXPRESS CONFIG
@@ -177,7 +182,8 @@ async function uniqueMilkId() {
 
 function generateCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const part = () => Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  const part = () =>
+    Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
   return "MSB-" + part();
 }
 
@@ -203,7 +209,6 @@ function emitUserPoints(milkId, points) {
 //  SOCKET.IO
 // ==========================
 io.on("connection", (socket) => {
-  // PWA: po zalogowaniu powinna wysłać user:join {milkId}
   socket.on("user:join", ({ milkId } = {}) => {
     const mid = String(milkId || "").trim();
     if (!mid) return;
@@ -215,11 +220,13 @@ io.on("connection", (socket) => {
 
 // ==========================
 //  ADMIN LOGIN BY PIN
+//  ✅ owner 0051 działa nawet jak Mongo ma problem
 // ==========================
 app.post("/api/login", async (req, res) => {
   try {
     const fixedPin = fixedPin4(req.body?.pin);
 
+    // ✅ OWNER zawsze wpuszcza
     if (fixedPin === "0051") {
       return res.json({ ok: true, role: "owner", user: { name: "Właściciel", pin: fixedPin } });
     }
@@ -253,8 +260,10 @@ app.post("/api/pracownicy", async (req, res) => {
     const fixedPin = fixedPin4(pin);
     const fixedRole = role === "manager" ? "manager" : "employee";
 
-    if (!name || fixedPin.length !== 4) return res.status(400).json({ ok: false, message: "Podaj imię i PIN (4 cyfry)" });
-    if (fixedPin === "0051") return res.status(400).json({ ok: false, message: "Ten PIN jest zarezerwowany dla właściciela" });
+    if (!name || fixedPin.length !== 4)
+      return res.status(400).json({ ok: false, message: "Podaj imię i PIN (4 cyfry)" });
+    if (fixedPin === "0051")
+      return res.status(400).json({ ok: false, message: "Ten PIN jest zarezerwowany dla właściciela" });
 
     const exists = await Employee.findOne({ pin: fixedPin });
     if (exists) return res.status(400).json({ ok: false, message: "Ten PIN już istnieje" });
@@ -263,7 +272,8 @@ app.post("/api/pracownicy", async (req, res) => {
     res.json({ ok: true, employee: emp });
   } catch (e) {
     console.error(e);
-    if (String(e).includes("E11000")) return res.status(400).json({ ok: false, message: "Ten PIN już istnieje" });
+    if (String(e).includes("E11000"))
+      return res.status(400).json({ ok: false, message: "Ten PIN już istnieje" });
     res.status(500).json({ ok: false, message: "Błąd dodawania pracownika" });
   }
 });
@@ -297,7 +307,6 @@ async function getOrCreateUserByEmail(emailRaw) {
     return user;
   }
 
-  // jeśli stary user bez milkId -> napraw
   if (!user.milkId) {
     user.milkId = await uniqueMilkId();
     await user.save();
@@ -365,7 +374,6 @@ app.get("/api/user", async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) return res.status(404).json({ ok: false });
 
-    // napraw brak milkId
     if (!user.milkId) {
       user.milkId = await uniqueMilkId();
       await user.save();
@@ -712,74 +720,6 @@ app.post("/api/admin/add-points", async (req, res) => {
   }
 });
 
-// ✅ MIGRACJA: nadaj milkId wszystkim userom bez milkId
-// odpal raz w przeglądarce: /api/admin/fix-milkids
-app.get("/api/admin/fix-milkids", async (req, res) => {
-  try {
-    const list = await User.find({ $or: [{ milkId: { $exists: false } }, { milkId: "" }, { milkId: null }] });
-    let fixed = 0;
-
-    for (const u of list) {
-      u.milkId = await uniqueMilkId();
-      await u.save();
-      fixed++;
-      await createHistory(u.milkId, "account", "Nadano Milk ID (migracja)");
-    }
-
-    res.json({ ok: true, fixed });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, message: "Błąd migracji" });
-  }
-});
-
-app.get("/api/admin/codes", async (req, res) => {
-  try {
-    const list = await Code.find({ status: "pending" }).sort({ createdAt: -1 });
-    res.json(list);
-  } catch (e) {
-    console.error(e);
-    res.status(500).json([]);
-  }
-});
-
-app.post("/api/admin/codes/check", async (req, res) => {
-  try {
-    const c = String(req.body?.code || "").trim().toUpperCase();
-    if (!c) return res.status(400).json({ ok: false, message: "Brak kodu" });
-
-    const doc = await Code.findOne({ code: c, status: "pending" });
-    if (!doc) return res.status(400).json({ ok: false, message: "Kod nieprawidłowy" });
-
-    res.json({ ok: true, code: doc.code, milkId: doc.milkId, rewardTitle: doc.rewardTitle });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, message: "Błąd" });
-  }
-});
-
-app.post("/api/admin/codes/redeem", async (req, res) => {
-  try {
-    const c = String(req.body?.code || "").trim().toUpperCase();
-    if (!c) return res.status(400).json({ ok: false, message: "Brak kodu" });
-
-    const doc = await Code.findOne({ code: c, status: "pending" });
-    if (!doc) return res.status(400).json({ ok: false, message: "Kod nieprawidłowy" });
-
-    doc.status = "redeemed";
-    doc.redeemedAt = new Date();
-    await doc.save();
-
-    await createHistory(doc.milkId, "redeem", `Zrealizowano kod: ${doc.code} (${doc.rewardTitle})`);
-    io.emit("codes-updated");
-
-    res.json({ ok: true });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, message: "Błąd realizacji" });
-  }
-});
-
 // ==========================
 //  ROUTES (CLEAN URLS)
 // ==========================
@@ -805,4 +745,3 @@ app.get("*", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "index.html")));
 server.listen(PORT, () => {
   console.log("MilkShake Bar server running on port:", PORT);
 });
-

@@ -130,7 +130,6 @@
     }
     .muted{opacity:.82;color:var(--muted);font-weight:750;line-height:1.55;font-size:.95rem}
 
-    /* Table */
     .table{
       width:100%;
       border-collapse:separate;
@@ -152,7 +151,6 @@
     .right{text-align:right}
     .mono{font-variant-numeric: tabular-nums; font-feature-settings:"tnum";}
 
-    /* Inputs */
     label{ font-size:.9rem; font-weight:900; margin:8px 0 6px; display:block; }
     input,select,textarea{
       width:100%;
@@ -173,7 +171,6 @@
     .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .row3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}
 
-    /* Tags */
     .tag{
       display:inline-flex;align-items:center;gap:6px;
       padding:6px 10px;border-radius:999px;
@@ -185,7 +182,6 @@
     .tag.pending{background: rgba(255,106,0,.12); color:#8a3d00;}
     .tag.bad{background: rgba(220,38,38,.12); color:#8a1010;}
 
-    /* Modal */
     .overlay{
       position:fixed; inset:0; z-index:90;
       display:none;
@@ -223,7 +219,6 @@
       display:grid;place-items:center;
     }
 
-    /* Toast */
     .toast{
       position:fixed;
       left:50%;
@@ -245,55 +240,6 @@
     .toast.show{ opacity:1; transform: translateX(-50%) translateY(0); }
     .toast.danger{ background: var(--danger); }
 
-    /* LOGIN SCREEN */
-    .lock{
-      position:fixed; inset:0; z-index:300;
-      display:grid; place-items:center;
-      padding: calc(14px + var(--safe-top)) 14px calc(14px + var(--safe-bottom));
-      background:
-        radial-gradient(900px 600px at 10% 10%, rgba(255,106,0,.16), transparent 60%),
-        radial-gradient(900px 600px at 90% 90%, rgba(255,145,0,.18), transparent 60%),
-        linear-gradient(180deg, rgba(255,246,236,.98), rgba(255,246,236,.985));
-    }
-    .lock-card{
-      width:min(520px,100%);
-      background: var(--glass-strong);
-      border:1px solid rgba(255,255,255,.98);
-      border-radius:28px;
-      box-shadow: 0 18px 60px rgba(0,0,0,.22);
-      padding:18px;
-      text-align:center;
-    }
-    .lock-logo{
-      width:64px;height:64px;border-radius:22px;background:var(--grad);color:#fff;
-      display:grid;place-items:center;margin:0 auto 10px;
-      box-shadow:0 14px 30px rgba(255,106,0,.25);
-      font-size:1.5rem;
-    }
-    .lock-title{font-weight:900;font-size:1.2rem}
-    .lock-sub{opacity:.8;font-weight:800;margin-top:4px}
-
-    .pin-dots{display:flex;justify-content:center;gap:14px;margin:14px 0 10px}
-    .pin-dots span{width:16px;height:16px;border-radius:50%;background:#ddd}
-    .pin-dots span.filled{background:var(--primary)}
-
-    .pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
-    .pin-pad button{
-      padding:16px;
-      font-size:1.2rem;
-      font-weight:900;
-      border-radius:16px;
-      border:none;
-      background:#fff;
-      box-shadow:0 8px 20px rgba(0,0,0,.12);
-      cursor:pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .pin-pad button:active{transform:translateY(1px)}
-    .pin-pad button[data-ok]{background:var(--grad);color:#fff}
-    .pin-err{margin-top:10px;color:#b91c1c;font-weight:900;min-height:22px}
-
-    /* ALARM FULLSCREEN */
     @keyframes alarmFlash{0%{background:#FF6A00}50%{background:#fff}100%{background:#FF6A00}}
     .alarm{
       position:fixed; inset:0; z-index:400;
@@ -340,30 +286,6 @@
 
 <body>
 
-  <!-- LOGIN -->
-  <section class="lock" id="lock">
-    <div class="lock-card">
-      <div class="lock-logo"><i class="fa-solid fa-crown"></i></div>
-      <div class="lock-title">Panel Administratora</div>
-      <div class="lock-sub">Wpisz PIN, aby kontynuować</div>
-
-      <div class="pin-dots" id="pinDots"><span></span><span></span><span></span><span></span></div>
-
-      <div class="pin-pad" id="pinPad">
-        <button data-n="1">1</button><button data-n="2">2</button><button data-n="3">3</button>
-        <button data-n="4">4</button><button data-n="5">5</button><button data-n="6">6</button>
-        <button data-n="7">7</button><button data-n="8">8</button><button data-n="9">9</button>
-        <button data-del>⌫</button><button data-n="0">0</button><button data-ok>OK</button>
-      </div>
-
-      <div class="pin-err" id="pinErr"></div>
-
-      <div class="muted" style="margin-top:10px">
-        Jeśli wracasz z panelu aplikacji — PIN nie będzie wymagany do odświeżenia strony.
-      </div>
-    </div>
-  </section>
-
   <!-- ALARM -->
   <section class="alarm" id="alarm">
     <div class="alarm-card">
@@ -378,21 +300,21 @@
     </div>
   </section>
 
-  <div class="wrap" id="app" style="display:none">
+  <div class="wrap" id="app">
 
     <header class="topbar">
       <div class="brand">
         <div class="logo"><i class="fa-solid fa-shield-halved"></i></div>
         <div>
           <h1>MilkShake Bar — Admin</h1>
-          <p id="who">—</p>
+          <p id="who">tryb awaryjny • bez logowania</p>
         </div>
       </div>
 
       <div class="actions">
         <a class="btn" href="appadmin.html" id="goAppAdmin"><i class="fa-solid fa-mobile-screen"></i> Panel aplikacji</a>
         <button class="btn" id="refreshBtn"><i class="fa-solid fa-rotate"></i> Odśwież</button>
-        <button class="btn btn-danger" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i> Wyloguj</button>
+        <!-- usunięto wyloguj -->
       </div>
     </header>
 
@@ -640,12 +562,11 @@
         osc = audioCtx.createOscillator();
         gain = audioCtx.createGain();
         osc.type = "square";
-        osc.frequency.value = 1600;          // pisk
-        gain.gain.value = 0.25;              // głośność (0.25 już jest mocno)
+        osc.frequency.value = 1600;
+        gain.gain.value = 0.25;
         osc.connect(gain).connect(audioCtx.destination);
         osc.start();
 
-        // delikatna modulacja
         let up = true;
         const t = setInterval(()=>{
           if(!osc) return clearInterval(t);
@@ -678,107 +599,6 @@
     }
     alarmOk.addEventListener("click", hideAlarm);
 
-    // ---------------- Session (bez ponownego PIN aż do odświeżenia)
-    let session = null;
-    function saveSession(data){
-      sessionStorage.setItem("admin-auth", JSON.stringify(data));
-    }
-    function loadSession(){
-      const saved = sessionStorage.getItem("admin-auth");
-      if(!saved) return null;
-      try{
-        const d = JSON.parse(saved);
-        if(d?.ok) return d;
-      }catch{}
-      return null;
-    }
-    function clearSession(){
-      sessionStorage.removeItem("admin-auth");
-    }
-
-    // ---------------- Login UI (PIN pad)
-    const lock = $("#lock");
-    const appRoot = $("#app");
-    const pinDots = [...$("#pinDots").querySelectorAll("span")];
-    const pinErr = $("#pinErr");
-    let pin = "";
-
-    function renderDots(){
-      pinDots.forEach((d,i)=> d.classList.toggle("filled", i < pin.length));
-    }
-    async function doLogin(pinValue){
-      pinErr.textContent = "";
-      const fixed = String(pinValue||"").replace(/\D/g,"").padStart(4,"0").slice(0,4);
-      if(fixed.length !== 4){
-        pinErr.textContent = "Wpisz 4 cyfry.";
-        return;
-      }
-      try{
-        const r = await fetch("/api/login", {
-          method:"POST",
-          headers:{ "Content-Type":"application/json" },
-          body: JSON.stringify({ pin: fixed })
-        });
-        if(!r.ok){
-          const e = await r.json().catch(()=>({}));
-          pinErr.textContent = e.message || "Błędny PIN";
-          pin = "";
-          renderDots();
-          return;
-        }
-        const data = await r.json();
-        session = data;
-        saveSession(data);
-        showApp();
-      }catch(e){
-        pinErr.textContent = "Błąd połączenia.";
-      }
-    }
-
-    $("#pinPad").querySelectorAll("button").forEach(btn=>{
-      if(btn.dataset.n){
-        btn.addEventListener("click", ()=>{
-          if(pin.length < 4){
-            pin += btn.dataset.n;
-            renderDots();
-          }
-        });
-      }
-      if(btn.hasAttribute("data-del")){
-        btn.addEventListener("click", ()=>{
-          pin = pin.slice(0,-1);
-          renderDots();
-        });
-      }
-      if(btn.hasAttribute("data-ok")){
-        btn.addEventListener("click", ()=> doLogin(pin));
-      }
-    });
-
-    function showApp(){
-      lock.style.display = "none";
-      appRoot.style.display = "block";
-      $("#who").textContent = `${session?.role || "—"} • ${session?.user?.name || "—"}`;
-      initSocket();
-      refreshAll();
-    }
-
-    // auto-login jeśli wróciłeś z appadmin bez odświeżenia
-    (function initAuth(){
-      const saved = loadSession();
-      if(saved){
-        session = saved;
-        showApp();
-      } else {
-        lock.style.display = "grid";
-      }
-    })();
-
-    $("#logoutBtn").addEventListener("click", ()=>{
-      clearSession();
-      location.reload();
-    });
-
     // ---------------- Tabs
     const tabMap = {
       new: $("#tab-new"),
@@ -790,13 +610,12 @@
     function setTab(name){
       $$(".tabbtn").forEach(b=> b.classList.toggle("active", b.dataset.tab===name));
       Object.entries(tabMap).forEach(([k,el])=> el.style.display = (k===name) ? "block" : "none");
-      // jeśli alarm stoi i ktoś przechodzi do sekcji, też wyciszamy
       hideAlarm();
       window.scrollTo({top:0, behavior:"smooth"});
     }
     $$(".tabbtn").forEach(btn=> btn.addEventListener("click", ()=> setTab(btn.dataset.tab)));
 
-    // ---------------- API
+    // ---------------- API (bez zmian)
     const API = {
       async data(){
         const r = await fetch("/api/data", { cache:"no-store" });
@@ -922,7 +741,6 @@
         });
       });
 
-      // EDYCJA (wymagane)
       scope.querySelectorAll("[data-edit]").forEach(b=>{
         b.addEventListener("click", ()=>{
           const id = b.dataset.edit;
@@ -1014,7 +832,6 @@
     $("#resSearch").addEventListener("input", renderAll);
     $("#resSource").addEventListener("change", renderAll);
 
-    // ---------------- Happy
     async function refreshHappyFromData(){
       try{
         const d = await API.data();
@@ -1039,7 +856,6 @@
       }
     });
 
-    // ---------------- Staff
     async function refreshEmployees(){
       try{
         state.employees = await API.employees();
@@ -1095,7 +911,6 @@
       }
     });
 
-    // ---------------- Orders (podgląd)
     function formatPLN(n){
       const v = Number(n || 0);
       return v.toLocaleString("pl-PL", { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + " zł";
@@ -1149,7 +964,6 @@
       });
     }
 
-    // ---------------- Refresh
     async function refreshReservations(){
       state.reservations = await API.reservations();
       renderNew();
@@ -1174,7 +988,7 @@
     }
     $("#refreshBtn").addEventListener("click", refreshAll);
 
-    // ---------------- Socket realtime + alarm migawki
+    // ---------------- Socket realtime + alarm
     let socket = null;
 
     function alarmReservation(r){
@@ -1233,7 +1047,6 @@
       socket = io();
 
       socket.on("new-reservation", (r)=>{
-        // migawka + refresh
         alarmReservation(r);
         refreshReservations().catch(()=>{});
       });
@@ -1248,6 +1061,10 @@
         toast("Happy bar zaktualizowany");
       });
     }
+
+    // START (od razu, bez logowania)
+    initSocket();
+    refreshAll();
   </script>
 </body>
 </html>

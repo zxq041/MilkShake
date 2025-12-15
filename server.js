@@ -10,9 +10,16 @@ const multer = require("multer");
 const { Server } = require("socket.io");
 const mongoose = require("mongoose");
 
+// ✅ DODANE: CORS (ważne przy GitHub Pages -> Railway)
+const cors = require("cors");
+
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+
+// ✅ socket.io też z CORS (jeśli łączysz się z innej domeny)
+const io = new Server(server, {
+  cors: { origin: "*", methods: ["GET", "POST"] },
+});
 
 const PORT = process.env.PORT || 3000;
 const PUBLIC_DIR = __dirname;
@@ -62,6 +69,9 @@ const ReservationSchema = new mongoose.Schema({
 
   email: { type: String, default: "" },
   milkId: { type: String, default: "" },
+
+  // ✅ DODANE: źródło (admin.html tego używa)
+  source: { type: String, default: "index" },
 
   createdAt: { type: Date, default: Date.now },
 });
@@ -136,6 +146,19 @@ const HappyBar = mongoose.model("HappyBar", HappySchema, col("happybars"));
 // ==========================
 //  BASIC EXPRESS CONFIG
 // ==========================
+
+// ✅ DODANE: CORS + preflight (ważne przy GH Pages)
+app.use(cors());
+app.options("*", cors());
+
+// (opcjonalne) log requestów do debug
+app.use((req, _res, next) => {
+  if (req.path.startsWith("/api/") || req.path.startsWith("/socket.io/")) {
+    console.log(`➡️ ${req.method} ${req.path}`);
+  }
+  next();
+});
+
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(PUBLIC_DIR));
@@ -221,11 +244,10 @@ io.on("connection", (socket) => {
 
 // ==========================
 //  ADMIN LOGIN BY PIN
-//  ✅ owner 0051 działa zawsze (nie zależy od nazwy pola w req.body)
+//  ✅ owner 0051 działa zawsze
 // ==========================
 app.post("/api/login", async (req, res) => {
   try {
-    // 🔥 obsłuż różne nazwy pola, bo admin.html bywa różny
     const rawPin =
       req.body?.pin ??
       req.body?.code ??
@@ -240,7 +262,6 @@ app.post("/api/login", async (req, res) => {
       return res.json({ ok: true, role: "owner", user: { name: "Właściciel", pin: fixedPin } });
     }
 
-    // zwykli pracownicy
     const emp = await Employee.findOne({ pin: fixedPin });
     if (!emp) return res.status(401).json({ ok: false, message: "Niepoprawny PIN" });
 
@@ -254,7 +275,7 @@ app.post("/api/login", async (req, res) => {
 // ==========================
 //  EMPLOYEES
 // ==========================
-app.get("/api/pracownicy", async (req, res) => {
+app.get("/api/pracownicy", async (_req, res) => {
   try {
     const list = await Employee.find().sort({ createdAt: -1 });
     res.json(list);
@@ -347,7 +368,6 @@ app.post("/api/auth/login", async (req, res) => {
   }
 });
 
-// kompatybilność: jeśli app wołało /api/app/login
 app.post("/api/app/login", async (req, res) => {
   req.url = "/api/auth/login";
   return app._router.handle(req, res, () => {});
@@ -414,7 +434,7 @@ app.get("/api/user/history", async (req, res) => {
 // ==========================
 //  DATA (dla index.html)
 // ==========================
-app.get("/api/data", async (req, res) => {
+app.get("/api/data", async (_req, res) => {
   try {
     const products = await Product.find().sort({ createdAt: -1 });
     const reservations = await Reservation.find().sort({ createdAt: -1 });
@@ -430,7 +450,7 @@ app.get("/api/data", async (req, res) => {
 // ==========================
 //  PRODUCTS
 // ==========================
-app.get("/api/produkty", async (req, res) => {
+app.get("/api/produkty", async (_req, res) => {
   res.json(await Product.find().sort({ createdAt: -1 }));
 });
 
@@ -479,7 +499,7 @@ app.delete("/api/produkty/:id", async (req, res) => {
 // ==========================
 //  RESERVATIONS
 // ==========================
-app.get("/api/rezerwacje", async (req, res) => {
+app.get("/api/rezerwacje", async (_req, res) => {
   res.json(await Reservation.find().sort({ createdAt: -1 }));
 });
 
@@ -500,6 +520,7 @@ app.post("/api/rezerwacje", async (req, res) => {
       notes: String(r.notes || ""),
       email: String(r.email || ""),
       milkId: String(r.milkId || ""),
+      source: String(r.source || (r.milkId ? "app" : "index")),
     });
 
     if (reservation.milkId) {
@@ -515,6 +536,20 @@ app.post("/api/rezerwacje", async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok: false, message: "Błąd zapisu rezerwacji" });
+  }
+});
+
+// ✅ DODANE: endpoint wymagany przez admin.html (edit rezerwacji)
+app.put("/api/rezerwacje/:id", async (req, res) => {
+  try {
+    const updated = await Reservation.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!updated) return res.status(404).json({ ok: false, message: "Nie znaleziono rezerwacji" });
+
+    io.emit("reservations-updated", await Reservation.find().sort({ createdAt: -1 }));
+    res.json({ ok: true, reservation: updated });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, message: "Błąd edycji rezerwacji" });
   }
 });
 
@@ -598,7 +633,6 @@ app.post("/api/orders", async (req, res) => {
   }
 });
 
-// kompatybilność (stare app.html): POST /api/admin/orders
 app.post("/api/admin/orders", async (req, res) => {
   req.url = "/api/orders";
   return app._router.handle(req, res, () => {});
@@ -648,7 +682,7 @@ app.post("/api/rewards/redeem", async (req, res) => {
 // ==========================
 //  APPADMIN — endpoints
 // ==========================
-app.get("/api/admin/stats", async (req, res) => {
+app.get("/api/admin/stats", async (_req, res) => {
   try {
     const users = await User.countDocuments();
     const aggPoints = await User.aggregate([{ $group: { _id: null, sum: { $sum: "$points" } } }]);
@@ -664,7 +698,7 @@ app.get("/api/admin/stats", async (req, res) => {
   }
 });
 
-app.get("/api/admin/users", async (req, res) => {
+app.get("/api/admin/users", async (_req, res) => {
   try {
     const list = await User.find().sort({ createdAt: -1 });
     res.json(list);
@@ -685,7 +719,7 @@ app.get("/api/admin/users/:milkId/history", async (req, res) => {
   }
 });
 
-app.get("/api/admin/orders", async (req, res) => {
+app.get("/api/admin/orders", async (_req, res) => {
   try {
     const list = await Order.find().sort({ createdAt: -1 });
     res.json(list);
@@ -695,7 +729,6 @@ app.get("/api/admin/orders", async (req, res) => {
   }
 });
 
-// ✅ DODAWANIE PUNKTÓW: po milkId LUB po email
 app.post("/api/admin/add-points", async (req, res) => {
   try {
     const { milkId, email, amountPLN, points } = req.body || {};
@@ -704,7 +737,6 @@ app.post("/api/admin/add-points", async (req, res) => {
     if (pts <= 0) return res.status(400).json({ ok: false, message: "Błędna liczba punktów" });
 
     let user = null;
-
     if (milkId) user = await User.findOne({ milkId: String(milkId).trim() });
     if (!user && email) user = await User.findOne({ email: String(email).trim().toLowerCase() });
 
@@ -724,7 +756,6 @@ app.post("/api/admin/add-points", async (req, res) => {
       `Dodano +${pts} pkt (kwota: ${Number(amountPLN || 0).toFixed(2)} zł)`
     );
 
-    // ✅ REALTIME DO PWA
     emitUserPoints(user.milkId, user.points);
 
     res.json({ ok: true, milkId: user.milkId, points: user.points });
@@ -750,8 +781,7 @@ app.get("/index.html", (req, res) => res.redirect(301, "/"));
 
 app.get("/favicon.ico", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "favicon.ico")));
 
-// ✅ (opcjonalnie) debug status
-app.get("/api/health", (req, res) => {
+app.get("/api/health", (_req, res) => {
   res.json({
     ok: true,
     mongoState: mongoose.connection.readyState, // 1 = connected
@@ -759,16 +789,25 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// SPA fallback
-app.get("*", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "index.html")));
+// ==========================
+// ✅ SPA FALLBACK — NAPRAWA
+//  NIE wolno zwracać index.html dla /api/* i /socket.io/*
+// ==========================
+app.get("*", (req, res) => {
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({ ok: false, message: "Not found" });
+  }
+  if (req.path.startsWith("/socket.io/")) {
+    return res.sendStatus(404);
+  }
+  return res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+});
 
 // ==========================
-//  WARMUP: stwórz kolekcje new_* od razu po starcie
-//  (Mongo tworzy kolekcje dopiero po pierwszym zapisie, więc robimy pusty "init")
+//  WARMUP
 // ==========================
 async function warmupCollections() {
   try {
-    // createIndexes wymusza utworzenie indeksów/kolekcji gdy to możliwe
     await Promise.allSettled([
       User.init(),
       Order.init(),
@@ -795,3 +834,6 @@ mongoose.connection.once("connected", () => {
 server.listen(PORT, () => {
   console.log("MilkShake Bar server running on port:", PORT);
 });
+
+
+

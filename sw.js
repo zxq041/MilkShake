@@ -1,7 +1,12 @@
-// sw.js
-const CACHE_VERSION = "milk-pwa-v12"; // <-- ZWIĘKSZAJ przy każdej publikacji
+// sw.js — Milk PWA Service Worker (SAFE)
+// ✅ cache tylko dla GET i statycznych plików
+// ✅ NIE dotyka /api/* ani /socket.io/*
+// ✅ HTML network-first, reszta cache-first
+
+const CACHE_VERSION = "milk-pwa-v13"; // <-- ZWIĘKSZAJ przy każdej publikacji
+
 const APP_SHELL = [
-  "/",               // jeśli masz routing na /
+  "/", // jeśli masz routing na /
   "/app.html",
   "/manifest.webmanifest",
   "/icons/icon-192.png",
@@ -9,44 +14,49 @@ const APP_SHELL = [
 ];
 
 self.addEventListener("install", (event) => {
-  self.skipWaiting(); // nowy SW od razu aktywny
-  event.waitUntil(
-    caches.open(CACHE_VERSION).then((cache) => cache.addAll(APP_SHELL))
-  );
+  self.skipWaiting();
+  event.waitUntil(caches.open(CACHE_VERSION).then((cache) => cache.addAll(APP_SHELL)));
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
-      // usuń stare cache
       const keys = await caches.keys();
       await Promise.all(keys.map((k) => (k !== CACHE_VERSION ? caches.delete(k) : null)));
-      await self.clients.claim(); // przejmij kontrolę nad otwartymi kartami/PWA
+      await self.clients.claim();
     })()
   );
 });
 
-// Strategia: HTML zawsze z sieci (żeby aktualizacje wchodziły), reszta cache-first
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
   // tylko same-origin
-  if (url.origin !== location.origin) return;
+  if (url.origin !== self.location.origin) return;
 
-  // HTML: network-first (najważniejsze!)
-  if (req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html")) {
+  // ❗️NIGDY nie cache'ujemy nie-GET (POST/PUT/DELETE itd.)
+  if (req.method !== "GET") return;
+
+  // ❗️NIGDY nie dotykamy backendu/API ani socketów
+  if (url.pathname.startsWith("/api/")) return;
+  if (url.pathname.startsWith("/socket.io/")) return;
+
+  // HTML: network-first (żeby aktualizacje wchodziły)
+  const accept = req.headers.get("accept") || "";
+  const isHTML = req.mode === "navigate" || accept.includes("text/html");
+
+  if (isHTML) {
     event.respondWith(
       (async () => {
         try {
           const fresh = await fetch(req, { cache: "no-store" });
-          // zaktualizuj cache app shell
           const cache = await caches.open(CACHE_VERSION);
           cache.put(req, fresh.clone());
           return fresh;
-        } catch {
+        } catch (e) {
           const cached = await caches.match(req);
-          return cached || caches.match("/app.html");
+          return cached || (await caches.match("/app.html")) || Response.error();
         }
       })()
     );

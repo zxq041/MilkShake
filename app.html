@@ -1364,46 +1364,12 @@
     </div>
   </div>
 <script>
-  // =========================================================
-  //  PWA + AUTO UPDATE (bez usuwania z pulpitu)
-  // =========================================================
-  let swReg = null;
-
+  // ---------- PWA ----------
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", async () => {
-      try {
-        swReg = await navigator.serviceWorker.register("sw.js");
-
-        // jeżeli nowy SW czeka -> aktywuj
-        if (swReg.waiting) {
-          swReg.waiting.postMessage({ type: "SKIP_WAITING" });
-        }
-
-        swReg.addEventListener("updatefound", () => {
-          const nw = swReg.installing;
-          if (!nw) return;
-          nw.addEventListener("statechange", () => {
-            if (nw.state === "installed" && navigator.serviceWorker.controller) {
-              // jest nowa wersja
-              showToast("Aktualizacja aplikacji…", false);
-              nw.postMessage({ type: "SKIP_WAITING" });
-            }
-          });
-        });
-
-        navigator.serviceWorker.addEventListener("controllerchange", () => {
-          // po przejęciu kontroli przez nowy SW -> odśwież
-          window.location.reload();
-        });
-      } catch (e) {
-        console.warn("SW register error:", e);
-      }
-    });
+    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
   }
 
-  // =========================================================
-  //  Helpers / API
-  // =========================================================
+  // ---------- Helpers / API ----------
   const API = {
     async json(url, opts = {}) {
       const res = await fetch(url, {
@@ -1411,7 +1377,7 @@
         ...opts,
       });
 
-      const ct = res.headers.get("content-type") || "";
+      const ct = (res.headers.get("content-type") || "").toLowerCase();
       const text = await res.text();
 
       let data = null;
@@ -1422,43 +1388,23 @@
       if (!res.ok) {
         const msg =
           (data && (data.message || data.error)) ||
-          (text && text.slice(0, 160)) ||
+          (text && text.slice(0, 180)) ||
           `HTTP ${res.status}`;
         throw new Error(msg);
       }
 
+      // jeśli backend zwróci HTML (np. SPA fallback), pokaż czytelny błąd
       if (!ct.includes("application/json") && text.trim().startsWith("<")) {
         throw new Error("Backend zwrócił HTML zamiast JSON (sprawdź routing / endpoint).");
       }
 
-      return data ?? (text ? JSON.parse(text) : null);
+      if (data !== null) return data;
+      if (!text) return null;
+      try { return JSON.parse(text); } catch { return text; }
     },
   };
 
-  // =========================================================
-  //  Tabs
-  // =========================================================
-  const tabs = {
-    points: document.getElementById("tab-points"),
-    rewards: document.getElementById("tab-rewards"),
-    order: document.getElementById("tab-order"),
-    res: document.getElementById("tab-res"),
-    account: document.getElementById("tab-account"),
-  };
-  const navButtons = document.querySelectorAll(".nav-btn");
-
-  function openTab(name) {
-    Object.entries(tabs).forEach(([k, el]) => el.classList.toggle("active", k === name));
-    navButtons.forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
-
-  navButtons.forEach((btn) => btn.addEventListener("click", () => openTab(btn.dataset.tab)));
-  document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => openTab(b.dataset.go)));
-
-  // =========================================================
-  //  Toast
-  // =========================================================
+  // ---------- Toast ----------
   const toast = document.getElementById("toast");
   const toastText = document.getElementById("toastText");
   function showToast(msg, danger = false) {
@@ -1468,49 +1414,62 @@
     setTimeout(() => toast.classList.remove("show"), 3200);
   }
 
-  // =========================================================
-  //  Storage (scoped per user milkId)
-  // =========================================================
+  // ---------- Storage ----------
   const store = {
     get(key, fallback) {
-      try {
-        return JSON.parse(localStorage.getItem(key)) ?? fallback;
-      } catch {
-        return fallback;
-      }
+      try { return JSON.parse(localStorage.getItem(key)) ?? fallback; }
+      catch { return fallback; }
     },
-    set(key, val) {
-      localStorage.setItem(key, JSON.stringify(val));
-    },
+    set(key, val) { localStorage.setItem(key, JSON.stringify(val)); },
+    del(key) { localStorage.removeItem(key); }
   };
 
-  function getUser() {
-    return store.get("user", null);
-  }
-  function isLogged() {
-    const u = getUser();
-    return !!(u && u.email && u.milkId);
+  // ---------- Auth / user gating ----------
+  function getUser() { return store.get("user", null); }
+  function isLoggedIn() { return !!getUser(); }
+
+  // Wymusza login przed akcją
+  function requireLogin(actionName = "tej akcji") {
+    if (isLoggedIn()) return true;
+    showToast(`Zaloguj się, aby użyć ${actionName}.`, true);
+    openTab("account");
+    return false;
   }
 
-  function requireLogin(what = "tej funkcji") {
-    if (!isLogged()) {
-      showToast(`Zaloguj się, aby użyć ${what}`, true);
-      openTab("account");
-      return false;
+  // ---------- Tabs ----------
+  const tabs = {
+    points: document.getElementById("tab-points"),
+    rewards: document.getElementById("tab-rewards"),
+    order: document.getElementById("tab-order"),
+    res: document.getElementById("tab-res"),
+    account: document.getElementById("tab-account"),
+  };
+  const navButtons = document.querySelectorAll(".nav-btn");
+  function openTab(name) {
+    Object.entries(tabs).forEach(([k, el]) => el.classList.toggle("active", k === name));
+    navButtons.forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    // update pill label (np. jak nie zalogowany)
+    renderTopPill();
+  }
+  navButtons.forEach((btn) => btn.addEventListener("click", () => openTab(btn.dataset.tab)));
+  document.querySelectorAll("[data-go]").forEach((b) =>
+    b.addEventListener("click", () => openTab(b.dataset.go))
+  );
+
+  // ---------- Top pill (punkty / login) ----------
+  const pointsPillEl = document.getElementById("pointsPill");
+  function renderTopPill() {
+    const user = getUser();
+    if (!user) {
+      pointsPillEl.textContent = "Zaloguj się";
+      return;
     }
-    return true;
+    const pts = store.get("points", 0);
+    pointsPillEl.textContent = pts + " pkt";
   }
 
-  // klucze per użytkownik
-  function uKey(base) {
-    const u = getUser();
-    const id = u?.milkId || "guest";
-    return `milk:${id}:${base}`;
-  }
-
-  // =========================================================
-  //  Opening hours / status
-  // =========================================================
+  // ---------- Opening hours / status ----------
   const openingCardEl = document.getElementById("openingCard");
   const openDotEl = document.getElementById("openDot");
   const openTextEl = document.getElementById("openText");
@@ -1540,28 +1499,25 @@
     const today = openingSchedule[day];
     const openM = toMinutes(today.open);
     const closeM = toMinutes(today.close);
-
-    const isOpenNow = minutesNow >= openM && minutesNow < closeM;
+    const isOpen = minutesNow >= openM && minutesNow < closeM;
 
     openDotEl.classList.remove("open", "closed");
-    openDotEl.classList.add(isOpenNow ? "open" : "closed");
-    openTextEl.textContent = isOpenNow ? "Jesteśmy Otwarci" : "Jesteśmy Zamknięci";
+    openDotEl.classList.add(isOpen ? "open" : "closed");
+    openTextEl.textContent = isOpen ? "Jesteśmy Otwarci" : "Jesteśmy Zamknięci";
 
     const order = [1, 2, 3, 4, 5, 6, 0];
-    openHoursEl.innerHTML = order
-      .map((d) => {
-        const s = openingSchedule[d];
-        const isToday = d === day;
-        return `
-          <div class="${isToday ? "today" : ""}">
-            <b>${s.label}</b> ${s.open}–${s.close}
-          </div>
-        `;
-      })
-      .join("");
+    openHoursEl.innerHTML = order.map((d) => {
+      const s = openingSchedule[d];
+      const isToday = d === day;
+      return `
+        <div class="${isToday ? "today" : ""}">
+          <b>${s.label}</b> ${s.open}–${s.close}
+        </div>
+      `;
+    }).join("");
   }
 
-  openingCardEl.addEventListener("click", () => {
+  openingCardEl?.addEventListener("click", () => {
     openingCardEl.classList.toggle("expanded");
     const expanded = openingCardEl.classList.contains("expanded");
     openHintEl.textContent = expanded
@@ -1572,17 +1528,51 @@
   renderOpeningHours();
   setInterval(renderOpeningHours, 60 * 1000);
 
-  // =========================================================
-  //  Loyalty code modal (Milk ID z backendu – stałe dla emaila)
-  // =========================================================
+  // ---------- Clear points history once ----------
+  (function clearHistoryOnce() {
+    const didClear = store.get("didClearHistoryOnce", false);
+    if (!didClear) {
+      store.set("pointsHistory", []);
+      store.set("didClearHistoryOnce", true);
+    }
+  })();
+
+  // ---------- Loyalty code (Milk ID) ----------
   const loyaltyCodeEl = document.getElementById("loyaltyCode");
   const showCodeBtn = document.getElementById("showCodeBtn");
   const copyCodeBtn = document.getElementById("copyCodeBtn");
   const codeModal = document.getElementById("codeModal");
 
+  function generate6DigitCode() {
+    return String(Math.floor(100000 + Math.random() * 900000));
+  }
+
+  // Wersja "konto -> stały kod":
+  // - jeżeli user zalogowany: kod trzymamy per email
+  // - jeżeli niezalogowany: lokalny fallback
+  function getOrCreateLoyaltyCode() {
+    const user = getUser();
+    if (user?.email) {
+      const key = "loyaltyCodeByEmail:" + user.email.toLowerCase();
+      let code = store.get(key, null);
+      if (!code || String(code).length !== 6) {
+        code = generate6DigitCode();
+        store.set(key, code);
+      }
+      store.set("loyaltyCode", code); // kompatybilność
+      return String(code);
+    }
+
+    let code = store.get("loyaltyCode", null);
+    if (!code || String(code).length !== 6) {
+      code = generate6DigitCode();
+      store.set("loyaltyCode", code);
+    }
+    return String(code);
+  }
+
   function renderLoyaltyCode() {
-    if (!requireLogin("Milk ID")) return;
-    loyaltyCodeEl.textContent = String(getUser().milkId);
+    loyaltyCodeEl.textContent = getOrCreateLoyaltyCode();
   }
 
   function openCodeModal() {
@@ -1598,10 +1588,11 @@
   }
 
   showCodeBtn?.addEventListener("click", openCodeModal);
-  codeModal?.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", closeCodeModal));
+  codeModal?.querySelectorAll("[data-close]")?.forEach((el) =>
+    el.addEventListener("click", closeCodeModal)
+  );
 
   copyCodeBtn?.addEventListener("click", async () => {
-    if (!requireLogin("Milk ID")) return;
     const code = loyaltyCodeEl.textContent;
     try {
       await navigator.clipboard.writeText(code);
@@ -1611,57 +1602,45 @@
     }
   });
 
-  // =========================================================
-  //  Points (lokalnie per milkId – możesz potem podpiąć backend)
-  // =========================================================
+  // ---------- Points ----------
   const pointsCountEl = document.getElementById("pointsCount");
-  const pointsPillEl = document.getElementById("pointsPill");
   const pointsProgressEl = document.getElementById("pointsProgress");
   const historyEl = document.getElementById("pointsHistory");
 
   function renderPoints() {
-    if (!isLogged()) {
-      pointsCountEl.textContent = "—";
-      pointsPillEl.textContent = "Zaloguj się";
-      pointsProgressEl.style.width = "0%";
-      historyEl.innerHTML = `
-        <div class="empty">
-          <div class="icon"><i class="fa-solid fa-user"></i></div>
-          <div>
-            <b>Zaloguj się, aby zbierać punkty</b>
-            <div class="tiny">Po zalogowaniu dostaniesz stały Milk ID.</div>
-          </div>
-        </div>`;
-      return;
-    }
+    const user = getUser();
+    const pts = store.get("points", 0);
 
-    const pts = store.get(uKey("points"), 0);
-    pointsCountEl.textContent = pts;
-    pointsPillEl.textContent = pts + " pkt";
-    const pct = Math.min(100, pts % 100);
+    pointsCountEl.textContent = user ? pts : "—";
+    renderTopPill();
+
+    const pct = user ? Math.min(100, pts % 100) : 0;
     pointsProgressEl.style.width = pct + "%";
 
-    const hist = store.get(uKey("pointsHistory"), []);
-    historyEl.innerHTML = hist.length
-      ? hist
-          .map(
-            (h) => `<div style="padding:8px 0;border-bottom:1px dashed rgba(0,0,0,.06)">
-              <b>${h.text}</b><div class="tiny">${h.date}</div>
-           </div>`
-          )
-          .join("")
+    const hist = store.get("pointsHistory", []);
+    historyEl.innerHTML = user
+      ? (hist.length
+          ? hist.map(h => `
+              <div style="padding:8px 0;border-bottom:1px dashed rgba(0,0,0,.06)">
+                <b>${h.text}</b><div class="tiny">${h.date}</div>
+              </div>`).join("")
+          : `<div class="empty">
+              <div class="icon"><i class="fa-solid fa-clock"></i></div>
+              <div>
+                <b>Historia punktów jest pusta</b>
+                <div class="tiny">Punkty pojawią się po pierwszym naliczeniu.</div>
+              </div>
+            </div>`)
       : `<div class="empty">
-            <div class="icon"><i class="fa-solid fa-clock"></i></div>
-            <div>
-              <b>Historia punktów jest pusta</b>
-              <div class="tiny">Punkty pojawią się po pierwszym naliczeniu.</div>
-            </div>
-           </div>`;
+          <div class="icon"><i class="fa-solid fa-user"></i></div>
+          <div>
+            <b>Zaloguj się</b>
+            <div class="tiny">Aby zbierać punkty i używać Milk ID.</div>
+          </div>
+        </div>`;
   }
 
-  // =========================================================
-  //  Rewards (zostają jak u Ciebie, ale wymagają logowania)
-  // =========================================================
+  // ---------- Rewards ----------
   const rewards = [
     { id: "shake_small", title: "Milkshake mały", cost: 80, icon: "fa-ice-cream", desc: "Dowolny smak" },
     { id: "shake_big", title: "Milkshake duży", cost: 120, icon: "fa-glass-whiskey", desc: "Z dodatkami" },
@@ -1671,44 +1650,44 @@
   const rewardsListEl = document.getElementById("rewardsList");
 
   function renderRewards() {
-    if (!isLogged()) {
+    const user = getUser();
+    const pts = store.get("points", 0);
+
+    if (!user) {
       rewardsListEl.innerHTML = `
         <div class="empty">
           <div class="icon"><i class="fa-solid fa-user"></i></div>
           <div>
             <b>Zaloguj się, aby wymieniać nagrody</b>
-            <div class="tiny">Nagrody są powiązane z Twoim Milk ID.</div>
+            <div class="tiny">Po zalogowaniu przypiszemy Milk ID do Twojego maila.</div>
           </div>
         </div>`;
       return;
     }
 
-    const pts = store.get(uKey("points"), 0);
-    rewardsListEl.innerHTML = rewards
-      .map((r) => {
-        const disabled = pts < r.cost;
-        return `
-          <div class="reward">
-            <div class="reward-left">
-              <div class="reward-ico"><i class="fa-solid ${r.icon}"></i></div>
-              <div>
-                <div class="reward-title">${r.title}</div>
-                <div class="tiny">${r.desc}</div>
-                <div class="muted">Koszt: <b>${r.cost} pkt</b></div>
-              </div>
-            </div>
-            <div style="text-align:right;min-width:88px">
-              <div style="font-weight:900">${r.cost} pkt</div>
-              <button class="btn btn-primary btn-small"
-                ${disabled ? "disabled style='opacity:.5;cursor:not-allowed'" : ""}
-                data-redeem="${r.id}">
-                Wymień
-              </button>
+    rewardsListEl.innerHTML = rewards.map((r) => {
+      const disabled = pts < r.cost;
+      return `
+        <div class="reward">
+          <div class="reward-left">
+            <div class="reward-ico"><i class="fa-solid ${r.icon}"></i></div>
+            <div>
+              <div class="reward-title">${r.title}</div>
+              <div class="tiny">${r.desc}</div>
+              <div class="muted">Koszt: <b>${r.cost} pkt</b></div>
             </div>
           </div>
-        `;
-      })
-      .join("");
+          <div style="text-align:right;min-width:88px">
+            <div style="font-weight:900">${r.cost} pkt</div>
+            <button class="btn btn-primary btn-small"
+              ${disabled ? "disabled style='opacity:.5;cursor:not-allowed'" : ""}
+              data-redeem="${r.id}">
+              Wymień
+            </button>
+          </div>
+        </div>
+      `;
+    }).join("");
 
     rewardsListEl.querySelectorAll("[data-redeem]").forEach((btn) => {
       btn.addEventListener("click", () => redeemReward(btn.dataset.redeem));
@@ -1716,22 +1695,22 @@
   }
 
   function redeemReward(id) {
-    if (!requireLogin("nagrody")) return;
+    if (!requireLogin("wymiany nagród")) return;
 
     const r = rewards.find((x) => x.id === id);
     if (!r) return;
 
-    const pts = store.get(uKey("points"), 0);
+    const pts = store.get("points", 0);
     if (pts < r.cost) {
       showToast("Masz za mało punktów 😅", true);
       return;
     }
 
-    store.set(uKey("points"), pts - r.cost);
+    store.set("points", pts - r.cost);
 
-    const hist = store.get(uKey("pointsHistory"), []);
+    const hist = store.get("pointsHistory", []);
     hist.unshift({ text: `Wymieniono: -${r.cost} pkt (${r.title})`, date: new Date().toLocaleString("pl-PL") });
-    store.set(uKey("pointsHistory"), hist);
+    store.set("pointsHistory", hist);
 
     renderPoints();
     renderRewards();
@@ -1739,10 +1718,37 @@
     openTab("rewards");
   }
 
-  // =========================================================
-  //  Order & pickup – WYSYŁKA DO BACKENDU
-  //  (naprawione endpointy: /api/orders)
-  // =========================================================
+  // ---------- Prefill personal data ----------
+  function getPersonal() {
+    // trzymamy w user.profile albo osobno, żeby nie psuć
+    const user = getUser();
+    const profile = store.get("profile", {});
+    return {
+      name: profile.name || user?.name || "",
+      phone: profile.phone || user?.phone || "",
+      email: profile.email || user?.email || "",
+    };
+  }
+
+  function prefillPersonalUI() {
+    const p = getPersonal();
+    const nameInput = document.getElementById("personalName");
+    const phoneInput = document.getElementById("personalPhone");
+    const emailInput = document.getElementById("personalEmail");
+    if (nameInput && !nameInput.value) nameInput.value = p.name || "";
+    if (phoneInput && !phoneInput.value) phoneInput.value = p.phone || "";
+    if (emailInput && !emailInput.value) emailInput.value = p.email || "";
+  }
+
+  function prefillReservationForm() {
+    const p = getPersonal();
+    const name = document.querySelector("#reservationForm input[name='name']");
+    const phone = document.querySelector("#reservationForm input[name='phone']");
+    if (name && !name.value && p.name) name.value = p.name;
+    if (phone && !phone.value && p.phone) phone.value = p.phone;
+  }
+
+  // ---------- Order & pickup (SERVER) ----------
   const menuItems = [
     { id: "m1", title: "Milkshake klasyczny", price: 18, icon: "fa-ice-cream", desc: "Dowolny smak" },
     { id: "m2", title: "Milkshake premium", price: 24, icon: "fa-glass-whiskey", desc: "Z dodatkami" },
@@ -1757,19 +1763,14 @@
   const submitOrderBtn = document.getElementById("submitOrderBtn");
   const ordersListEl = document.getElementById("ordersList");
 
-  function getCart() {
-    return store.get(uKey("orderCart"), []);
-  }
-  function setCart(c) {
-    store.set(uKey("orderCart"), c);
-  }
+  function getCart() { return store.get("orderCart", []); }
+  function setCart(c) { store.set("orderCart", c); }
 
   function addToCart(id) {
-    const item = menuItems.find((x) => x.id === id);
-    if (!item) return;
-
     if (!requireLogin("zamówień")) return;
 
+    const item = menuItems.find((x) => x.id === id);
+    if (!item) return;
     const cart = getCart();
     const existing = cart.find((c) => c.id === id);
     if (existing) existing.qty++;
@@ -1793,25 +1794,21 @@
   }
 
   function renderMenu() {
-    menuListEl.innerHTML = menuItems
-      .map(
-        (m) => `
-        <div class="menu-item">
-          <div class="menu-left">
-            <div class="menu-ico"><i class="fa-solid ${m.icon}"></i></div>
-            <div>
-              <div class="menu-title">${m.title}</div>
-              <div class="menu-desc">${m.desc}</div>
-            </div>
-          </div>
-          <div style="text-align:right;min-width:88px">
-            <div class="menu-price">${m.price} zł</div>
-            <button class="btn btn-primary btn-small" data-add="${m.id}">Dodaj</button>
+    menuListEl.innerHTML = menuItems.map((m) => `
+      <div class="menu-item">
+        <div class="menu-left">
+          <div class="menu-ico"><i class="fa-solid ${m.icon}"></i></div>
+          <div>
+            <div class="menu-title">${m.title}</div>
+            <div class="menu-desc">${m.desc}</div>
           </div>
         </div>
-      `
-      )
-      .join("");
+        <div style="text-align:right;min-width:88px">
+          <div class="menu-price">${m.price} zł</div>
+          <button class="btn btn-primary btn-small" data-add="${m.id}">Dodaj</button>
+        </div>
+      </div>
+    `).join("");
 
     menuListEl.querySelectorAll("[data-add]").forEach((btn) => {
       btn.addEventListener("click", () => addToCart(btn.dataset.add));
@@ -1819,15 +1816,16 @@
   }
 
   function renderCart() {
+    const user = getUser();
     const cart = getCart();
 
-    if (!isLogged()) {
+    if (!user) {
       cartListEl.innerHTML = `
         <div class="empty">
           <div class="icon"><i class="fa-solid fa-user"></i></div>
           <div>
-            <b>Zaloguj się, aby zamawiać</b>
-            <div class="tiny">Zamówienia są przypisane do Twojego konta.</div>
+            <b>Zaloguj się, aby składać zamówienia</b>
+            <div class="tiny">Po zalogowaniu możesz „Zamów i odbierz”.</div>
           </div>
         </div>`;
       cartTotalEl.textContent = "0 zł";
@@ -1852,26 +1850,24 @@
     submitOrderBtn.disabled = false;
 
     let total = 0;
-    cartListEl.innerHTML = cart
-      .map((c) => {
-        const m = menuItems.find((x) => x.id === c.id);
-        const lineTotal = m.price * c.qty;
-        total += lineTotal;
-        return `
-          <div class="cart-line">
-            <div>
-              <b>${m.title}</b>
-              <div class="tiny">${m.price} zł x ${c.qty} = ${lineTotal} zł</div>
-            </div>
-            <div class="cart-actions">
-              <button class="qty-btn" data-qty="${c.id}" data-d="-1">−</button>
-              <b>${c.qty}</b>
-              <button class="qty-btn" data-qty="${c.id}" data-d="1">+</button>
-            </div>
+    cartListEl.innerHTML = cart.map((c) => {
+      const m = menuItems.find((x) => x.id === c.id);
+      const lineTotal = m.price * c.qty;
+      total += lineTotal;
+      return `
+        <div class="cart-line">
+          <div>
+            <b>${m.title}</b>
+            <div class="tiny">${m.price} zł x ${c.qty} = ${lineTotal} zł</div>
           </div>
-        `;
-      })
-      .join("");
+          <div class="cart-actions">
+            <button class="qty-btn" data-qty="${c.id}" data-d="-1">−</button>
+            <b>${c.qty}</b>
+            <button class="qty-btn" data-qty="${c.id}" data-d="1">+</button>
+          </div>
+        </div>
+      `;
+    }).join("");
 
     cartTotalEl.textContent = total + " zł";
 
@@ -1902,33 +1898,31 @@
       return;
     }
 
-    const user = getUser();
-
-    // automatyczne dane klienta (z profilu)
-    const customerName = user?.name || "";
-    const customerPhone = user?.phone || "";
-
     const items = cart.map((c) => {
       const m = menuItems.find((x) => x.id === c.id);
       return { title: m.title, qty: c.qty, price: m.price };
     });
     const total = items.reduce((s, i) => s + i.price * i.qty, 0);
 
-    try {
-      const payload = {
-        source: "app",
-        email: user.email,
-        milkId: user.milkId,
-        customerName,
-        customerPhone,
-        pickupTime,
-        pickupLocation,
-        notes: notes || "",
-        items,
-        total,
-      };
+    const user = getUser();
+    const loyaltyCode = getOrCreateLoyaltyCode();
+    const profile = getPersonal();
 
-      // ✅ To jest endpoint, który dodamy w server.js
+    const payload = {
+      source: "app",
+      pickupTime,
+      pickupLocation,
+      notes: notes || "",
+      items,
+      total,
+      status: "Przyjęte",
+      createdAt: new Date().toISOString(),
+      user: { email: user?.email || "", name: profile.name || user?.name || "", phone: profile.phone || user?.phone || "" },
+      loyaltyCode,
+    };
+
+    try {
+      // ✅ POPRAWNY endpoint klienta
       await API.json("/api/orders", {
         method: "POST",
         body: JSON.stringify(payload),
@@ -1945,178 +1939,136 @@
     }
   }
 
-  submitOrderBtn.addEventListener("click", submitOrder);
+  submitOrderBtn?.addEventListener("click", submitOrder);
 
   async function refreshOrdersFromServer() {
-    if (!isLogged()) {
-      ordersListEl.innerHTML = `
-        <div class="empty">
-          <div class="icon"><i class="fa-solid fa-user"></i></div>
-          <div>
-            <b>Zaloguj się, aby zobaczyć zamówienia</b>
-            <div class="tiny">Historia jest przypisana do Twojego konta.</div>
-          </div>
-        </div>`;
-      return;
-    }
-
     try {
-      // ✅ To jest endpoint, który dodamy w server.js
-      const data = await API.json("/api/orders?email=" + encodeURIComponent(getUser().email));
+      // jeśli masz endpoint "moje zamówienia" — super. Jeśli nie, czytaj admin tylko w appadmin.
+      // tutaj pokazujemy lokalne (UX), a serwerowo pobierzemy jeśli istnieje:
+      const data = await API.json("/api/orders/my"); // optional
       const orders = Array.isArray(data) ? data : (data?.orders || []);
-      renderOrdersUI(orders);
-    } catch (e) {
-      ordersListEl.innerHTML = `
-        <div class="empty">
-          <div class="icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
-          <div>
-            <b>Nie mogę pobrać zamówień</b>
-            <div class="tiny">${String(e.message || e)}</div>
-          </div>
-        </div>`;
+      renderOrdersUI(orders, false);
+    } catch {
+      const local = store.get("orders_local", []);
+      renderOrdersUI(local, true);
     }
   }
 
-  function renderOrdersUI(orders) {
+  function renderOrdersUI(orders, isLocal = false) {
     ordersListEl.innerHTML = orders.length
-      ? orders
-          .map(
-            (o) => `
-            <div class="res-item">
-              <b>${(o.pickupLocation || "—")} • ${(o.pickupTime || "—")}</b>
-              <div class="tiny">Złożono: ${o.createdAt ? new Date(o.createdAt).toLocaleString("pl-PL") : "—"}</div>
-              <div class="tiny">Status: <b>${o.status || "Przyjęte"}</b></div>
-              <div style="margin-top:6px">
-                ${(o.items || []).map((i) => `• ${i.qty}x ${i.title}`).join("<br>")}
-              </div>
-              <div class="divider"></div>
-              <div style="display:flex;justify-content:space-between;font-weight:900">
-                <span>Razem</span><span>${o.total ?? 0} zł</span>
-              </div>
-              <div class="tiny" style="margin-top:4px">
-                Płatność na miejscu przy odbiorze.
-              </div>
+      ? orders.map((o) => `
+          <div class="res-item">
+            <b>${(o.pickupLocation || "—")} • ${(o.pickupTime || "—")}</b>
+            <div class="tiny">Złożono: ${o.date || (o.createdAt ? new Date(o.createdAt).toLocaleString("pl-PL") : "—")}</div>
+            <div class="tiny">Status: <b>${o.status || "Przyjęte"}</b>${isLocal ? " (lokalnie)" : ""}</div>
+            <div style="margin-top:6px">
+              ${(o.items || []).map((i) => `• ${i.qty}x ${i.title}`).join("<br>")}
             </div>
-          `
-          )
-          .join("")
+            <div class="divider"></div>
+            <div style="display:flex;justify-content:space-between;font-weight:900">
+              <span>Razem</span><span>${o.total ?? 0} zł</span>
+            </div>
+            <div class="tiny" style="margin-top:4px">
+              Płatność na miejscu przy odbiorze.
+            </div>
+          </div>
+        `).join("")
       : `<div class="empty">
-            <div class="icon"><i class="fa-solid fa-bag-shopping"></i></div>
-            <div>
-              <b>Brak zamówień</b>
-              <div class="tiny">Twoje zamówienia pojawią się tutaj.</div>
-            </div>
-           </div>`;
+          <div class="icon"><i class="fa-solid fa-bag-shopping"></i></div>
+          <div>
+            <b>Brak zamówień</b>
+            <div class="tiny">Twoje zamówienia pojawią się tutaj.</div>
+          </div>
+        </div>`;
   }
 
-  // =========================================================
-  //  Reservations – WYSYŁKA DO /api/rezerwacje (admin.html)
-  // =========================================================
+  // ---------- Reservations (SERVER) ----------
   const resForm = document.getElementById("reservationForm");
   const resListEl = document.getElementById("reservationsList");
 
   async function refreshReservationsFromServer() {
-    if (!isLogged()) {
-      resListEl.innerHTML = `
-        <div class="empty">
-          <div class="icon"><i class="fa-solid fa-user"></i></div>
-          <div>
-            <b>Zaloguj się, aby składać rezerwacje</b>
-            <div class="tiny">Rezerwacje będą przypisane do Twojego konta.</div>
-          </div>
-        </div>`;
-      return;
-    }
-
     try {
-      // backend nie ma auth per-user, więc tu pokazujemy lokalną listę „Twoje”
-      const local = store.get(uKey("reservations_local"), []);
-      renderReservationsUI(local);
-    } catch (e) {
-      renderReservationsUI([]);
+      const list = await API.json("/api/rezerwacje");
+      renderReservationsUI(list, false);
+    } catch {
+      const local = store.get("reservations_local", []);
+      renderReservationsUI(local, true);
     }
   }
 
-  function renderReservationsUI(list) {
+  function renderReservationsUI(list, isLocal = false) {
     resListEl.innerHTML = list.length
-      ? list
-          .map(
-            (r) => `
-            <div class="res-item">
-              <b>${r.date} • ${r.time}</b>
-              <div>${r.guests} os. • ${r.room}</div>
-              <div class="tiny">${r.name}, ${r.phone}</div>
-              ${r.notes ? `<div class="tiny">Uwagi: ${r.notes}</div>` : ""}
-              <div class="divider"></div>
-              <div class="res-actions">
-                <button class="btn btn-ghost btn-small" data-del-local="${r.id}">Usuń</button>
-              </div>
+      ? list.map((r) => `
+          <div class="res-item">
+            <b>${r.date} • ${r.time}</b>
+            <div>${r.guests} os. • ${r.room}</div>
+            <div class="tiny">${r.name}, ${r.phone}</div>
+            ${r.notes ? `<div class="tiny">Uwagi: ${r.notes}</div>` : ""}
+            <div class="divider"></div>
+            <div class="res-actions">
+              ${isLocal ? `<button class="btn btn-ghost btn-small" data-del-local="${r.id}">Usuń</button>` : ``}
             </div>
-          `
-          )
-          .join("")
+          </div>
+        `).join("")
       : `<div class="empty">
-            <div class="icon"><i class="fa-solid fa-calendar-check"></i></div>
-            <div>
-              <b>Brak rezerwacji</b>
-              <div class="tiny">Zarezerwuj stolik — zajmie to chwilkę.</div>
-            </div>
-           </div>`;
+          <div class="icon"><i class="fa-solid fa-calendar-check"></i></div>
+          <div>
+            <b>Brak rezerwacji</b>
+            <div class="tiny">Zarezerwuj stolik — zajmie to chwilkę.</div>
+          </div>
+        </div>`;
 
     resListEl.querySelectorAll("[data-del-local]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.dataset.delLocal;
-        const newList = store.get(uKey("reservations_local"), []).filter((x) => x.id !== id);
-        store.set(uKey("reservations_local"), newList);
+        const newList = store.get("reservations_local", []).filter((x) => x.id !== id);
+        store.set("reservations_local", newList);
         refreshReservationsFromServer();
         showToast("Rezerwacja usunięta");
       });
     });
   }
 
-  resForm.addEventListener("submit", async (e) => {
+  resForm?.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!requireLogin("rezerwacji")) return;
 
     const fd = new FormData(resForm);
     const data = Object.fromEntries(fd.entries());
 
-    // auto-uzupełnij z profilu, jeśli puste
-    const u = getUser();
-    if (u?.name && !data.name) data.name = u.name;
-    if (u?.phone && !data.phone) data.phone = u.phone;
-
     if (!data.name || !data.phone || !data.date || !data.time || !data.guests || !data.room) {
       showToast("Uzupełnij wszystkie pola", true);
       return;
     }
 
-    try {
-      const payload = {
-        name: String(data.name),
-        phone: String(data.phone),
-        date: String(data.date),
-        time: String(data.time),
-        guests: String(data.guests),
-        room: String(data.room),
-        notes: String(data.notes || ""),
-        source: "app",
-        email: u.email,
-        milkId: u.milkId,
-      };
+    const user = getUser();
+    const loyaltyCode = getOrCreateLoyaltyCode();
 
-      // ✅ istnieje w Twoim server.js
+    const payload = {
+      name: String(data.name),
+      phone: String(data.phone),
+      date: String(data.date),
+      time: String(data.time),
+      guests: String(data.guests),
+      room: String(data.room),
+      notes: String(data.notes || ""),
+      source: "app",
+      user: { email: user?.email || "" },
+      loyaltyCode,
+    };
+
+    try {
       await API.json("/api/rezerwacje", {
         method: "POST",
         body: JSON.stringify(payload),
       });
 
-      // „Twoje” lokalnie (bo admin panel ma całą listę)
-      const local = store.get(uKey("reservations_local"), []);
+      const local = store.get("reservations_local", []);
       local.unshift({ ...payload, id: crypto.randomUUID() });
-      store.set(uKey("reservations_local"), local);
+      store.set("reservations_local", local);
 
       resForm.reset();
+      prefillReservationForm();
       showToast("Rezerwacja wysłana 🧡");
       await refreshReservationsFromServer();
       openTab("res");
@@ -2125,114 +2077,110 @@
     }
   });
 
-  (() => {
+  // min date = today
+  (function () {
+    if (!resForm) return;
     const dateInput = resForm.querySelector("input[name='date']");
-    const iso = new Date().toISOString().split("T")[0];
-    dateInput.min = iso;
+    if (!dateInput) return;
+    dateInput.min = new Date().toISOString().split("T")[0];
   })();
 
-  // =========================================================
-  //  Account / Auth (prawdziwe konto + stały milkId)
-  // =========================================================
+  // ---------- Account / Auth ----------
   const loggedOutEl = document.getElementById("accountLoggedOut");
   const loggedInEl = document.getElementById("accountLoggedIn");
   const avatarEl = document.getElementById("avatar");
   const accNameEl = document.getElementById("accName");
   const accEmailEl = document.getElementById("accEmail");
 
-  function setUser(user) {
-    store.set("user", user);
-    renderAccount();
-    renderPoints();
-    renderRewards();
-    renderCart();
-    refreshOrdersFromServer();
-    refreshReservationsFromServer();
-  }
-
   function renderAccount() {
     const user = getUser();
-    const ok = isLogged();
-    loggedOutEl.style.display = ok ? "none" : "flex";
-    loggedInEl.style.display = ok ? "flex" : "none";
+    const isLogged = !!user;
 
-    if (ok) {
-      const initials = (user.name || "Milk User")
+    loggedOutEl.style.display = isLogged ? "none" : "flex";
+    loggedInEl.style.display = isLogged ? "flex" : "none";
+
+    if (isLogged) {
+      const profile = getPersonal();
+      const initials = (profile.name || user.name || "Milk User")
         .split(" ")
         .map((w) => w[0])
         .slice(0, 2)
         .join("")
         .toUpperCase();
 
-      avatarEl.textContent = initials || "MU";
-      accNameEl.textContent = user.name || "Użytkownik";
-      accEmailEl.textContent = user.email || "";
+      avatarEl.textContent = initials;
+      accNameEl.textContent = profile.name || user.name || "Użytkownik";
+      accEmailEl.textContent = profile.email || user.email || "";
     }
+
+    renderPoints();
+    renderRewards();
+    renderCart();
+    prefillPersonalUI();
+    prefillReservationForm();
   }
 
-  async function ensureProfileHint() {
-    if (!isLogged()) return;
-    const shown = store.get(uKey("profileHintShown"), false);
-    if (!shown) {
-      showToast("Uzupełnij dane osobowe, aby przyspieszyć zamówienia i rezerwacje ✨");
-      store.set(uKey("profileHintShown"), true);
+  async function loginWithEmail(email) {
+    // ✅ endpoint login, którego wcześniej nie było u Ciebie
+    const data = await API.json("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email: String(email).trim().toLowerCase() }),
+    });
+
+    // oczekujemy: { ok:true, user:{email, name?, id?, loyaltyCode?} }
+    store.set("user", data.user || { email: String(email).trim().toLowerCase() });
+
+    // pokaż jednorazowo komunikat po loginie
+    const onceKey = "didShowFillProfileHint:" + (data.user?.email || email).toLowerCase();
+    const did = store.get(onceKey, false);
+    if (!did) {
+      store.set(onceKey, true);
+      setTimeout(() => {
+        showToast("Uzupełnij dane osobowe — przyspieszy to rezerwacje i zamówienia ✅");
+      }, 600);
     }
+
+    // przypisz Milk ID per email (lokalnie stałe)
+    getOrCreateLoyaltyCode();
+
+    renderAccount();
+    openTab("account");
   }
 
-  // Google login (demo) -> też przechodzi przez backend, żeby dostać milkId
-  document.getElementById("loginGoogle").addEventListener("click", async () => {
+  document.getElementById("loginGoogle")?.addEventListener("click", async () => {
     try {
-      const demoEmail = "google@user.com";
-      const data = await API.json("/api/app/login", {
-        method: "POST",
-        body: JSON.stringify({ email: demoEmail, provider: "google" }),
-      });
-      setUser(data.user);
+      // proste “google-like” logowanie bez OAuth:
+      const fakeEmail = "google_" + crypto.randomUUID().slice(0, 8) + "@milk.app";
+      await loginWithEmail(fakeEmail);
       showToast("Zalogowano przez Google ✅");
-      openTab("account");
-      ensureProfileHint();
     } catch (e) {
       showToast("Błąd logowania: " + e.message, true);
     }
   });
 
-  // Email login (nie robimy tu prawdziwego hasła – jak chcesz, dodamy)
-  document.getElementById("loginEmailForm").addEventListener("submit", async (e) => {
+  document.getElementById("loginEmailForm")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
-    const email = String(fd.get("email") || "").trim().toLowerCase();
-    if (!email || !email.includes("@")) {
-      showToast("Podaj poprawny email", true);
-      return;
-    }
+    const email = fd.get("email");
+
+    if (!email) { showToast("Podaj email", true); return; }
 
     try {
-      const data = await API.json("/api/app/login", {
-        method: "POST",
-        body: JSON.stringify({ email, provider: "email" }),
-      });
-      setUser(data.user);
+      await loginWithEmail(email);
       showToast("Zalogowano ✅");
-      openTab("account");
       e.target.reset();
-      ensureProfileHint();
-    } catch (e2) {
-      showToast("Błąd logowania: " + e2.message, true);
+    } catch (err) {
+      showToast("Błąd logowania: " + err.message, true);
     }
   });
 
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    store.set("user", null);
-    renderAccount();
-    renderPoints();
-    renderRewards();
-    renderCart();
-    refreshOrdersFromServer();
-    refreshReservationsFromServer();
+  document.getElementById("logoutBtn")?.addEventListener("click", () => {
+    store.del("user");
     showToast("Wylogowano");
+    renderAccount();
   });
 
-  // Subpages
+  // ---------- Subpages ----------
   const subpages = {
     personal: document.getElementById("page-personal"),
     language: document.getElementById("page-language"),
@@ -2241,57 +2189,59 @@
   };
 
   function openSubpage(name) {
-    closeSubpages();
+    Object.values(subpages).forEach((p) => p.classList.remove("active"));
     subpages[name]?.classList.add("active");
+    if (name === "personal") prefillPersonalUI();
   }
+
   function closeSubpages() {
     Object.values(subpages).forEach((p) => p.classList.remove("active"));
   }
 
-  document.querySelectorAll("[data-back]").forEach((b) => b.addEventListener("click", closeSubpages));
-  document.querySelectorAll(".list-item[data-open]").forEach((item) => {
+  document.querySelectorAll("[data-back]")?.forEach((b) =>
+    b.addEventListener("click", closeSubpages)
+  );
+
+  document.querySelectorAll(".list-item[data-open]")?.forEach((item) => {
     item.addEventListener("click", () => openSubpage(item.dataset.open));
   });
 
-  // Zapis danych osobowych -> backend, żeby przypisać do maila na stałe
-  document.getElementById("savePersonalBtn").addEventListener("click", async () => {
-    if (!requireLogin("ustawień profilu")) return;
+  document.getElementById("savePersonalBtn")?.addEventListener("click", () => {
+    if (!requireLogin("zapisu danych")) return;
 
-    const u = getUser();
-    const name = String(document.getElementById("personalName").value || "").trim();
-    const phone = String(document.getElementById("personalPhone").value || "").trim();
-    const email = String(document.getElementById("personalEmail").value || u.email).trim().toLowerCase();
+    const name = (document.getElementById("personalName")?.value || "").trim();
+    const phone = (document.getElementById("personalPhone")?.value || "").trim();
+    const email = (document.getElementById("personalEmail")?.value || "").trim();
 
-    try {
-      const data = await API.json("/api/app/profile", {
-        method: "POST",
-        body: JSON.stringify({
-          email: u.email,
-          name,
-          phone,
-          emailNew: email, // jakbyś chciał zmieniać mail – opcjonalnie
-        }),
-      });
+    const profile = store.get("profile", {});
+    profile.name = name || profile.name || "";
+    profile.phone = phone || profile.phone || "";
+    profile.email = email || profile.email || getUser()?.email || "";
+    store.set("profile", profile);
 
-      setUser(data.user);
-      showToast("Dane zapisane ✅");
-      closeSubpages();
-    } catch (e) {
-      showToast("Błąd zapisu: " + e.message, true);
-    }
+    // podbij też user.name/email jeżeli brak
+    const user = getUser() || {};
+    if (profile.email) user.email = profile.email;
+    if (profile.name) user.name = profile.name;
+    store.set("user", user);
+
+    // auto-uzupełnij formularze
+    prefillReservationForm();
+
+    showToast("Dane zapisane ✅");
+    closeSubpages();
+    renderAccount();
   });
 
-  document.querySelectorAll("[data-lang]").forEach((btn) => {
+  document.querySelectorAll("[data-lang]")?.forEach((btn) => {
     btn.addEventListener("click", () => {
       store.set("lang", btn.dataset.lang);
-      showToast("Zapisano język");
+      showToast("Zapisano język ✅");
       closeSubpages();
     });
   });
 
-  // =========================================================
-  //  Install guide (zostaje jak masz)
-  // =========================================================
+  // ---------- Install guide logic (jak miałeś) ----------
   const installGuideEl = document.getElementById("installGuide");
   const guideTabs = document.querySelectorAll("[data-guide-tab]");
   const guidePanes = document.querySelectorAll("[data-guide-pane]");
@@ -2305,7 +2255,6 @@
   function isIOS() {
     return /iphone|ipad|ipod/i.test(navigator.userAgent);
   }
-
   function showInstallGuide() {
     installGuideEl?.classList.add("show");
     installGuideEl?.setAttribute("aria-hidden", "false");
@@ -2316,13 +2265,14 @@
     installGuideEl?.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
   }
-
   function setGuideTab(name) {
     guideTabs.forEach((b) => b.classList.toggle("active", b.dataset.guideTab === name));
     guidePanes.forEach((p) => p.classList.toggle("active", p.dataset.guidePane === name));
   }
   guideTabs.forEach((btn) => btn.addEventListener("click", () => setGuideTab(btn.dataset.guideTab)));
-  (function initGuideDefaultTab() { setGuideTab(isIOS() ? "ios" : "android"); })();
+  (function initGuideDefaultTab() {
+    setGuideTab(isIOS() ? "ios" : "android");
+  })();
 
   let deferredPrompt = null;
   window.addEventListener("beforeinstallprompt", (e) => {
@@ -2349,17 +2299,20 @@
     else hideInstallGuide();
   })();
 
-  // =========================================================
-  //  Init
-  // =========================================================
+  // ---------- Init ----------
   renderMenu();
+  renderOpeningHours();
   renderAccount();
-  renderPoints();
   renderRewards();
+  renderPoints();
   renderCart();
   openTab("points");
+
+  // prefill (jeśli user już jest)
+  prefillPersonalUI();
+  prefillReservationForm();
+
+  // server refresh (optional)
   refreshReservationsFromServer();
   refreshOrdersFromServer();
-  ensureProfileHint();
 </script>
-

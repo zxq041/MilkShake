@@ -1,7 +1,5 @@
 // server.js — MilkShake Bar backend (Express + Socket.IO + MongoDB)
-// Obsługuje: strona główna, menu, admin.html, appadmin.html, app.html
-// + rezerwacje, produkty, happy bar, pracownicy, zamówienia (Zamów i odbierz),
-// + panel aplikacji (admin API): users/points/history/orders/codes/stats
+// Wersja: pełna (produkty, rezerwacje, happybar, pracownicy, konta PWA, zamówienia, punkty, kody, statystyki dla appadmin)
 
 const express = require("express");
 const http = require("http");
@@ -44,14 +42,18 @@ const ProductSchema = new mongoose.Schema({
 });
 
 const ReservationSchema = new mongoose.Schema({
-  source: { type: String, default: "index" }, // index / app
   name: { type: String, required: true },
   phone: { type: String, required: true },
-  date: { type: String, required: true }, // YYYY-MM-DD
-  time: { type: String, required: true }, // HH:mm
+  date: { type: String, required: true },
+  time: { type: String, required: true },
   guests: { type: String, required: true },
   room: { type: String, required: true },
   notes: { type: String, default: "" },
+
+  // opcjonalnie z PWA:
+  email: { type: String, default: "" },
+  milkId: { type: String, default: "" },
+
   createdAt: { type: Date, default: Date.now },
 });
 
@@ -60,7 +62,7 @@ const HappySchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now },
 });
 
-// Pracownicy
+// Pracownicy (admin PIN)
 const EmployeeSchema = new mongoose.Schema({
   name: { type: String, required: true },
   pin: { type: String, required: true, unique: true }, // 4 cyfry
@@ -68,53 +70,51 @@ const EmployeeSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-// Użytkownicy aplikacji (Milk ID)
-const MilkUserSchema = new mongoose.Schema({
-  milkId: { type: String, required: true, unique: true },
-  email: { type: String, default: "" },
+// Konta PWA (użytkownicy)
+const UserSchema = new mongoose.Schema({
+  email: { type: String, unique: true },
   name: { type: String, default: "" },
   phone: { type: String, default: "" },
+  milkId: { type: String, unique: true },
   points: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
 });
 
-// Historia (punkty / zamówienia / kody / nagrody)
-const MilkHistorySchema = new mongoose.Schema({
+// Historia (dla panelu + PWA)
+const HistorySchema = new mongoose.Schema({
   milkId: { type: String, required: true },
-  type: { type: String, default: "action" }, // points/order/code/reward/other
+  type: { type: String, default: "action" }, // points/order/code/reservation
   detail: { type: String, default: "" },
   ts: { type: Date, default: Date.now },
 });
 
-// Zamówienia “Zamów i odbierz”
+// Zamówienia (Zamów i odbierz)
 const OrderSchema = new mongoose.Schema({
-  id: { type: String, required: true, unique: true }, // uuid z app
-  milkId: { type: String, default: "" }, // 6-cyfrowy kod (Twoje "Milk ID")
-  items: [
-    {
-      title: String,
-      qty: Number,
-      price: Number,
-    },
-  ],
+  id: { type: String, required: true }, // uuid z app
+  milkId: { type: String, required: true },
+  email: { type: String, required: true },
+
+  customerName: { type: String, default: "" },
+  customerPhone: { type: String, default: "" },
+
+  items: { type: Array, default: [] }, // [{title, qty, price}]
   total: { type: Number, default: 0 },
   pickupTime: { type: String, default: "" },
-  pickupLocation: { type: String, default: "" }, // Słupsk/Rowy
+  pickupLocation: { type: String, default: "" },
   notes: { type: String, default: "" },
-  status: {
-    type: String,
-    enum: ["Przyjęte", "W realizacji", "Gotowe", "Wydane", "Anulowane"],
-    default: "Przyjęte",
-  },
+
+  status: { type: String, default: "Przyjęte" }, // Przyjęte/W realizacji/Gotowe/Wydane/Anulowane
   createdAt: { type: Date, default: Date.now },
 });
 
-// Kody do realizacji (nagrody/vouchery)
+// Kody (nagrody/vouchery) do realizacji
 const CodeSchema = new mongoose.Schema({
-  code: { type: String, required: true, unique: true }, // np. MSB-AB12CD
+  code: { type: String, unique: true }, // np. MSB-AB12CD
   milkId: { type: String, required: true },
+  email: { type: String, default: "" },
+  rewardId: { type: String, default: "" },
   rewardTitle: { type: String, default: "" },
-  status: { type: String, enum: ["pending", "redeemed"], default: "pending" },
+  status: { type: String, default: "pending" }, // pending/redeemed
   createdAt: { type: Date, default: Date.now },
   redeemedAt: { type: Date, default: null },
 });
@@ -123,8 +123,8 @@ const Product = mongoose.model("Product", ProductSchema);
 const Reservation = mongoose.model("Reservation", ReservationSchema);
 const HappyBar = mongoose.model("HappyBar", HappySchema);
 const Employee = mongoose.model("Employee", EmployeeSchema);
-const MilkUser = mongoose.model("MilkUser", MilkUserSchema);
-const MilkHistory = mongoose.model("MilkHistory", MilkHistorySchema);
+const User = mongoose.model("User", UserSchema);
+const History = mongoose.model("History", HistorySchema);
 const Order = mongoose.model("Order", OrderSchema);
 const Code = mongoose.model("Code", CodeSchema);
 
@@ -143,16 +143,14 @@ app.use("/uploads", express.static(UPLOADS_DIR));
 const storage = multer.diskStorage({
   destination: (_, __, cb) => cb(null, UPLOADS_DIR),
   filename: (_, file, cb) => {
-    const safeName =
-      Date.now() + "-" + file.originalname.replace(/[^\w.-]/g, "_");
+    const safeName = Date.now() + "-" + file.originalname.replace(/[^\w.-]/g, "_");
     cb(null, safeName);
   },
 });
 const upload = multer({ storage });
 
 app.post("/api/upload", upload.single("image"), (req, res) => {
-  if (!req.file)
-    return res.status(400).json({ ok: false, message: "Brak pliku" });
+  if (!req.file) return res.status(400).json({ ok: false, message: "Brak pliku" });
   res.json({ ok: true, url: `/uploads/${req.file.filename}` });
 });
 
@@ -164,15 +162,52 @@ io.on("connection", (socket) => {
 });
 
 // ==========================
-//  API: LOGIN BY PIN
+//  Helpers
+// ==========================
+function fixedPin4(pin) {
+  return String(pin || "").replace(/\D/g, "").padStart(4, "0").slice(0, 4);
+}
+
+async function createHistory(milkId, type, detail) {
+  if (!milkId) return;
+  await History.create({ milkId, type, detail, ts: new Date() });
+}
+
+function generateMilkId6() {
+  // 6 cyfr: zawsze pasuje do UI
+  const n = Math.floor(100000 + Math.random() * 900000);
+  return String(n);
+}
+
+async function uniqueMilkId() {
+  while (true) {
+    const id = generateMilkId6();
+    const exists = await User.findOne({ milkId: id });
+    if (!exists) return id;
+  }
+}
+
+function generateCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const part = () => Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  return "MSB-" + part();
+}
+
+async function uniqueCode() {
+  while (true) {
+    const code = generateCode();
+    const exists = await Code.findOne({ code });
+    if (!exists) return code;
+  }
+}
+
+// ==========================
+//  API: LOGIN BY PIN (admin)
 // ==========================
 app.post("/api/login", async (req, res) => {
   try {
     const { pin } = req.body || {};
-    const fixedPin = String(pin || "")
-      .replace(/\D/g, "")
-      .padStart(4, "0")
-      .slice(0, 4);
+    const fixedPin = fixedPin4(pin);
 
     // właściciel
     if (fixedPin === "0051") {
@@ -185,9 +220,7 @@ app.post("/api/login", async (req, res) => {
 
     // manager / employee
     const emp = await Employee.findOne({ pin: fixedPin });
-    if (!emp) {
-      return res.status(401).json({ ok: false, message: "Niepoprawny kod" });
-    }
+    if (!emp) return res.status(401).json({ ok: false, message: "Niepoprawny kod" });
 
     res.json({
       ok: true,
@@ -216,36 +249,20 @@ app.get("/api/pracownicy", async (req, res) => {
 app.post("/api/pracownicy", async (req, res) => {
   try {
     const { name, pin, role } = req.body || {};
-
-    const fixedPin = String(pin || "")
-      .replace(/\D/g, "")
-      .padStart(4, "0")
-      .slice(0, 4);
+    const fixedPin = fixedPin4(pin);
     const fixedRole = role === "manager" ? "manager" : "employee";
 
     if (!name || fixedPin.length !== 4) {
-      return res
-        .status(400)
-        .json({ ok: false, message: "Podaj imię i PIN (4 cyfry)" });
+      return res.status(400).json({ ok: false, message: "Podaj imię i PIN (4 cyfry)" });
     }
-
     if (fixedPin === "0051") {
-      return res
-        .status(400)
-        .json({ ok: false, message: "Ten PIN jest zarezerwowany dla właściciela" });
+      return res.status(400).json({ ok: false, message: "Ten PIN jest zarezerwowany dla właściciela" });
     }
 
     const exists = await Employee.findOne({ pin: fixedPin });
-    if (exists) {
-      return res.status(400).json({ ok: false, message: "Ten PIN już istnieje" });
-    }
+    if (exists) return res.status(400).json({ ok: false, message: "Ten PIN już istnieje" });
 
-    const emp = await Employee.create({
-      name: String(name).trim(),
-      pin: fixedPin,
-      role: fixedRole,
-    });
-
+    const emp = await Employee.create({ name: String(name).trim(), pin: fixedPin, role: fixedRole });
     res.json({ ok: true, employee: emp });
   } catch (e) {
     console.error(e);
@@ -263,6 +280,108 @@ app.delete("/api/pracownicy/:id", async (req, res) => {
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok: false, message: "Błąd usuwania pracownika" });
+  }
+});
+
+// ==========================
+//  API: AUTH (PWA) — logowanie / zakładanie konta
+// ==========================
+app.post("/api/auth/login", async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    const em = String(email || "").trim().toLowerCase();
+    if (!em) return res.status(400).json({ ok: false, message: "Podaj email" });
+
+    let user = await User.findOne({ email: em });
+    if (!user) {
+      user = await User.create({
+        email: em,
+        milkId: await uniqueMilkId(),
+      });
+      await createHistory(user.milkId, "account", "Utworzono konto");
+    }
+
+    res.json({
+      ok: true,
+      user: {
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        milkId: user.milkId,
+        points: user.points,
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, message: "Błąd logowania" });
+  }
+});
+
+// update danych profilu
+app.post("/api/user/profile", async (req, res) => {
+  try {
+    const { email, name, phone } = req.body || {};
+    const em = String(email || "").trim().toLowerCase();
+    if (!em) return res.status(400).json({ ok: false, message: "Brak email" });
+
+    const user = await User.findOneAndUpdate(
+      { email: em },
+      { name: String(name || ""), phone: String(phone || "") },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ ok: false, message: "Nie znaleziono użytkownika" });
+    await createHistory(user.milkId, "profile", "Zaktualizowano dane profilu");
+
+    res.json({
+      ok: true,
+      user: {
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        milkId: user.milkId,
+        points: user.points,
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, message: "Błąd zapisu profilu" });
+  }
+});
+
+// pobranie świeżych danych usera (np. punkty)
+app.get("/api/user", async (req, res) => {
+  try {
+    const em = String(req.query.email || "").trim().toLowerCase();
+    if (!em) return res.status(400).json({ ok: false });
+    const user = await User.findOne({ email: em });
+    if (!user) return res.status(404).json({ ok: false });
+    res.json({
+      ok: true,
+      user: {
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        milkId: user.milkId,
+        points: user.points,
+      },
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false });
+  }
+});
+
+// historia usera do PWA
+app.get("/api/user/history", async (req, res) => {
+  try {
+    const milkId = String(req.query.milkId || "").trim();
+    if (!milkId) return res.json([]);
+    const list = await History.find({ milkId }).sort({ ts: -1 }).limit(200);
+    res.json(list);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json([]);
   }
 });
 
@@ -316,8 +435,7 @@ app.put("/api/produkty/:id", async (req, res) => {
   try {
     const id = req.params.id;
     const updated = await Product.findByIdAndUpdate(id, req.body, { new: true });
-    if (!updated)
-      return res.status(404).json({ ok: false, message: "Nie znaleziono produktu" });
+    if (!updated) return res.status(404).json({ ok: false, message: "Nie znaleziono produktu" });
 
     io.emit("products-updated", await Product.find().sort({ createdAt: -1 }));
     res.json({ ok: true, product: updated });
@@ -341,7 +459,7 @@ app.delete("/api/produkty/:id", async (req, res) => {
 });
 
 // ==========================
-//  API: RESERVATIONS
+//  API: RESERVATIONS (index + PWA)
 // ==========================
 app.get("/api/rezerwacje", async (req, res) => {
   const reservations = await Reservation.find().sort({ createdAt: -1 });
@@ -352,13 +470,10 @@ app.post("/api/rezerwacje", async (req, res) => {
   try {
     const r = req.body || {};
     if (!r.name || !r.phone || !r.date || !r.time || !r.guests || !r.room) {
-      return res
-        .status(400)
-        .json({ ok: false, message: "Uzupełnij wszystkie wymagane pola." });
+      return res.status(400).json({ ok: false, message: "Uzupełnij wszystkie wymagane pola." });
     }
 
     const reservation = await Reservation.create({
-      source: String(r.source || "index"),
       name: String(r.name),
       phone: String(r.phone),
       date: String(r.date),
@@ -366,29 +481,19 @@ app.post("/api/rezerwacje", async (req, res) => {
       guests: String(r.guests),
       room: String(r.room),
       notes: String(r.notes || ""),
+      email: String(r.email || ""),
+      milkId: String(r.milkId || ""),
     });
 
-    io.emit("new-reservation", reservation); // migawka w admin.html
-    io.emit("reservations-updated", await Reservation.find().sort({ createdAt: -1 }));
+    if (reservation.milkId) {
+      await createHistory(reservation.milkId, "reservation", `Rezerwacja: ${reservation.date} ${reservation.time} (${reservation.guests} os.)`);
+    }
+
+    io.emit("new-reservation", reservation);
     res.json({ ok: true, reservation });
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok: false, message: "Błąd zapisu rezerwacji" });
-  }
-});
-
-// EDYCJA rezerwacji (wymagane przez Ciebie)
-app.put("/api/rezerwacje/:id", async (req, res) => {
-  try {
-    const updated = await Reservation.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!updated) return res.status(404).json({ ok: false, message: "Nie znaleziono rezerwacji" });
-
-    io.emit("reservation-updated", updated);
-    io.emit("reservations-updated", await Reservation.find().sort({ createdAt: -1 }));
-    res.json({ ok: true, reservation: updated });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, message: "Błąd edycji rezerwacji" });
   }
 });
 
@@ -412,8 +517,8 @@ app.post("/api/happy", async (req, res) => {
     const text = String(happy || "");
 
     await HappyBar.create({ text, updatedAt: new Date() });
-
     io.emit("happy-updated", text);
+
     res.json({ ok: true, happy: text });
   } catch (e) {
     console.error(e);
@@ -422,23 +527,120 @@ app.post("/api/happy", async (req, res) => {
 });
 
 // ==========================
-//  API: APP (Orders + Users + Points + Codes) — pod appadmin.html
+//  API: ORDERS (PWA)
 // ==========================
 
-async function ensureMilkUser(milkId) {
-  const id = String(milkId || "").trim();
-  if (!id) return null;
-  let u = await MilkUser.findOne({ milkId: id });
-  if (!u) u = await MilkUser.create({ milkId: id });
-  return u;
-}
+// lista zamówień usera
+app.get("/api/orders", async (req, res) => {
+  try {
+    const email = String(req.query.email || "").trim().toLowerCase();
+    if (!email) return res.json([]);
+    const list = await Order.find({ email }).sort({ createdAt: -1 });
+    res.json(list);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json([]);
+  }
+});
 
-// Stats
+// tworzenie zamówienia
+app.post("/api/orders", async (req, res) => {
+  try {
+    const o = req.body || {};
+    const email = String(o.email || "").trim().toLowerCase();
+    const milkId = String(o.milkId || "").trim();
+    if (!email || !milkId) return res.status(401).json({ ok: false, message: "Zaloguj się" });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(401).json({ ok: false, message: "Zaloguj się" });
+
+    if (!o.id || !o.items || !Array.isArray(o.items) || !o.items.length) {
+      return res.status(400).json({ ok: false, message: "Brak pozycji" });
+    }
+
+    const order = await Order.create({
+      id: String(o.id),
+      email,
+      milkId,
+      customerName: String(o.customerName || user.name || ""),
+      customerPhone: String(o.customerPhone || user.phone || ""),
+      items: o.items,
+      total: Number(o.total || 0),
+      pickupTime: String(o.pickupTime || ""),
+      pickupLocation: String(o.pickupLocation || ""),
+      notes: String(o.notes || ""),
+      status: "Przyjęte",
+    });
+
+    await createHistory(milkId, "order", `Zamówienie: ${order.pickupLocation} ${order.pickupTime} • ${order.total} zł`);
+    io.emit("new-order", order);
+
+    res.json({ ok: true, order });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, message: "Błąd zamówienia" });
+  }
+});
+
+// ==========================
+//  API: REWARDS -> tworzy KOD, odejmuje punkty (PWA)
+// ==========================
+app.post("/api/rewards/redeem", async (req, res) => {
+  try {
+    const { email, rewardId, rewardTitle, cost } = req.body || {};
+    const em = String(email || "").trim().toLowerCase();
+    if (!em) return res.status(401).json({ ok: false, message: "Zaloguj się" });
+
+    const user = await User.findOne({ email: em });
+    if (!user) return res.status(401).json({ ok: false, message: "Zaloguj się" });
+
+    const c = Number(cost || 0);
+    if (!rewardId || !rewardTitle || c <= 0) {
+      return res.status(400).json({ ok: false, message: "Błędna nagroda" });
+    }
+
+    if (user.points < c) {
+      return res.status(400).json({ ok: false, message: "Za mało punktów" });
+    }
+
+    user.points -= c;
+    await user.save();
+
+    const code = await uniqueCode();
+    const doc = await Code.create({
+      code,
+      milkId: user.milkId,
+      email: user.email,
+      rewardId: String(rewardId),
+      rewardTitle: String(rewardTitle),
+      status: "pending",
+    });
+
+    await createHistory(user.milkId, "code", `Wymieniono: -${c} pkt (${rewardTitle}) • Kod: ${code}`);
+    io.emit("codes-updated");
+
+    res.json({
+      ok: true,
+      code: doc.code,
+      rewardTitle: doc.rewardTitle,
+      points: user.points,
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ ok: false, message: "Błąd realizacji nagrody" });
+  }
+});
+
+// ==========================
+//  API: APPADMIN (panel aplikacji) — endpoints z appadmin.html
+// ==========================
+
+// stats
 app.get("/api/admin/stats", async (req, res) => {
   try {
-    const users = await MilkUser.countDocuments();
-    const totalPointsAgg = await MilkUser.aggregate([{ $group: { _id: null, s: { $sum: "$points" } } }]);
-    const totalPoints = totalPointsAgg?.[0]?.s || 0;
+    const users = await User.countDocuments();
+    const aggPoints = await User.aggregate([{ $group: { _id: null, sum: { $sum: "$points" } } }]);
+    const totalPoints = aggPoints?.[0]?.sum ?? 0;
 
     const totalOrders = await Order.countDocuments();
     const pendingCodes = await Code.countDocuments({ status: "pending" });
@@ -446,186 +648,118 @@ app.get("/api/admin/stats", async (req, res) => {
     res.json({ users, totalPoints, totalOrders, pendingCodes });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok: false, message: "Błąd statystyk" });
+    res.status(500).json({ users: 0, totalPoints: 0, totalOrders: 0, pendingCodes: 0 });
   }
 });
 
-// Users
+// users list
 app.get("/api/admin/users", async (req, res) => {
   try {
-    const users = await MilkUser.find().sort({ createdAt: -1 });
-    res.json(users);
+    const list = await User.find().sort({ createdAt: -1 });
+    res.json(list);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok: false, message: "Błąd klientów" });
+    res.status(500).json([]);
   }
 });
 
+// user history
 app.get("/api/admin/users/:milkId/history", async (req, res) => {
   try {
-    const milkId = String(req.params.milkId || "");
-    const hist = await MilkHistory.find({ milkId }).sort({ ts: -1 }).limit(250);
-    res.json(hist.map(h => ({ ts: h.ts, type: h.type, detail: h.detail })));
+    const milkId = String(req.params.milkId || "").trim();
+    const list = await History.find({ milkId }).sort({ ts: -1 }).limit(200);
+    res.json(list);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok: false, message: "Błąd historii" });
+    res.status(500).json([]);
   }
 });
 
-// Orders
+// orders list (for appadmin)
 app.get("/api/admin/orders", async (req, res) => {
   try {
-    const orders = await Order.find().sort({ createdAt: -1 }).limit(500);
-    res.json(orders);
+    const list = await Order.find().sort({ createdAt: -1 });
+    res.json(list);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok: false, message: "Błąd zamówień" });
+    res.status(500).json([]);
   }
 });
 
-// Zmiana statusu zamówienia (opcjonalnie do paneli)
-app.put("/api/admin/orders/:id/status", async (req, res) => {
-  try {
-    const id = String(req.params.id || "");
-    const { status } = req.body || {};
-    const allowed = ["Przyjęte", "W realizacji", "Gotowe", "Wydane", "Anulowane"];
-    const st = allowed.includes(status) ? status : "Przyjęte";
-
-    const updated = await Order.findOneAndUpdate({ id }, { status: st }, { new: true });
-    if (!updated) return res.status(404).json({ ok: false, message: "Nie znaleziono zamówienia" });
-
-    io.emit("order-updated", updated);
-    res.json({ ok: true, order: updated });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, message: "Błąd statusu" });
-  }
-});
-
-// App endpoint: tworzenie zamówienia z app.html (ważne!)
-app.post("/api/orders", async (req, res) => {
-  try {
-    const o = req.body || {};
-    const id = String(o.id || "").trim();
-    if (!id) return res.status(400).json({ ok: false, message: "Brak ID" });
-
-    // jeśli już istnieje — nie duplikujemy
-    const exists = await Order.findOne({ id });
-    if (exists) return res.json({ ok: true, order: exists, duplicated: true });
-
-    const milkId = String(o.milkId || "").trim();
-    if (milkId) await ensureMilkUser(milkId);
-
-    const items = Array.isArray(o.items) ? o.items.map(i => ({
-      title: String(i.title || ""),
-      qty: Number(i.qty || 0),
-      price: Number(i.price || 0),
-    })) : [];
-
-    const total = Number(o.total || items.reduce((s, i) => s + i.price * i.qty, 0));
-
-    const order = await Order.create({
-      id,
-      milkId,
-      items,
-      total,
-      pickupTime: String(o.pickupTime || ""),
-      pickupLocation: String(o.pickupLocation || ""),
-      notes: String(o.notes || ""),
-      status: "Przyjęte",
-    });
-
-    // historia
-    if (milkId) {
-      await MilkHistory.create({
-        milkId,
-        type: "order",
-        detail: `Zamówienie: ${order.pickupLocation || "-"} ${order.pickupTime || "-"} • ${order.total} zł • status: ${order.status}`,
-      });
-    }
-
-    // realtime dla admina (migawka) + appadmin
-    io.emit("new-order", order);
-    io.emit("orders-updated", await Order.find().sort({ createdAt: -1 }).limit(500));
-
-    res.json({ ok: true, order });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ ok: false, message: "Błąd zapisu zamówienia" });
-  }
-});
-
-// Add points
+// add points (10 zł = 1 pkt) — used by appadmin
 app.post("/api/admin/add-points", async (req, res) => {
   try {
     const { milkId, amountPLN, points } = req.body || {};
-    const id = String(milkId || "").trim();
+    const mid = String(milkId || "").trim();
     const pts = Number(points || 0);
 
-    if (!id) return res.status(400).json({ ok: false, message: "Brak Milk ID" });
-    if (!Number.isFinite(pts) || pts <= 0) return res.status(400).json({ ok: false, message: "Zła liczba punktów" });
+    if (!mid || pts <= 0) return res.status(400).json({ ok: false, message: "Błędne dane" });
 
-    const user = await ensureMilkUser(id);
-    user.points = Number(user.points || 0) + pts;
+    const user = await User.findOne({ milkId: mid });
+    if (!user) return res.status(404).json({ ok: false, message: "Nie znaleziono Milk ID" });
+
+    user.points += pts;
     await user.save();
 
-    await MilkHistory.create({
-      milkId: id,
-      type: "points",
-      detail: `Dodano +${pts} pkt (kwota: ${Number(amountPLN || 0)} zł)`,
-    });
+    await createHistory(mid, "points", `Dodano +${pts} pkt (kwota: ${Number(amountPLN || 0).toFixed(2)} zł)`);
 
-    io.emit("users-updated", await MilkUser.find().sort({ createdAt: -1 }));
-    res.json({ ok: true, pointsAdded: pts, user });
+    res.json({ ok: true, points: user.points });
   } catch (e) {
     console.error(e);
     res.status(500).json({ ok: false, message: "Błąd dodawania punktów" });
   }
 });
 
-// Codes list
+// codes list (pending)
 app.get("/api/admin/codes", async (req, res) => {
   try {
-    const codes = await Code.find({ status: "pending" }).sort({ createdAt: -1 }).limit(500);
-    res.json(codes);
+    const list = await Code.find({ status: "pending" }).sort({ createdAt: -1 });
+    res.json(list);
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok: false, message: "Błąd kodów" });
+    res.status(500).json([]);
   }
 });
 
-// Check code
+// check code
 app.post("/api/admin/codes/check", async (req, res) => {
   try {
     const { code } = req.body || {};
-    const c = await Code.findOne({ code: String(code || "").trim() });
-    if (!c || c.status !== "pending") return res.status(400).json({ ok: false, message: "Kod nieprawidłowy" });
-    res.json({ code: c.code, milkId: c.milkId, rewardTitle: c.rewardTitle });
+    const c = String(code || "").trim().toUpperCase();
+    if (!c) return res.status(400).json({ ok: false, message: "Brak kodu" });
+
+    const doc = await Code.findOne({ code: c, status: "pending" });
+    if (!doc) return res.status(400).json({ ok: false, message: "Kod nieprawidłowy" });
+
+    res.json({
+      ok: true,
+      code: doc.code,
+      milkId: doc.milkId,
+      rewardTitle: doc.rewardTitle,
+    });
   } catch (e) {
     console.error(e);
-    res.status(500).json({ ok: false, message: "Błąd kodu" });
+    res.status(500).json({ ok: false, message: "Błąd" });
   }
 });
 
-// Redeem code
+// redeem code
 app.post("/api/admin/codes/redeem", async (req, res) => {
   try {
     const { code } = req.body || {};
-    const c = await Code.findOne({ code: String(code || "").trim() });
-    if (!c || c.status !== "pending") return res.status(400).json({ ok: false, message: "Kod nieprawidłowy" });
+    const c = String(code || "").trim().toUpperCase();
+    if (!c) return res.status(400).json({ ok: false, message: "Brak kodu" });
 
-    c.status = "redeemed";
-    c.redeemedAt = new Date();
-    await c.save();
+    const doc = await Code.findOne({ code: c, status: "pending" });
+    if (!doc) return res.status(400).json({ ok: false, message: "Kod nieprawidłowy" });
 
-    await ensureMilkUser(c.milkId);
-    await MilkHistory.create({
-      milkId: c.milkId,
-      type: "code",
-      detail: `Zrealizowano kod: ${c.code} (${c.rewardTitle || "nagroda"})`,
-    });
+    doc.status = "redeemed";
+    doc.redeemedAt = new Date();
+    await doc.save();
 
-    io.emit("codes-updated", await Code.find({ status: "pending" }).sort({ createdAt: -1 }));
+    await createHistory(doc.milkId, "redeem", `Zrealizowano kod: ${doc.code} (${doc.rewardTitle})`);
+    io.emit("codes-updated");
+
     res.json({ ok: true });
   } catch (e) {
     console.error(e);
@@ -633,51 +767,33 @@ app.post("/api/admin/codes/redeem", async (req, res) => {
   }
 });
 
-// (Opcjonalne) tworzenie kodu nagrody z app — jeśli kiedyś podłączysz realne nagrody
-app.post("/api/codes/create", async (req, res) => {
-  try {
-    const { milkId, rewardTitle } = req.body || {};
-    const id = String(milkId || "").trim();
-    if (!id) return res.status(400).json({ ok: false, message: "Brak Milk ID" });
-
-    await ensureMilkUser(id);
-
-    const code = "MSB-" + Math.random().toString(36).slice(2, 8).toUpperCase();
-    const c = await Code.create({ code, milkId: id, rewardTitle: String(rewardTitle || "Nagroda") });
-
-    await MilkHistory.create({
-      milkId: id,
-      type: "reward",
-      detail: `Utworzono kod nagrody: ${c.code} (${c.rewardTitle})`,
-    });
-
-    io.emit("codes-updated", await Code.find({ status: "pending" }).sort({ createdAt: -1 }));
-    res.json({ ok: true, code: c.code });
-  } catch (e) {
-    console.error(e);
-    if (String(e).includes("E11000")) return res.status(400).json({ ok: false, message: "Kolizja kodu, spróbuj ponownie" });
-    res.status(500).json({ ok: false, message: "Błąd tworzenia kodu" });
-  }
+// ALIAS (żeby nie było błędu z app.html jeśli gdzieś zostało stare POST /api/admin/orders)
+app.post("/api/admin/orders", async (req, res) => {
+  // przekieruj wprost do /api/orders (ta sama logika)
+  req.url = "/api/orders";
+  return app._router.handle(req, res, () => {});
 });
 
 // ==========================
 //  ROUTES (CLEAN URLS)
 // ==========================
-app.get("/", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "index.html")));
 app.get("/admin", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "admin.html")));
-app.get("/appadmin", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "appadmin.html")));
 app.get("/menu", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "menu.html")));
-app.get("/app", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "app.html")));
 
+// jeśli masz app.html jako PWA:
+app.get("/app", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "app.html")));
+app.get("/appadmin", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "appadmin.html")));
+
+// przekierowania ze starych adresów *.html
 app.get("/menu.html", (req, res) => res.redirect(301, "/menu"));
 app.get("/admin.html", (req, res) => res.redirect(301, "/admin"));
-app.get("/appadmin.html", (req, res) => res.redirect(301, "/appadmin"));
 app.get("/app.html", (req, res) => res.redirect(301, "/app"));
+app.get("/appadmin.html", (req, res) => res.redirect(301, "/appadmin"));
 app.get("/index.html", (req, res) => res.redirect(301, "/"));
 
 app.get("/favicon.ico", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "favicon.ico")));
 
-// Fallback — jeśli ktoś wejdzie w dziwny adres, daj index (żeby nie było Not Found)
+// SPA fallback
 app.get("*", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "index.html")));
 
 // ==========================

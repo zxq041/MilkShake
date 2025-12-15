@@ -27,7 +27,10 @@ if (!MONGO_URL) {
 }
 
 mongoose
-  .connect(MONGO_URL, { dbName: "milkshakebar" })
+  .connect(MONGO_URL, {
+    dbName: "milkshakebar",
+    autoIndex: true,
+  })
   .then(() => console.log("✅ MongoDB connected"))
   .catch((err) => console.error("MongoDB connect error:", err));
 
@@ -120,7 +123,7 @@ const CodeSchema = new mongoose.Schema({
   redeemedAt: { type: Date, default: null },
 });
 
-// ✅ WAŻNE: wszystkie modele zapisują do nowych kolekcji
+// ✅ wszystkie modele zapisują do nowych kolekcji
 const User = mongoose.model("User", UserSchema, col("users"));
 const Order = mongoose.model("Order", OrderSchema, col("orders"));
 const History = mongoose.model("History", HistorySchema, col("histories"));
@@ -182,8 +185,7 @@ async function uniqueMilkId() {
 
 function generateCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const part = () =>
-    Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  const part = () => Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
   return "MSB-" + part();
 }
 
@@ -195,7 +197,6 @@ async function uniqueCode() {
   }
 }
 
-// Socket room helpers
 function roomForMilk(milkId) {
   return `milk:${String(milkId || "").trim()}`;
 }
@@ -220,23 +221,32 @@ io.on("connection", (socket) => {
 
 // ==========================
 //  ADMIN LOGIN BY PIN
-//  ✅ owner 0051 działa nawet jak Mongo ma problem
+//  ✅ owner 0051 działa zawsze (nie zależy od nazwy pola w req.body)
 // ==========================
 app.post("/api/login", async (req, res) => {
   try {
-    const fixedPin = fixedPin4(req.body?.pin);
+    // 🔥 obsłuż różne nazwy pola, bo admin.html bywa różny
+    const rawPin =
+      req.body?.pin ??
+      req.body?.code ??
+      req.body?.passcode ??
+      req.body?.password ??
+      req.body?.adminPin;
+
+    const fixedPin = fixedPin4(rawPin);
 
     // ✅ OWNER zawsze wpuszcza
     if (fixedPin === "0051") {
       return res.json({ ok: true, role: "owner", user: { name: "Właściciel", pin: fixedPin } });
     }
 
+    // zwykli pracownicy
     const emp = await Employee.findOne({ pin: fixedPin });
-    if (!emp) return res.status(401).json({ ok: false, message: "Niepoprawny kod" });
+    if (!emp) return res.status(401).json({ ok: false, message: "Niepoprawny PIN" });
 
     res.json({ ok: true, role: emp.role, user: { id: emp._id, name: emp.name, pin: emp.pin } });
   } catch (e) {
-    console.error(e);
+    console.error("LOGIN ERROR:", e);
     res.status(500).json({ ok: false, message: "Błąd logowania" });
   }
 });
@@ -708,7 +718,11 @@ app.post("/api/admin/add-points", async (req, res) => {
     user.points += pts;
     await user.save();
 
-    await createHistory(user.milkId, "points", `Dodano +${pts} pkt (kwota: ${Number(amountPLN || 0).toFixed(2)} zł)`);
+    await createHistory(
+      user.milkId,
+      "points",
+      `Dodano +${pts} pkt (kwota: ${Number(amountPLN || 0).toFixed(2)} zł)`
+    );
 
     // ✅ REALTIME DO PWA
     emitUserPoints(user.milkId, user.points);
@@ -736,8 +750,44 @@ app.get("/index.html", (req, res) => res.redirect(301, "/"));
 
 app.get("/favicon.ico", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "favicon.ico")));
 
+// ✅ (opcjonalnie) debug status
+app.get("/api/health", (req, res) => {
+  res.json({
+    ok: true,
+    mongoState: mongoose.connection.readyState, // 1 = connected
+    db: mongoose.connection.name,
+  });
+});
+
 // SPA fallback
 app.get("*", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "index.html")));
+
+// ==========================
+//  WARMUP: stwórz kolekcje new_* od razu po starcie
+//  (Mongo tworzy kolekcje dopiero po pierwszym zapisie, więc robimy pusty "init")
+// ==========================
+async function warmupCollections() {
+  try {
+    // createIndexes wymusza utworzenie indeksów/kolekcji gdy to możliwe
+    await Promise.allSettled([
+      User.init(),
+      Order.init(),
+      History.init(),
+      Code.init(),
+      Reservation.init(),
+      Product.init(),
+      Employee.init(),
+      HappyBar.init(),
+    ]);
+    console.log("✅ Warmup collections done");
+  } catch (e) {
+    console.log("⚠️ Warmup collections error:", e?.message || e);
+  }
+}
+
+mongoose.connection.once("connected", () => {
+  warmupCollections();
+});
 
 // ==========================
 //  START

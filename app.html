@@ -1363,14 +1363,47 @@
       </p>
     </div>
   </div>
+<script>
+  // =========================================================
+  //  PWA + AUTO UPDATE (bez usuwania z pulpitu)
+  // =========================================================
+  let swReg = null;
 
-  <script>
-  // ---------- PWA ----------
   if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => navigator.serviceWorker.register("sw.js"));
+    window.addEventListener("load", async () => {
+      try {
+        swReg = await navigator.serviceWorker.register("sw.js");
+
+        // jeżeli nowy SW czeka -> aktywuj
+        if (swReg.waiting) {
+          swReg.waiting.postMessage({ type: "SKIP_WAITING" });
+        }
+
+        swReg.addEventListener("updatefound", () => {
+          const nw = swReg.installing;
+          if (!nw) return;
+          nw.addEventListener("statechange", () => {
+            if (nw.state === "installed" && navigator.serviceWorker.controller) {
+              // jest nowa wersja
+              showToast("Aktualizacja aplikacji…", false);
+              nw.postMessage({ type: "SKIP_WAITING" });
+            }
+          });
+        });
+
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          // po przejęciu kontroli przez nowy SW -> odśwież
+          window.location.reload();
+        });
+      } catch (e) {
+        console.warn("SW register error:", e);
+      }
+    });
   }
 
-  // ---------- Helpers / API ----------
+  // =========================================================
+  //  Helpers / API
+  // =========================================================
   const API = {
     async json(url, opts = {}) {
       const res = await fetch(url, {
@@ -1378,7 +1411,6 @@
         ...opts,
       });
 
-      // jeśli backend zwróci HTML (np. SPA fallback), pokaż czytelny błąd
       const ct = res.headers.get("content-type") || "";
       const text = await res.text();
 
@@ -1390,12 +1422,11 @@
       if (!res.ok) {
         const msg =
           (data && (data.message || data.error)) ||
-          (text && text.slice(0, 140)) ||
+          (text && text.slice(0, 160)) ||
           `HTTP ${res.status}`;
         throw new Error(msg);
       }
 
-      // jeżeli miał być JSON, a jest HTML -> też błąd
       if (!ct.includes("application/json") && text.trim().startsWith("<")) {
         throw new Error("Backend zwrócił HTML zamiast JSON (sprawdź routing / endpoint).");
       }
@@ -1404,7 +1435,9 @@
     },
   };
 
-  // ---------- Tabs ----------
+  // =========================================================
+  //  Tabs
+  // =========================================================
   const tabs = {
     points: document.getElementById("tab-points"),
     rewards: document.getElementById("tab-rewards"),
@@ -1413,15 +1446,19 @@
     account: document.getElementById("tab-account"),
   };
   const navButtons = document.querySelectorAll(".nav-btn");
+
   function openTab(name) {
     Object.entries(tabs).forEach(([k, el]) => el.classList.toggle("active", k === name));
     navButtons.forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
+
   navButtons.forEach((btn) => btn.addEventListener("click", () => openTab(btn.dataset.tab)));
   document.querySelectorAll("[data-go]").forEach((b) => b.addEventListener("click", () => openTab(b.dataset.go)));
 
-  // ---------- Toast ----------
+  // =========================================================
+  //  Toast
+  // =========================================================
   const toast = document.getElementById("toast");
   const toastText = document.getElementById("toastText");
   function showToast(msg, danger = false) {
@@ -1431,7 +1468,9 @@
     setTimeout(() => toast.classList.remove("show"), 3200);
   }
 
-  // ---------- Storage (punkty / konto nadal lokalnie jak miałeś) ----------
+  // =========================================================
+  //  Storage (scoped per user milkId)
+  // =========================================================
   const store = {
     get(key, fallback) {
       try {
@@ -1445,7 +1484,33 @@
     },
   };
 
-  // ---------- Opening hours / status ----------
+  function getUser() {
+    return store.get("user", null);
+  }
+  function isLogged() {
+    const u = getUser();
+    return !!(u && u.email && u.milkId);
+  }
+
+  function requireLogin(what = "tej funkcji") {
+    if (!isLogged()) {
+      showToast(`Zaloguj się, aby użyć ${what}`, true);
+      openTab("account");
+      return false;
+    }
+    return true;
+  }
+
+  // klucze per użytkownik
+  function uKey(base) {
+    const u = getUser();
+    const id = u?.milkId || "guest";
+    return `milk:${id}:${base}`;
+  }
+
+  // =========================================================
+  //  Opening hours / status
+  // =========================================================
   const openingCardEl = document.getElementById("openingCard");
   const openDotEl = document.getElementById("openDot");
   const openTextEl = document.getElementById("openText");
@@ -1476,11 +1541,11 @@
     const openM = toMinutes(today.open);
     const closeM = toMinutes(today.close);
 
-    const isOpen = minutesNow >= openM && minutesNow < closeM;
+    const isOpenNow = minutesNow >= openM && minutesNow < closeM;
 
     openDotEl.classList.remove("open", "closed");
-    openDotEl.classList.add(isOpen ? "open" : "closed");
-    openTextEl.textContent = isOpen ? "Jesteśmy Otwarci" : "Jesteśmy Zamknięci";
+    openDotEl.classList.add(isOpenNow ? "open" : "closed");
+    openTextEl.textContent = isOpenNow ? "Jesteśmy Otwarci" : "Jesteśmy Zamknięci";
 
     const order = [1, 2, 3, 4, 5, 6, 0];
     openHoursEl.innerHTML = order
@@ -1507,48 +1572,36 @@
   renderOpeningHours();
   setInterval(renderOpeningHours, 60 * 1000);
 
-  // ---------- Clear points history once ----------
-  (function clearHistoryOnce() {
-    const didClear = store.get("didClearHistoryOnce", false);
-    if (!didClear) {
-      store.set("pointsHistory", []);
-      store.set("didClearHistoryOnce", true);
-    }
-  })();
-
-  // ---------- Loyalty code modal ----------
+  // =========================================================
+  //  Loyalty code modal (Milk ID z backendu – stałe dla emaila)
+  // =========================================================
   const loyaltyCodeEl = document.getElementById("loyaltyCode");
   const showCodeBtn = document.getElementById("showCodeBtn");
   const copyCodeBtn = document.getElementById("copyCodeBtn");
   const codeModal = document.getElementById("codeModal");
 
-  function generate6DigitCode() {
-    return String(Math.floor(100000 + Math.random() * 900000));
-  }
-  function getOrCreateLoyaltyCode() {
-    let code = store.get("loyaltyCode", null);
-    if (!code || String(code).length !== 6) {
-      code = generate6DigitCode();
-      store.set("loyaltyCode", code);
-    }
-    return String(code);
-  }
   function renderLoyaltyCode() {
-    loyaltyCodeEl.textContent = getOrCreateLoyaltyCode();
+    if (!requireLogin("Milk ID")) return;
+    loyaltyCodeEl.textContent = String(getUser().milkId);
   }
+
   function openCodeModal() {
+    if (!requireLogin("Milk ID")) return;
     renderLoyaltyCode();
     codeModal.classList.add("show");
     document.body.style.overflow = "hidden";
   }
+
   function closeCodeModal() {
     codeModal.classList.remove("show");
     document.body.style.overflow = "";
   }
+
   showCodeBtn?.addEventListener("click", openCodeModal);
   codeModal?.querySelectorAll("[data-close]").forEach((el) => el.addEventListener("click", closeCodeModal));
 
   copyCodeBtn?.addEventListener("click", async () => {
+    if (!requireLogin("Milk ID")) return;
     const code = loyaltyCodeEl.textContent;
     try {
       await navigator.clipboard.writeText(code);
@@ -1558,20 +1611,37 @@
     }
   });
 
-  // ---------- Points ----------
+  // =========================================================
+  //  Points (lokalnie per milkId – możesz potem podpiąć backend)
+  // =========================================================
   const pointsCountEl = document.getElementById("pointsCount");
   const pointsPillEl = document.getElementById("pointsPill");
   const pointsProgressEl = document.getElementById("pointsProgress");
   const historyEl = document.getElementById("pointsHistory");
 
   function renderPoints() {
-    const pts = store.get("points", 0);
+    if (!isLogged()) {
+      pointsCountEl.textContent = "—";
+      pointsPillEl.textContent = "Zaloguj się";
+      pointsProgressEl.style.width = "0%";
+      historyEl.innerHTML = `
+        <div class="empty">
+          <div class="icon"><i class="fa-solid fa-user"></i></div>
+          <div>
+            <b>Zaloguj się, aby zbierać punkty</b>
+            <div class="tiny">Po zalogowaniu dostaniesz stały Milk ID.</div>
+          </div>
+        </div>`;
+      return;
+    }
+
+    const pts = store.get(uKey("points"), 0);
     pointsCountEl.textContent = pts;
     pointsPillEl.textContent = pts + " pkt";
     const pct = Math.min(100, pts % 100);
     pointsProgressEl.style.width = pct + "%";
 
-    const hist = store.get("pointsHistory", []);
+    const hist = store.get(uKey("pointsHistory"), []);
     historyEl.innerHTML = hist.length
       ? hist
           .map(
@@ -1589,7 +1659,9 @@
            </div>`;
   }
 
-  // ---------- Rewards ----------
+  // =========================================================
+  //  Rewards (zostają jak u Ciebie, ale wymagają logowania)
+  // =========================================================
   const rewards = [
     { id: "shake_small", title: "Milkshake mały", cost: 80, icon: "fa-ice-cream", desc: "Dowolny smak" },
     { id: "shake_big", title: "Milkshake duży", cost: 120, icon: "fa-glass-whiskey", desc: "Z dodatkami" },
@@ -1599,7 +1671,19 @@
   const rewardsListEl = document.getElementById("rewardsList");
 
   function renderRewards() {
-    const pts = store.get("points", 0);
+    if (!isLogged()) {
+      rewardsListEl.innerHTML = `
+        <div class="empty">
+          <div class="icon"><i class="fa-solid fa-user"></i></div>
+          <div>
+            <b>Zaloguj się, aby wymieniać nagrody</b>
+            <div class="tiny">Nagrody są powiązane z Twoim Milk ID.</div>
+          </div>
+        </div>`;
+      return;
+    }
+
+    const pts = store.get(uKey("points"), 0);
     rewardsListEl.innerHTML = rewards
       .map((r) => {
         const disabled = pts < r.cost;
@@ -1625,24 +1709,29 @@
         `;
       })
       .join("");
+
     rewardsListEl.querySelectorAll("[data-redeem]").forEach((btn) => {
       btn.addEventListener("click", () => redeemReward(btn.dataset.redeem));
     });
   }
 
   function redeemReward(id) {
+    if (!requireLogin("nagrody")) return;
+
     const r = rewards.find((x) => x.id === id);
     if (!r) return;
-    const pts = store.get("points", 0);
+
+    const pts = store.get(uKey("points"), 0);
     if (pts < r.cost) {
       showToast("Masz za mało punktów 😅", true);
       return;
     }
-    store.set("points", pts - r.cost);
 
-    const hist = store.get("pointsHistory", []);
+    store.set(uKey("points"), pts - r.cost);
+
+    const hist = store.get(uKey("pointsHistory"), []);
     hist.unshift({ text: `Wymieniono: -${r.cost} pkt (${r.title})`, date: new Date().toLocaleString("pl-PL") });
-    store.set("pointsHistory", hist);
+    store.set(uKey("pointsHistory"), hist);
 
     renderPoints();
     renderRewards();
@@ -1650,7 +1739,10 @@
     openTab("rewards");
   }
 
-  // ---------- Order & pickup (ZAPIS DO PANELU) ----------
+  // =========================================================
+  //  Order & pickup – WYSYŁKA DO BACKENDU
+  //  (naprawione endpointy: /api/orders)
+  // =========================================================
   const menuItems = [
     { id: "m1", title: "Milkshake klasyczny", price: 18, icon: "fa-ice-cream", desc: "Dowolny smak" },
     { id: "m2", title: "Milkshake premium", price: 24, icon: "fa-glass-whiskey", desc: "Z dodatkami" },
@@ -1666,15 +1758,18 @@
   const ordersListEl = document.getElementById("ordersList");
 
   function getCart() {
-    return store.get("orderCart", []);
+    return store.get(uKey("orderCart"), []);
   }
   function setCart(c) {
-    store.set("orderCart", c);
+    store.set(uKey("orderCart"), c);
   }
 
   function addToCart(id) {
     const item = menuItems.find((x) => x.id === id);
     if (!item) return;
+
+    if (!requireLogin("zamówień")) return;
+
     const cart = getCart();
     const existing = cart.find((c) => c.id === id);
     if (existing) existing.qty++;
@@ -1725,15 +1820,30 @@
 
   function renderCart() {
     const cart = getCart();
+
+    if (!isLogged()) {
+      cartListEl.innerHTML = `
+        <div class="empty">
+          <div class="icon"><i class="fa-solid fa-user"></i></div>
+          <div>
+            <b>Zaloguj się, aby zamawiać</b>
+            <div class="tiny">Zamówienia są przypisane do Twojego konta.</div>
+          </div>
+        </div>`;
+      cartTotalEl.textContent = "0 zł";
+      submitOrderBtn.disabled = true;
+      return;
+    }
+
     if (!cart.length) {
       cartListEl.innerHTML = `
-          <div class="empty">
-            <div class="icon"><i class="fa-solid fa-bag-shopping"></i></div>
-            <div>
-              <b>Koszyk jest pusty</b>
-              <div class="tiny">Dodaj coś z menu.</div>
-            </div>
-          </div>`;
+        <div class="empty">
+          <div class="icon"><i class="fa-solid fa-bag-shopping"></i></div>
+          <div>
+            <b>Koszyk jest pusty</b>
+            <div class="tiny">Dodaj coś z menu.</div>
+          </div>
+        </div>`;
       cartTotalEl.textContent = "0 zł";
       submitOrderBtn.disabled = true;
       return;
@@ -1775,6 +1885,8 @@
   }
 
   async function submitOrder() {
+    if (!requireLogin("zamówień")) return;
+
     const cart = getCart();
     if (!cart.length) {
       showToast("Koszyk pusty 😅", true);
@@ -1790,30 +1902,34 @@
       return;
     }
 
+    const user = getUser();
+
+    // automatyczne dane klienta (z profilu)
+    const customerName = user?.name || "";
+    const customerPhone = user?.phone || "";
+
     const items = cart.map((c) => {
       const m = menuItems.find((x) => x.id === c.id);
       return { title: m.title, qty: c.qty, price: m.price };
     });
     const total = items.reduce((s, i) => s + i.price * i.qty, 0);
 
-    // zapis do backendu (panel "appadmin.html" powinien to czytać)
     try {
       const payload = {
         source: "app",
+        email: user.email,
+        milkId: user.milkId,
+        customerName,
+        customerPhone,
         pickupTime,
         pickupLocation,
         notes: notes || "",
         items,
         total,
-        createdAt: new Date().toISOString(),
-        status: "Przyjęte",
-        user: store.get("user", null),
-        loyaltyCode: store.get("loyaltyCode", null),
       };
 
-      // UWAGA: ten endpoint MUSI istnieć w server.js
-      // jeśli go nie masz -> dostaniesz 404 i pokaże się toast z błędem
-      await API.json("/api/admin/orders", {
+      // ✅ To jest endpoint, który dodamy w server.js
+      await API.json("/api/orders", {
         method: "POST",
         body: JSON.stringify(payload),
       });
@@ -1831,28 +1947,45 @@
 
   submitOrderBtn.addEventListener("click", submitOrder);
 
-  // lista zamówień z backendu (jeśli endpoint istnieje)
   async function refreshOrdersFromServer() {
+    if (!isLogged()) {
+      ordersListEl.innerHTML = `
+        <div class="empty">
+          <div class="icon"><i class="fa-solid fa-user"></i></div>
+          <div>
+            <b>Zaloguj się, aby zobaczyć zamówienia</b>
+            <div class="tiny">Historia jest przypisana do Twojego konta.</div>
+          </div>
+        </div>`;
+      return;
+    }
+
     try {
-      const data = await API.json("/api/admin/orders");
+      // ✅ To jest endpoint, który dodamy w server.js
+      const data = await API.json("/api/orders?email=" + encodeURIComponent(getUser().email));
       const orders = Array.isArray(data) ? data : (data?.orders || []);
       renderOrdersUI(orders);
     } catch (e) {
-      // fallback: pokaż lokalne jeśli backend nie ma endpointu
-      const local = store.get("orders", []);
-      renderOrdersUI(local, true);
+      ordersListEl.innerHTML = `
+        <div class="empty">
+          <div class="icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div>
+            <b>Nie mogę pobrać zamówień</b>
+            <div class="tiny">${String(e.message || e)}</div>
+          </div>
+        </div>`;
     }
   }
 
-  function renderOrdersUI(orders, isLocal = false) {
+  function renderOrdersUI(orders) {
     ordersListEl.innerHTML = orders.length
       ? orders
           .map(
             (o) => `
             <div class="res-item">
               <b>${(o.pickupLocation || "—")} • ${(o.pickupTime || "—")}</b>
-              <div class="tiny">Złożono: ${o.date || o.createdAt || "—"}</div>
-              <div class="tiny">Status: <b>${o.status || "Przyjęte"}</b>${isLocal ? " (lokalnie)" : ""}</div>
+              <div class="tiny">Złożono: ${o.createdAt ? new Date(o.createdAt).toLocaleString("pl-PL") : "—"}</div>
+              <div class="tiny">Status: <b>${o.status || "Przyjęte"}</b></div>
               <div style="margin-top:6px">
                 ${(o.items || []).map((i) => `• ${i.qty}x ${i.title}`).join("<br>")}
               </div>
@@ -1876,23 +2009,35 @@
            </div>`;
   }
 
-  // ---------- Reservations (WYSYŁKA DO /api/rezerwacje) ----------
+  // =========================================================
+  //  Reservations – WYSYŁKA DO /api/rezerwacje (admin.html)
+  // =========================================================
   const resForm = document.getElementById("reservationForm");
   const resListEl = document.getElementById("reservationsList");
 
   async function refreshReservationsFromServer() {
+    if (!isLogged()) {
+      resListEl.innerHTML = `
+        <div class="empty">
+          <div class="icon"><i class="fa-solid fa-user"></i></div>
+          <div>
+            <b>Zaloguj się, aby składać rezerwacje</b>
+            <div class="tiny">Rezerwacje będą przypisane do Twojego konta.</div>
+          </div>
+        </div>`;
+      return;
+    }
+
     try {
-      const list = await API.json("/api/rezerwacje");
-      // pokaż tylko te, które należą do użytkownika jeśli chcesz filtrować po tel/email – na razie pokazuję "Twoje" lokalnie:
-      // ale żeby mieć spójność, pokażę listę lokalnych wysłanych + fallback.
-      renderReservationsUI(list, false);
+      // backend nie ma auth per-user, więc tu pokazujemy lokalną listę „Twoje”
+      const local = store.get(uKey("reservations_local"), []);
+      renderReservationsUI(local);
     } catch (e) {
-      const local = store.get("reservations_local", []);
-      renderReservationsUI(local, true);
+      renderReservationsUI([]);
     }
   }
 
-  function renderReservationsUI(list, isLocal = false) {
+  function renderReservationsUI(list) {
     resListEl.innerHTML = list.length
       ? list
           .map(
@@ -1904,11 +2049,7 @@
               ${r.notes ? `<div class="tiny">Uwagi: ${r.notes}</div>` : ""}
               <div class="divider"></div>
               <div class="res-actions">
-                ${
-                  isLocal
-                    ? `<button class="btn btn-ghost btn-small" data-del-local="${r.id}">Usuń</button>`
-                    : ``
-                }
+                <button class="btn btn-ghost btn-small" data-del-local="${r.id}">Usuń</button>
               </div>
             </div>
           `
@@ -1922,12 +2063,11 @@
             </div>
            </div>`;
 
-    // tylko lokalne można usuwać (backend usuwa admin panel)
     resListEl.querySelectorAll("[data-del-local]").forEach((btn) => {
       btn.addEventListener("click", () => {
         const id = btn.dataset.delLocal;
-        const newList = store.get("reservations_local", []).filter((x) => x.id !== id);
-        store.set("reservations_local", newList);
+        const newList = store.get(uKey("reservations_local"), []).filter((x) => x.id !== id);
+        store.set(uKey("reservations_local"), newList);
         refreshReservationsFromServer();
         showToast("Rezerwacja usunięta");
       });
@@ -1936,17 +2076,22 @@
 
   resForm.addEventListener("submit", async (e) => {
     e.preventDefault();
+    if (!requireLogin("rezerwacji")) return;
+
     const fd = new FormData(resForm);
     const data = Object.fromEntries(fd.entries());
 
-    // walidacja jak w backendzie
+    // auto-uzupełnij z profilu, jeśli puste
+    const u = getUser();
+    if (u?.name && !data.name) data.name = u.name;
+    if (u?.phone && !data.phone) data.phone = u.phone;
+
     if (!data.name || !data.phone || !data.date || !data.time || !data.guests || !data.room) {
       showToast("Uzupełnij wszystkie pola", true);
       return;
     }
 
     try {
-      // WYŚLIJ DO BACKENDU -> admin.html zobaczy
       const payload = {
         name: String(data.name),
         phone: String(data.phone),
@@ -1956,24 +2101,27 @@
         room: String(data.room),
         notes: String(data.notes || ""),
         source: "app",
+        email: u.email,
+        milkId: u.milkId,
       };
 
+      // ✅ istnieje w Twoim server.js
       await API.json("/api/rezerwacje", {
         method: "POST",
         body: JSON.stringify(payload),
       });
 
-      // zachowaj kopię "Twoje" lokalnie (bo backend nie ma per-user auth)
-      const local = store.get("reservations_local", []);
+      // „Twoje” lokalnie (bo admin panel ma całą listę)
+      const local = store.get(uKey("reservations_local"), []);
       local.unshift({ ...payload, id: crypto.randomUUID() });
-      store.set("reservations_local", local);
+      store.set(uKey("reservations_local"), local);
 
       resForm.reset();
       showToast("Rezerwacja wysłana 🧡");
       await refreshReservationsFromServer();
       openTab("res");
     } catch (err) {
-      showToast("Seen błąd: " + err.message, true);
+      showToast("Błąd rezerwacji: " + err.message, true);
     }
   });
 
@@ -1983,7 +2131,9 @@
     dateInput.min = iso;
   })();
 
-  // ---------- Account / Auth ----------
+  // =========================================================
+  //  Account / Auth (prawdziwe konto + stały milkId)
+  // =========================================================
   const loggedOutEl = document.getElementById("accountLoggedOut");
   const loggedInEl = document.getElementById("accountLoggedIn");
   const avatarEl = document.getElementById("avatar");
@@ -1993,49 +2143,103 @@
   function setUser(user) {
     store.set("user", user);
     renderAccount();
+    renderPoints();
+    renderRewards();
+    renderCart();
+    refreshOrdersFromServer();
+    refreshReservationsFromServer();
   }
+
   function renderAccount() {
-    const user = store.get("user", null);
-    const isLogged = !!user;
-    loggedOutEl.style.display = isLogged ? "none" : "flex";
-    loggedInEl.style.display = isLogged ? "flex" : "none";
-    if (isLogged) {
-      const initials = (user.name || "Milk User").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
-      avatarEl.textContent = initials;
+    const user = getUser();
+    const ok = isLogged();
+    loggedOutEl.style.display = ok ? "none" : "flex";
+    loggedInEl.style.display = ok ? "flex" : "none";
+
+    if (ok) {
+      const initials = (user.name || "Milk User")
+        .split(" ")
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase();
+
+      avatarEl.textContent = initials || "MU";
       accNameEl.textContent = user.name || "Użytkownik";
       accEmailEl.textContent = user.email || "";
     }
   }
 
-  document.getElementById("loginGoogle").addEventListener("click", () => {
-    setUser({ provider: "google", name: "Użytkownik Google", email: "google@user.com" });
-    showToast("Zalogowano przez Google ✅");
-    openTab("account");
+  async function ensureProfileHint() {
+    if (!isLogged()) return;
+    const shown = store.get(uKey("profileHintShown"), false);
+    if (!shown) {
+      showToast("Uzupełnij dane osobowe, aby przyspieszyć zamówienia i rezerwacje ✨");
+      store.set(uKey("profileHintShown"), true);
+    }
+  }
+
+  // Google login (demo) -> też przechodzi przez backend, żeby dostać milkId
+  document.getElementById("loginGoogle").addEventListener("click", async () => {
+    try {
+      const demoEmail = "google@user.com";
+      const data = await API.json("/api/app/login", {
+        method: "POST",
+        body: JSON.stringify({ email: demoEmail, provider: "google" }),
+      });
+      setUser(data.user);
+      showToast("Zalogowano przez Google ✅");
+      openTab("account");
+      ensureProfileHint();
+    } catch (e) {
+      showToast("Błąd logowania: " + e.message, true);
+    }
   });
 
-  document.getElementById("loginEmailForm").addEventListener("submit", (e) => {
+  // Email login (nie robimy tu prawdziwego hasła – jak chcesz, dodamy)
+  document.getElementById("loginEmailForm").addEventListener("submit", async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
-    const email = fd.get("email");
-    setUser({ provider: "email", name: String(email).split("@")[0], email });
-    showToast("Zalogowano ✅");
-    openTab("account");
-    e.target.reset();
+    const email = String(fd.get("email") || "").trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      showToast("Podaj poprawny email", true);
+      return;
+    }
+
+    try {
+      const data = await API.json("/api/app/login", {
+        method: "POST",
+        body: JSON.stringify({ email, provider: "email" }),
+      });
+      setUser(data.user);
+      showToast("Zalogowano ✅");
+      openTab("account");
+      e.target.reset();
+      ensureProfileHint();
+    } catch (e2) {
+      showToast("Błąd logowania: " + e2.message, true);
+    }
   });
 
   document.getElementById("logoutBtn").addEventListener("click", () => {
     store.set("user", null);
     renderAccount();
+    renderPoints();
+    renderRewards();
+    renderCart();
+    refreshOrdersFromServer();
+    refreshReservationsFromServer();
     showToast("Wylogowano");
   });
 
-  // ---------- Subpages ----------
+  // Subpages
   const subpages = {
     personal: document.getElementById("page-personal"),
     language: document.getElementById("page-language"),
     about: document.getElementById("page-about"),
     help: document.getElementById("page-help"),
   };
+
   function openSubpage(name) {
     closeSubpages();
     subpages[name]?.classList.add("active");
@@ -2043,20 +2247,40 @@
   function closeSubpages() {
     Object.values(subpages).forEach((p) => p.classList.remove("active"));
   }
+
   document.querySelectorAll("[data-back]").forEach((b) => b.addEventListener("click", closeSubpages));
   document.querySelectorAll(".list-item[data-open]").forEach((item) => {
     item.addEventListener("click", () => openSubpage(item.dataset.open));
   });
 
-  document.getElementById("savePersonalBtn").addEventListener("click", () => {
-    const user = store.get("user", {}) || {};
-    user.name = document.getElementById("personalName").value || user.name;
-    user.phone = document.getElementById("personalPhone").value || user.phone;
-    user.email = document.getElementById("personalEmail").value || user.email;
-    setUser(user);
-    showToast("Dane zapisane");
-    closeSubpages();
+  // Zapis danych osobowych -> backend, żeby przypisać do maila na stałe
+  document.getElementById("savePersonalBtn").addEventListener("click", async () => {
+    if (!requireLogin("ustawień profilu")) return;
+
+    const u = getUser();
+    const name = String(document.getElementById("personalName").value || "").trim();
+    const phone = String(document.getElementById("personalPhone").value || "").trim();
+    const email = String(document.getElementById("personalEmail").value || u.email).trim().toLowerCase();
+
+    try {
+      const data = await API.json("/api/app/profile", {
+        method: "POST",
+        body: JSON.stringify({
+          email: u.email,
+          name,
+          phone,
+          emailNew: email, // jakbyś chciał zmieniać mail – opcjonalnie
+        }),
+      });
+
+      setUser(data.user);
+      showToast("Dane zapisane ✅");
+      closeSubpages();
+    } catch (e) {
+      showToast("Błąd zapisu: " + e.message, true);
+    }
   });
+
   document.querySelectorAll("[data-lang]").forEach((btn) => {
     btn.addEventListener("click", () => {
       store.set("lang", btn.dataset.lang);
@@ -2065,7 +2289,9 @@
     });
   });
 
-  // ---------- Install guide logic (zostawione jak miałeś) ----------
+  // =========================================================
+  //  Install guide (zostaje jak masz)
+  // =========================================================
   const installGuideEl = document.getElementById("installGuide");
   const guideTabs = document.querySelectorAll("[data-guide-tab]");
   const guidePanes = document.querySelectorAll("[data-guide-pane]");
@@ -2096,10 +2322,7 @@
     guidePanes.forEach((p) => p.classList.toggle("active", p.dataset.guidePane === name));
   }
   guideTabs.forEach((btn) => btn.addEventListener("click", () => setGuideTab(btn.dataset.guideTab)));
-
-  (function initGuideDefaultTab() {
-    setGuideTab(isIOS() ? "ios" : "android");
-  })();
+  (function initGuideDefaultTab() { setGuideTab(isIOS() ? "ios" : "android"); })();
 
   let deferredPrompt = null;
   window.addEventListener("beforeinstallprompt", (e) => {
@@ -2115,31 +2338,28 @@
     if (!deferredPrompt) return;
     androidInstallBtn.disabled = true;
     deferredPrompt.prompt();
-    try {
-      await deferredPrompt.userChoice;
-    } catch {}
+    try { await deferredPrompt.userChoice; } catch {}
     deferredPrompt = null;
     androidInstallBtn.style.display = "none";
   });
 
   (function gateAppWithInstallGuide() {
     const inStandalone = isStandaloneMode();
-    if (!inStandalone) {
-      showInstallGuide();
-    } else {
-      hideInstallGuide();
-    }
+    if (!inStandalone) showInstallGuide();
+    else hideInstallGuide();
   })();
 
-  // ---------- Init ----------
+  // =========================================================
+  //  Init
+  // =========================================================
+  renderMenu();
+  renderAccount();
   renderPoints();
   renderRewards();
-  renderMenu();
   renderCart();
-  renderAccount();
   openTab("points");
-
-  // wczytanie z backendu:
   refreshReservationsFromServer();
   refreshOrdersFromServer();
+  ensureProfileHint();
 </script>
+
